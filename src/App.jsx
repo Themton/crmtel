@@ -1270,10 +1270,10 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
             <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>เลือกฟิลด์</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
-                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
                 <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 14, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
                   <option value="">+ เพิ่มฟิลด์...</option>
-                  {[{ v: "assigned_to", l: "Assigned To" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                  {[{ v: "assigned_to", l: "มอบหมาย" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }, { v: "call_subject", l: "หัวข้อโทร" }, { v: "call_date", l: "วันที่โทร" }, { v: "call_note", l: "หมายเหตุ" }, { v: "customer_relation", l: "ความสัมพันธ์ลูกค้า" }, { v: "next_follow", l: "ครั้งถัดไป" }, { v: "product_price", l: "โปรสินค้า" }, { v: "order_date", l: "วันที่สั่งซื้อ" }, { v: "note", l: "ที่อยู่" }, { v: "name", l: "ชื่อ" }, { v: "phone", l: "เบอร์โทร" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
               </div>
             </div>
@@ -1281,7 +1281,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 13, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
                 {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                  <span style={{ fontSize: 14, color: "#d4a017" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
+                  <span style={{ fontSize: 14, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
                     {f === "assigned_to" && (() => {
@@ -1360,6 +1360,10 @@ function CRMApp({ currentUser, onLogout }) {
                     {f === "supervisor" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select>}
                     {f === "previous_promo" && <input style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} />}
                     {f === "received_product" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">ยังไม่ได้รับ</option></select>}
+                    {f === "call_subject" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}</select>}
+                    {f === "customer_relation" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}</select>}
+                    {(f === "call_date" || f === "next_follow" || f === "order_date") && <input type="date" style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} />}
+                    {(f === "call_note" || f === "note" || f === "name" || f === "phone" || f === "product_price") && <input style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} placeholder={f === "product_price" ? "ราคา" : ""} />}
                   </div>
                 </div>))}
               </div>
@@ -1379,7 +1383,7 @@ function CRMApp({ currentUser, onLogout }) {
                 const assignMode = quickUpdate.fieldValues.assign_mode || "equal";
                 const promoMap = quickUpdate.fieldValues.promo_map || {};
                 if (quickUpdate.fields.includes("assigned_to") && assignMode === "promo" && Object.keys(promoMap).length > 0) {
-                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "product_price" ? Number(v) || 0 : f === "customer_relation" ? Number(v) || 0 : (v || ""); } });
                   const promoGroups = {};
                   selectedRows.forEach((rid) => {
                     const c = customers.find((cx) => cx.id === rid);
@@ -1410,7 +1414,7 @@ function CRMApp({ currentUser, onLogout }) {
                     }
                   }
                 } else if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
-                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "product_price" ? Number(v) || 0 : f === "customer_relation" ? Number(v) || 0 : (v || ""); } });
                   // Group by employee
                   const empBatch = {};
                   for (let i = 0; i < total; i++) {
@@ -1429,7 +1433,7 @@ function CRMApp({ currentUser, onLogout }) {
                     }
                   }
                 } else {
-                  const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "product_price" ? Number(v) || 0 : f === "customer_relation" ? Number(v) || 0 : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
                   const BATCH = 100;
                   for (let b = 0; b < Math.ceil(total / BATCH); b++) {
                     const batch = selectedRows.slice(b * BATCH, (b + 1) * BATCH);
