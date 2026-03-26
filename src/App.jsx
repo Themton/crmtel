@@ -417,18 +417,30 @@ function CRMApp({ currentUser, onLogout }) {
     loadColOrder();
     // Employee polls every 5 seconds
     if (currentUser?.role === "employee") {
-      const interval = setInterval(loadColOrder, 5000);
+      const interval = setInterval(loadColOrder, 3000);
       return () => clearInterval(interval);
     }
   }, [currentUser?.name, customers.length]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Auto-refresh data every 5 seconds (real-time)
+  // Auto-refresh: check for changes every 2 seconds (lightweight)
+  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
   useEffect(() => {
-    const interval = setInterval(() => { fetchAll(); }, 5000);
+    const checkForChanges = async () => {
+      try {
+        const res = await supabase.from("crm_settings").select();
+        const settings = res.data || [];
+        const ts = settings.find((s) => s.key === "last_updated");
+        if (ts && ts.value !== lastKnownUpdate) {
+          setLastKnownUpdate(ts.value);
+          fetchAll();
+        }
+      } catch {}
+    };
+    const interval = setInterval(checkForChanges, 2000);
     return () => clearInterval(interval);
-  }, [fetchAll]);
+  }, [lastKnownUpdate, fetchAll]);
 
   // Real-time notification polling every 10 seconds
   useEffect(() => {
@@ -450,7 +462,7 @@ function CRMApp({ currentUser, onLogout }) {
       } catch {}
     };
     pollNotifications();
-    const interval = setInterval(pollNotifications, 5000);
+    const interval = setInterval(pollNotifications, 3000);
     return () => clearInterval(interval);
   }, [currentUser?.name]);
 
@@ -470,7 +482,7 @@ function CRMApp({ currentUser, onLogout }) {
       showToast("บันทึกแล้ว");
     }
     setModal(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
   };
 
   // ---- DELETE → MOVE TO TRASH ----
@@ -488,7 +500,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from(table).delete().eq("id", id);
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("ลบสำเร็จ ✓");
   };
 
@@ -516,7 +528,7 @@ function CRMApp({ currentUser, onLogout }) {
     }
     setProgress(null);
     setSelectedRows([]);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -531,7 +543,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", tid);
     setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("กู้คืนสำเร็จ ✓");
   };
 
@@ -541,7 +553,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", id);
     setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("ลบถาวรสำเร็จ ✓");
   };
 
@@ -551,14 +563,18 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 0, total: 1, label: "กำลังล้างถังขยะ..." });
     await supabase.from("crm_trash").delete().gte("id", 0);
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("ล้างถังขยะ " + total + " รายการสำเร็จ ✓");
   };
 
   // ---- INLINE UPDATE ----
+  const broadcastChange = async () => {
+    try { await supabase.from("crm_settings").delete().eq("key", "last_updated"); await supabase.from("crm_settings").insert({ key: "last_updated", value: Date.now().toString() }); } catch {}
+  };
   const upd = async (id, f, v) => {
     setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
     await supabase.from("crm_customers").update({ [f]: v }).eq("id", id);
+    broadcastChange();
   };
 
   // ---- IMPORT CSV ----
@@ -625,7 +641,7 @@ function CRMApp({ currentUser, onLogout }) {
           }
           setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
         }
-        await fetchAll();
+        await fetchAll(); broadcastChange();
         setProgress(null);
       }
       setImportResult({ success: successList, dupes: dupeList });
@@ -653,7 +669,7 @@ function CRMApp({ currentUser, onLogout }) {
       }
     }
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
     // Send notifications to assigned employees
     for (let i = 0; i < assignEmployees.length; i++) {
@@ -675,7 +691,7 @@ function CRMApp({ currentUser, onLogout }) {
       setProgress({ current: Math.min((b + 1) * BATCH, assignSelected.length), total: assignSelected.length, label: "กำลังถอนสิทธิ์..." });
     }
     setProgress(null);
-    await fetchAll();
+    await fetchAll(); broadcastChange();
     showToast("ถอนสิทธิ์แล้ว", "warning");
     setAssignSelected([]);
   };
@@ -843,7 +859,7 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: "#9ca3af" }}>เรียลทาม ⚡</span>
+                <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
                 <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
               </div>
             </div>
@@ -1558,7 +1574,7 @@ function CRMApp({ currentUser, onLogout }) {
                   }
                 }
                 setProgress(null);
-                await fetchAll();
+                await fetchAll(); broadcastChange();
                 // Send notifications if assigned_to was updated
                 if (quickUpdate.fields.includes("assigned_to")) {
                   const assignList2 = quickUpdate.fieldValues.assigned_to_list || [];
@@ -1620,7 +1636,7 @@ function CRMApp({ currentUser, onLogout }) {
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
                 setProgress(null);
-                await fetchAll();
+                await fetchAll(); broadcastChange();
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
