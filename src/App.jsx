@@ -356,6 +356,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState("");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
+  const [colOrder, setColOrder] = useState([]);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
   const PAGE_SIZE = pageSize;
@@ -368,11 +369,28 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr] = await Promise.all([
+      const [c, e, s, cs, sv, tr, settings] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
+        safeFetch("crm_settings"),
       ]);
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // Load column order
+      if (settings.length > 0) {
+        let orderKey = "col_order_" + (currentUser?.name || "default");
+        let setting = settings.find((s) => s.key === orderKey);
+        // If employee, try supervisor's order
+        if (!setting && currentUser?.role === "employee") {
+          const myEmp = e.find((em) => em.name === currentUser.name);
+          const mySupervisor = c.find((cx) => cx.assigned_to === currentUser.name)?.supervisor;
+          if (mySupervisor) {
+            setting = settings.find((s) => s.key === "col_order_" + mySupervisor);
+          }
+        }
+        if (setting) {
+          try { setColOrder(JSON.parse(setting.value)); } catch {}
+        }
+      }
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
@@ -658,8 +676,27 @@ function CRMApp({ currentUser, onLogout }) {
   const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" };
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
-  // Table headers: customer fields + call fields
-  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","โปรสินค้า","มอบหมาย","ชื่อเล่น"];
+  // Column definitions - key, label, render function
+  const COL_DEFS = {
+    name: { label: "ชื่อ", render: (c) => <EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#3d2a0a" }} />, minW: 140 },
+    phone: { label: "เบอร์โทร", render: (c) => <EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /> },
+    note: { label: "ที่อยู่", render: (c) => <EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" />, maxW: 180 },
+    previous_promo: { label: "โปรก่อนหน้า", render: (c) => <EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /> },
+    order_date: { label: "วันที่สั่งซื้อ", render: (c) => <EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /> },
+    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
+    status: { label: "สถานะ", render: (c) => <InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => { upd(c.id, "status", v); if (c.status === "not_called" && v !== "not_called") upd(c.id, "call_date", new Date().toISOString().slice(0, 10)); }} />, minW: 120 },
+    call_subject: { label: "หัวข้อโทร", render: (c) => <SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /> },
+    call_date: { label: "วันที่โทร", render: (c) => <EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /> },
+    call_note: { label: "หมายเหตุ", render: (c) => <EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" />, minW: 300 },
+    customer_relation: { label: "ความสัมพันธ์ลูกค้า", render: (c) => <RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /> },
+    next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
+    product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
+    assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
+  };
+  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
+  const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
+  const TH = [...(currentUser?.role === "admin" ? [""] : []), ...activeColOrder.map((k) => COL_DEFS[k].label)];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -823,9 +860,10 @@ function CRMApp({ currentUser, onLogout }) {
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
                   { key: "sort", label: "ตัวเรียงลำดับ", icon: "↕" },
                   { key: "quickupdate", label: "อัพเดทด่วน", icon: "⚡" },
+                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
-                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#2563eb" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -948,6 +986,41 @@ function CRMApp({ currentUser, onLogout }) {
               {toolbarTab === "quickupdate" && selectedRows.length === 0 && (
                 <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc", color: "#9ca3af", fontSize: 13 }}>เลือกลูกค้าก่อน แล้วกดอัพเดทด่วน</div>
               )}
+
+              {/* COLUMN REORDER PANEL */}
+              {toolbarTab === "columns" && (
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศรเพื่อสลับ)</span></div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                    {activeColOrder.map((key, idx) => (
+                      <div key={key} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, background: "#fff", border: "1px solid #e5e7eb", fontSize: 13, fontWeight: 600, color: "#3d2a0a", cursor: "grab" }}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("colIdx", String(idx))}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          const fromIdx = parseInt(e.dataTransfer.getData("colIdx"));
+                          const newOrder = [...activeColOrder];
+                          const [item] = newOrder.splice(fromIdx, 1);
+                          newOrder.splice(idx, 0, item);
+                          setColOrder(newOrder);
+                        }}>
+                        <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: idx > 0 ? "#d4a017" : "#e5e7eb", fontSize: 14, padding: 0 }}>◀</button>
+                        <span>{COL_DEFS[key].label}</span>
+                        <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb", fontSize: 14, padding: 0 }}>▶</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>รีเซ็ต</button>
+                    <button onClick={async () => {
+                      const settingKey = "col_order_" + (currentUser?.name || "default");
+                      await supabase.from("crm_settings").delete().eq("key", settingKey);
+                      await supabase.from("crm_settings").insert({ key: settingKey, value: JSON.stringify(activeColOrder) });
+                      showToast("บันทึกลำดับคอลัมน์สำเร็จ ✓ (พนักงานในทีมจะเห็นเหมือนกัน)");
+                    }} style={{ padding: "6px 16px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
+                  </div>
+                </div>
+              )}
             </div>
             {/* PAGINATION TOP */}
             {<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap", gap: 8 }}>
@@ -1023,27 +1096,10 @@ function CRMApp({ currentUser, onLogout }) {
                           setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id));
                         }} style={{ accentColor: "#d4a017" }} /></td>
                         {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
-                        <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#3d2a0a" }} /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
-                        <td style={{ padding: "4px 4px", maxWidth: 180 }}><EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /></td>
-                        <td style={{ padding: "6px 8px" }}>{c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span>}</td>
-                        <td style={{ padding: "6px 4px", minWidth: 120 }}><InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => {
-                          upd(c.id, "status", v);
-                          if (c.status === "not_called" && v !== "not_called") {
-                            const today = new Date().toISOString().slice(0, 10);
-                            upd(c.id, "call_date", today);
-                          }
-                        }} /></td>
-                        <td style={{ padding: "6px 4px" }}><SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
-                        <td style={{ padding: "4px 4px", minWidth: 300 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
-                        <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
-                        <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
-                        <td style={{ padding: "6px 8px", fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</td>
+                        {activeColOrder.map((key) => {
+                          const col = COL_DEFS[key];
+                          return <td key={key} style={{ padding: key === "received_product" || key === "assigned_to" || key === "nickname" ? "6px 8px" : key === "status" || key === "call_subject" || key === "customer_relation" ? "6px 4px" : "4px 4px", minWidth: col.minW, maxWidth: col.maxW }}>{col.render(c)}</td>;
+                        })}
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
