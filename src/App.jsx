@@ -381,6 +381,7 @@ function CRMApp({ currentUser, onLogout }) {
   // ---- DELETE → MOVE TO TRASH ----
   const handleDelete = async (table, id) => {
     if (!confirm("ต้องการลบ?")) return;
+    setProgress({ current: 0, total: 2, label: "กำลังลบข้อมูล..." });
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
       if (item) {
@@ -388,48 +389,70 @@ function CRMApp({ currentUser, onLogout }) {
         await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
       }
     }
+    setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
     await supabase.from(table).delete().eq("id", id);
+    setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
+    setProgress(null);
     await fetchAll();
-    showToast("ลบแล้ว");
+    showToast("ลบสำเร็จ ✓");
   };
 
   const handleBulkDelete = async () => {
     if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
-    for (const rid of selectedRows) {
+    const total = selectedRows.length;
+    setProgress({ current: 0, total, label: "กำลังลบข้อมูล..." });
+    for (let i = 0; i < total; i++) {
+      const rid = selectedRows[i];
       const item = customers.find((c) => c.id === rid);
       if (item) {
         const { id: oid, ...rest } = item;
         await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
       }
       await supabase.from("crm_customers").delete().eq("id", rid);
+      setProgress({ current: i + 1, total, label: "กำลังลบข้อมูล..." });
     }
+    setProgress(null);
     setSelectedRows([]);
     await fetchAll();
-    showToast("ลบ " + selectedRows.length + " รายการ");
+    showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
   // ---- RESTORE FROM TRASH ----
   const handleRestore = async (id) => {
     const item = trash.find((t) => t.id === id);
     if (!item) return;
+    setProgress({ current: 0, total: 2, label: "กำลังกู้คืน..." });
     const { id: tid, original_id, deleted_at, deleted_by, ...rest } = item;
     await supabase.from("crm_customers").insert(rest);
+    setProgress({ current: 1, total: 2, label: "กำลังกู้คืน..." });
     await supabase.from("crm_trash").delete().eq("id", tid);
+    setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
+    setProgress(null);
     await fetchAll();
-    showToast("กู้คืนแล้ว");
+    showToast("กู้คืนสำเร็จ ✓");
   };
 
   const handlePermanentDelete = async (id) => {
     if (!confirm("ลบถาวร?")) return;
+    setProgress({ current: 0, total: 1, label: "กำลังลบถาวร..." });
     await supabase.from("crm_trash").delete().eq("id", id);
+    setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
+    setProgress(null);
     await fetchAll();
+    showToast("ลบถาวรสำเร็จ ✓");
   };
 
   const handleEmptyTrash = async () => {
     if (!confirm("ลบถาวรทั้งหมด " + trash.length + " รายการ?")) return;
-    for (const t of trash) await supabase.from("crm_trash").delete().eq("id", t.id);
+    const total = trash.length;
+    setProgress({ current: 0, total, label: "กำลังล้างถังขยะ..." });
+    for (let i = 0; i < total; i++) {
+      await supabase.from("crm_trash").delete().eq("id", trash[i].id);
+      setProgress({ current: i + 1, total, label: "กำลังล้างถังขยะ..." });
+    }
+    setProgress(null);
     await fetchAll();
-    showToast("ล้างถังขยะแล้ว");
+    showToast("ล้างถังขยะ " + total + " รายการสำเร็จ ✓");
   };
 
   // ---- INLINE UPDATE ----
