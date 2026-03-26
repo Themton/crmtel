@@ -416,7 +416,7 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleBulkDelete = async () => {
-    if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
+    if (!selectedRows.length || !confirm("ลบทั้งหมด " + selectedRows.length + " รายการ?\n\n⚠️ ข้อมูลจะย้ายไปถังขยะ")) return;
     const total = selectedRows.length;
     const BATCH = 100;
     setProgress({ current: 0, total, label: "กำลังลบข้อมูล..." });
