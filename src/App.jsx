@@ -329,14 +329,14 @@ function CRMApp({ currentUser, onLogout }) {
     if (!confirm("ต้องการลบ?")) return;
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
-      if (item) setTrash((p) => [{ ...item, deleted_at: new Date().toISOString().slice(0, 10) }, ...p]);
+      if (item) setTrash((p) => [{ ...item, deleted_at: new Date().toISOString().slice(0, 10), deleted_by: currentUser?.name || "admin" }, ...p]);
     }
     setterMap[table]?.((p) => p.filter((r) => r.id !== id));
   };
   const handleBulkDelete = () => {
     if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
     const deleted = customers.filter((r) => selectedRows.includes(r.id));
-    setTrash((p) => [...deleted.map((d) => ({ ...d, deleted_at: new Date().toISOString().slice(0, 10) })), ...p]);
+    setTrash((p) => [...deleted.map((d) => ({ ...d, deleted_at: new Date().toISOString().slice(0, 10), deleted_by: currentUser?.name || "admin" })), ...p]);
     setCustomers((p) => p.filter((r) => !selectedRows.includes(r.id)));
     setSelectedRows([]);
   };
@@ -433,7 +433,7 @@ function CRMApp({ currentUser, onLogout }) {
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + trash.length + ")", icon: <I.Trash2 />, role: "admin" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setStatusFilter("all"); setAssignFilter("all"); setAssignSelected([]); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
@@ -523,7 +523,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
                         <td style={{ padding: "6px 4px" }}>{c.offer ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: "#d97706", cursor: "pointer" }} onClick={() => { const v = prompt("เสนอขาย:", c.offer); if (v !== null) upd(c.id, "offer", v); }}>{c.offer}</span> : <span style={{ color: "#9ca3af", cursor: "pointer", fontSize: 11 }} onClick={() => { const v = prompt("เสนอขาย:"); if (v) upd(c.id, "offer", v); }}>—</span>}</td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
-                        {currentUser?.role === "admin" && <td style={{ padding: "6px 8px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
+                        <td style={{ padding: "6px 8px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
@@ -611,12 +611,14 @@ function CRMApp({ currentUser, onLogout }) {
           </div>}
 
           {/* TRASH */}
-          {tab === "trash" && <div>
+          {tab === "trash" && (() => {
+            const myTrash = currentUser?.role === "admin" ? trash : trash.filter((t) => t.deleted_by === currentUser?.name);
+            return <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({trash.length})</h2>
-              {trash.length > 0 && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({myTrash.length})</h2>
+              {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
             </div>
-            {trash.length === 0 ? (
+            {myTrash.length === 0 ? (
               <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 12 }}>🗑️</div>
                 <div style={{ color: "#9ca3af", fontSize: 16 }}>ไม่มีข้อมูลที่ลบ</div>
@@ -626,10 +628,10 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
-                      {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
+                      {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
                     <tbody>
-                      {trash.map((t) => {
+                      {myTrash.map((t) => {
                         const st = statuses.find((s) => s.key === t.status);
                         return (
                           <tr key={t.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
@@ -638,11 +640,12 @@ function CRMApp({ currentUser, onLogout }) {
                             <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
                             <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280" }}>{t.assigned_to || "—"}</td>
+                            <td style={{ padding: "12px 14px", color: "#4b5563", fontWeight: 500 }}>{t.deleted_by || "—"}</td>
                             <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 12 }}>{t.deleted_at}</td>
                             <td style={{ padding: "12px 14px" }}>
                               <div style={{ display: "flex", gap: 8 }}>
                                 <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
-                                <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>
+                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
                               </div>
                             </td>
                           </tr>
@@ -653,7 +656,8 @@ function CRMApp({ currentUser, onLogout }) {
                 </div>
               </div>
             )}
-          </div>}
+          </div>;
+          })()}
 
         </main>
       </div>
