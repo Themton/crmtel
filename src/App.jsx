@@ -401,9 +401,9 @@ function CRMApp({ currentUser, onLogout }) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Auto-refresh data every 30 seconds (real-time dashboard)
+  // Auto-refresh data every 5 seconds (real-time)
   useEffect(() => {
-    const interval = setInterval(() => { fetchAll(); }, 30000);
+    const interval = setInterval(() => { fetchAll(); }, 5000);
     return () => clearInterval(interval);
   }, [fetchAll]);
 
@@ -427,7 +427,7 @@ function CRMApp({ currentUser, onLogout }) {
       } catch {}
     };
     pollNotifications();
-    const interval = setInterval(pollNotifications, 10000);
+    const interval = setInterval(pollNotifications, 5000);
     return () => clearInterval(interval);
   }, [currentUser?.name]);
 
@@ -820,7 +820,7 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: "#9ca3af" }}>อัปเดตอัตโนมัติทุก 30 วินาที</span>
+                <span style={{ fontSize: 11, color: "#9ca3af" }}>เรียลทาม ⚡</span>
                 <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
               </div>
             </div>
