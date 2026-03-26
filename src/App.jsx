@@ -11,7 +11,7 @@ const COLOR_PRESETS = [
   { color: "#0891b2", bg: "#cffafe" }, { color: "#6b7280", bg: "#f3f4f6" }, { color: "#ea580c", bg: "#fff7ed" },
   { color: "#16a34a", bg: "#f0fdf4" }, { color: "#334155", bg: "#e2e8f0" }, { color: "#0d9488", bg: "#ccfbf1" },
 ];
-const RATING_COLORS = { 1: "#6b7280", 2: "#2563eb", 3: "#16a34a", 4: "#d97706", 5: "#dc2626" };
+const RATING_COLORS = { 0: "#9ca3af", 1: "#6b7280", 2: "#2563eb", 3: "#16a34a", 4: "#d97706", 5: "#dc2626" };
 
 // ---- DEMO DATA ----
 const DEMO_STATUSES = [
@@ -180,15 +180,15 @@ function RatingSelector({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: value ? RATING_COLORS[value] : "#e5e7eb", color: value ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-        {value || "—"} <I.ChevDown />
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+        {value !== null && value !== undefined ? value : "—"} <I.ChevDown />
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
-        {[1,2,3,4,5].map((n) => (
+        {[0,1,2,3,4,5].map((n) => (
           <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
             onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
             <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
-            <span style={{ color: "#374151" }}>{{ 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
+            <span style={{ color: "#374151" }}>{{ 0: "ยังไม่ประเมิน", 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
             {value === n && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
           </button>
         ))}
@@ -757,7 +757,7 @@ function CRMApp({ currentUser, onLogout }) {
                         </select>
                       ) : af.field === "customer_relation" ? (
                         <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option>{[1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                          <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
                         </select>
                       ) : (
                         <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }} />
