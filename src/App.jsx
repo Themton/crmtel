@@ -304,12 +304,13 @@ export default function AppWrapper() {
 
 // ---- CRM APP ----
 function CRMApp({ currentUser, onLogout }) {
+  const load = (key, fallback) => { try { const s = sessionStorage.getItem("crm_" + key); return s ? JSON.parse(s) : fallback; } catch { return fallback; } };
   const [tab, setTab] = useState(currentUser?.role === "admin" ? "customers" : "dashboard");
-  const [customers, setCustomers] = useState(USE_DEMO ? DEMO_CUSTOMERS : []);
-  const [employees, setEmployees] = useState(USE_DEMO ? DEMO_EMPLOYEES : []);
-  const [statuses, setStatuses] = useState(USE_DEMO ? DEMO_STATUSES : []);
-  const [callSubjects, setCallSubjects] = useState(USE_DEMO ? DEMO_CALL_SUBJECTS : []);
-  const [supervisors, setSupervisors] = useState(USE_DEMO ? DEMO_SUPERVISORS : []);
+  const [customers, setCustomers] = useState(() => load("customers", DEMO_CUSTOMERS));
+  const [employees, setEmployees] = useState(() => load("employees", DEMO_EMPLOYEES));
+  const [statuses, setStatuses] = useState(() => load("statuses", DEMO_STATUSES));
+  const [callSubjects, setCallSubjects] = useState(() => load("call_subjects", DEMO_CALL_SUBJECTS));
+  const [supervisors, setSupervisors] = useState(() => load("supervisors", DEMO_SUPERVISORS));
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -322,7 +323,15 @@ function CRMApp({ currentUser, onLogout }) {
   const [toast, setToast] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
-  const [trash, setTrash] = useState([]);
+  const [trash, setTrash] = useState(() => load("trash", []));
+
+  // Auto-save to sessionStorage
+  useEffect(() => { sessionStorage.setItem("crm_customers", JSON.stringify(customers)); }, [customers]);
+  useEffect(() => { sessionStorage.setItem("crm_employees", JSON.stringify(employees)); }, [employees]);
+  useEffect(() => { sessionStorage.setItem("crm_statuses", JSON.stringify(statuses)); }, [statuses]);
+  useEffect(() => { sessionStorage.setItem("crm_call_subjects", JSON.stringify(callSubjects)); }, [callSubjects]);
+  useEffect(() => { sessionStorage.setItem("crm_supervisors", JSON.stringify(supervisors)); }, [supervisors]);
+  useEffect(() => { sessionStorage.setItem("crm_trash", JSON.stringify(trash)); }, [trash]);
   const fileRef = useRef(null);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
