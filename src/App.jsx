@@ -618,7 +618,7 @@ function CRMApp({ currentUser, onLogout }) {
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Table headers: customer fields + call fields
-  const TH = ["","ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
+  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -908,7 +908,7 @@ function CRMApp({ currentUser, onLogout }) {
                     {fc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
-                        {currentUser?.role === "admin" ? <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td> : <td></td>}
+                        {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
                         <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#1e3a5f" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
                         <td style={{ padding: "4px 4px", maxWidth: 180 }}><EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" /></td>
