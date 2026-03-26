@@ -208,10 +208,10 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (editing) {
     return type === "textarea" ? (
       <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
     ) : (
       <input ref={ref} type={inputType} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
     );
   }
   let display = value || "—";
@@ -256,7 +256,7 @@ function LoginScreen({ onLogin }) {
       <div style={{ width: "100%", maxWidth: 420, padding: 20 }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 16 }} />
+          <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", marginBottom: 16 }} />
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM THE MT</h1>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>เพราะคุณคือ สุดยอดนำขายมือทอง</p>
         </div>
@@ -275,7 +275,7 @@ function LoginScreen({ onLogin }) {
               </span>
               <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
                 style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
-                onFocus={(e) => (e.target.style.borderColor = "#2563eb")} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")} />
+                onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }} />
             </div>
           </div>
 
@@ -287,7 +287,7 @@ function LoginScreen({ onLogin }) {
               </span>
               <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="password"
                 style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
-                onFocus={(e) => (e.target.style.borderColor = "#2563eb")} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(e); }} />
               <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
                 {showPass ? <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -972,7 +972,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
                     <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
-                    <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#2563eb" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
+                    <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
                   ))}
                   <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
                   <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
@@ -1391,7 +1391,7 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </div>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db}`}</style>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important}`}</style>
     </div>
   );
 }
