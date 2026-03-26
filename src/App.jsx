@@ -950,9 +950,9 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <div className="crm-scroll" style={{ overflowX: "scroll" }}>
+              <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
                 <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
-                  <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
+                  <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 12px", width: 60 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} />
