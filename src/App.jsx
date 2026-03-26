@@ -144,9 +144,26 @@ function SubjectDropdown({ value, subjects, onChange }) {
 }
 
 function RatingSelector({ value, onChange }) {
-  return (<div style={{ display: "flex", gap: 3 }}>{[1,2,3,4,5].map((n) => (
-    <button key={n} onClick={() => onChange(n)} style={{ width: 28, height: 28, borderRadius: 8, border: value === n ? "2px solid #1e293b" : "2px solid transparent", background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: value === n ? 1 : 0.5 }}>{n}</button>
-  ))}</div>);
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: value ? RATING_COLORS[value] : "#e5e7eb", color: value ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+        {value || "—"} <I.ChevDown />
+      </button>
+      {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
+        {[1,2,3,4,5].map((n) => (
+          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
+            onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
+            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ color: "#374151" }}>{{ 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
+            {value === n && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+          </button>
+        ))}
+      </div>}
+    </div>
+  );
 }
 
 function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
