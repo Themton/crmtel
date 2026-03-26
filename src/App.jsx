@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
 const USE_DEMO = false;
-const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json(); return r.ok ? { data: d } : { error: d }; }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }) }) }; } };
+const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }) }) }; } };
 
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
@@ -358,7 +358,8 @@ function CRMApp({ currentUser, onLogout }) {
   const [colWidths, setColWidths] = useState({});
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 500;
-  useEffect(() => { setPage(1); }, [search, advFilters, empFilter, promoFilter]);
+  useEffect(() => { setPage(1); }, [search, promoFilter]);
+  useEffect(() => { setPage(1); }, [JSON.stringify(advFilters), JSON.stringify(empFilter)]);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null); // { current, total, label }
   const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
@@ -373,20 +374,12 @@ function CRMApp({ currentUser, onLogout }) {
   // ---- FETCH ALL DATA FROM SUPABASE ----
   const fetchAll = useCallback(async () => {
     try {
+      const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
       const [c, e, s, cs, sv, tr] = await Promise.all([
-        supabase.from("crm_customers").select(),
-        supabase.from("crm_employees").select(),
-        supabase.from("crm_statuses").select(),
-        supabase.from("crm_call_subjects").select(),
-        supabase.from("crm_supervisors").select(),
-        supabase.from("crm_trash").select(),
+        safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
+        safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
       ]);
-      if (c.data) setCustomers(c.data);
-      if (e.data) setEmployees(e.data);
-      if (s.data) setStatuses(s.data);
-      if (cs.data) setCallSubjects(cs.data);
-      if (sv.data) setSupervisors(sv.data);
-      if (tr.data) setTrash(tr.data);
+      setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
