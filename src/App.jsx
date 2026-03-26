@@ -879,53 +879,67 @@ function CRMApp({ currentUser, onLogout }) {
 
               {/* FILTER PANEL */}
               {toolbarTab === "filter" && (
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>กรอง <span style={{ color: "#9ca3af", fontWeight: 400 }}>ตรงตามเงื่อนไขทั้งหมด</span></div>
-                  {advFilters.map((af, idx) => (
-                    <div key={idx} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "center" }}>
-                      <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
-                        style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 140 }}>
-                        <option value="">เลือกฟิลด์</option>
-                        <option value="status">สถานะ</option><option value="call_subject">หัวข้อโทร</option>
-                        <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
-                        <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
-                        <option value="previous_promo">โปรก่อนหน้า</option>
-                        <option value="assigned_to">มอบหมาย</option>
-                      </select>
-                      <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
-                        style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 130 }}>
-                        <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
-                      </select>
-                      {af.field === "status" ? (
-                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
-                        </select>
-                      ) : af.field === "call_subject" ? (
-                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
-                        </select>
-                      ) : af.field === "received_product" ? (
-                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
-                        </select>
-                      ) : af.field === "customer_relation" ? (
-                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
-                        </select>
-                      ) : af.field === "assigned_to" ? (
-                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
-                          <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
-                        </select>
-                      ) : (
-                        <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }} />
-                      )}
-                      <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>×</button>
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 560, zIndex: 100, animation: "fadeIn .15s" }}>
+                    <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>กรอง</span>
+                          <span style={{ fontSize: 13, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
+                        </div>
+                        <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
+                      </div>
                     </div>
-                  ))}
-                  <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#d4a017", fontWeight: 600, fontSize: 13, cursor: "pointer", padding: "6px 0" }}>+ เพิ่มตัวกรอง</button>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
-                    <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                    <div style={{ padding: "12px 16px" }}>
+                      {advFilters.map((af, idx) => (
+                        <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
+                            <option value="">เลือกฟิลด์</option>
+                            <option value="status">สถานะ</option><option value="call_subject">หัวข้อโทร</option>
+                            <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
+                            <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
+                            <option value="previous_promo">โปรก่อนหน้า</option>
+                            <option value="assigned_to">มอบหมาย</option>
+                          </select>
+                          <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
+                            <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
+                          </select>
+                          {af.field === "status" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
+                            </select>
+                          ) : af.field === "call_subject" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
+                            </select>
+                          ) : af.field === "received_product" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
+                            </select>
+                          ) : af.field === "customer_relation" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                            </select>
+                          ) : af.field === "assigned_to" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
+                            </select>
+                          ) : (
+                            <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                          )}
+                          <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
+                        </div>
+                      ))}
+                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
+                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <span style={{ fontSize: 13, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
+                    </div>
                   </div>
+                  <div style={{ height: 8 }}></div>
                 </div>
               )}
 
