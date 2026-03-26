@@ -321,7 +321,6 @@ function CRMApp({ currentUser, onLogout }) {
   const [settingsSubTab, setSettingsSubTab] = useState("statuses");
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [assignSelected, setAssignSelected] = useState([]);
-  const [assignEmployee, setAssignEmployee] = useState("");
   const [toast, setToast] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
@@ -450,32 +449,46 @@ function CRMApp({ currentUser, onLogout }) {
       const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
       const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
       if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
-      const nc = [];
+      const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
+      const nc = []; const dupes = [];
       for (let i = 1; i < lines.length; i++) {
         const v = lines[i].match(/(".*?"|[^",]+)/g)?.map((x) => x.trim().replace(/^"|"$/g, "")) || [];
         const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
         if (!name && !phone) continue;
+        const cleanPhone = phone.replace(/\D/g, "");
+        if (cleanPhone && existingPhones.has(cleanPhone)) { dupes.push(phone); continue; }
+        if (cleanPhone) existingPhones.add(cleanPhone);
         nc.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", status: "not_called" });
       }
       if (nc.length) {
         for (const row of nc) await supabase.from("crm_customers").insert(row);
         await fetchAll();
-        showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)");
-      } else showToast("ไม่พบข้อมูล", "warning");
+      }
+      if (dupes.length && nc.length) showToast("นำเข้า " + nc.length + " ลูกค้า, ข้าม " + dupes.length + " เบอร์ซ้ำ: " + dupes.slice(0, 5).join(", ") + (dupes.length > 5 ? "..." : ""), "warning");
+      else if (dupes.length && !nc.length) showToast("เบอร์ซ้ำทั้งหมด " + dupes.length + " รายการ ไม่ได้นำเข้า", "warning");
+      else if (nc.length) showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)");
+      else showToast("ไม่พบข้อมูล", "warning");
       e.target.value = "";
     };
     reader.readAsText(file);
   };
 
   // ---- SUPERVISOR ASSIGN ----
+  const [assignEmployees, setAssignEmployees] = useState([]);
   const handleAssign = async () => {
-    if (!assignSelected.length || !assignEmployee) return;
-    for (const rid of assignSelected) {
-      await supabase.from("crm_customers").update({ assigned_to: assignEmployee, supervisor: selectedSupervisor?.name || "" }).eq("id", rid);
+    if (!assignSelected.length || !assignEmployees.length) return;
+    const chunks = [];
+    for (let i = 0; i < assignEmployees.length; i++) chunks.push([]);
+    assignSelected.forEach((rid, idx) => chunks[idx % assignEmployees.length].push(rid));
+    for (let i = 0; i < assignEmployees.length; i++) {
+      for (const rid of chunks[i]) {
+        await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], supervisor: selectedSupervisor?.name || "" }).eq("id", rid);
+      }
     }
     await fetchAll();
-    showToast("มอบหมาย " + assignSelected.length + " ลูกค้า");
-    setAssignSelected([]); setAssignEmployee("");
+    const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
+    showToast("กระจาย " + assignSelected.length + " ลูกค้า → " + summary);
+    setAssignSelected([]); setAssignEmployees([]);
   };
   const handleRevoke = async () => {
     if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return;
@@ -799,8 +812,22 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                     <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#1e3a5f" }}>มอบหมายให้พนักงาน</h4>
-                    <select value={assignEmployee} onChange={(e2) => setAssignEmployee(e2.target.value)} style={{ ...iS, marginBottom: 14 }}><option value="">— เลือก —</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select>
-                    <button onClick={handleAssign} disabled={!assignSelected.length || !assignEmployee} style={{ ...bp, width: "100%", justifyContent: "center", opacity: (!assignSelected.length || !assignEmployee) ? 0.5 : 1 }}>มอบหมาย {assignSelected.length}</button>
+                    <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, maxHeight: 200, overflowY: "auto", marginBottom: 14 }}>
+                      {employees.map((em) => (
+                        <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
+                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f0f7ff")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                          <input type="checkbox" checked={assignEmployees.includes(em.name)} onChange={(e2) => setAssignEmployees(e2.target.checked ? [...assignEmployees, em.name] : assignEmployees.filter((n) => n !== em.name))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#1e40af" }}>{em.name.slice(0, 1)}</div>
+                          <span style={{ fontSize: 14 }}>{em.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {assignEmployees.length > 1 && assignSelected.length > 0 && (
+                      <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#1e40af" }}>
+                        กระจายเท่ากัน: {assignEmployees.map((name) => name + " (" + Math.floor(assignSelected.length / assignEmployees.length) + (assignEmployees.indexOf(name) < assignSelected.length % assignEmployees.length ? "+1" : "") + ")").join(", ")}
+                      </div>
+                    )}
+                    <button onClick={handleAssign} disabled={!assignSelected.length || !assignEmployees.length} style={{ ...bp, width: "100%", justifyContent: "center", opacity: (!assignSelected.length || !assignEmployees.length) ? 0.5 : 1 }}>มอบหมาย {assignSelected.length} ลูกค้า → {assignEmployees.length} คน</button>
                   </div>
                   <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                     <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#dc2626" }}>ถอนสิทธิ์</h4>
