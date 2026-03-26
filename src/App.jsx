@@ -178,8 +178,110 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   );
 }
 
-// ---- MAIN ----
-export default function CRMApp() {
+// ---- LOGIN ----
+const DEMO_USERS = [
+  { username: "admin", password: "admin123", name: "Admin", role: "admin" },
+  { username: "kiri", password: "1234", name: "Kiri Suksawat", role: "employee" },
+  { username: "fluke", password: "1234", name: "KHUNFLUKE", role: "employee" },
+];
+
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const user = DEMO_USERS.find((u) => u.username === username && u.password === password);
+    if (user) { onLogin(user); }
+    else { setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"); setTimeout(() => setError(""), 3000); }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f2744 0%, #1e3a5f 50%, #0c4a6e 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Sarabun','Noto Sans Thai',sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <div style={{ width: "100%", maxWidth: 420, padding: 20 }}>
+        {/* Logo */}
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 16, background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: 28, marginBottom: 16, boxShadow: "0 8px 30px rgba(56,189,248,0.3)" }}>C</div>
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM System</h1>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>ระบบจัดการลูกค้า</p>
+        </div>
+
+        {/* Login Card */}
+        <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", marginBottom: 28, textAlign: "center" }}>เข้าสู่ระบบ</h2>
+
+          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>ชื่อผู้ใช้</label>
+            <div style={{ position: "relative" }}>
+              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </span>
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
+                style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                onFocus={(e) => (e.target.style.borderColor = "#2563eb")} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")} />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>รหัสผ่าน</label>
+            <div style={{ position: "relative" }}>
+              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </span>
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="password"
+                style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                onFocus={(e) => (e.target.style.borderColor = "#2563eb")} onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(e); }} />
+              <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
+                {showPass ? <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                : <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+              </button>
+            </div>
+          </div>
+
+          <button onClick={handleSubmit}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.3)", transition: "transform 0.1s" }}
+            onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
+            เข้าสู่ระบบ
+          </button>
+
+          {/* Demo accounts */}
+          <div style={{ marginTop: 24, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 10, textAlign: "center" }}>บัญชีทดลอง</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {DEMO_USERS.map((u) => (
+                <button key={u.username} onClick={() => { setUsername(u.username); setPassword(u.password); }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#4b5563", textAlign: "left", transition: "background 0.1s" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                  <span><strong>{u.name}</strong> ({u.role})</span>
+                  <span style={{ color: "#9ca3af", fontSize: 12 }}>{u.username} / {u.password}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
+  );
+}
+
+// ---- MAIN WRAPPER ----
+export default function AppWrapper() {
+  const [user, setUser] = useState(null);
+  if (!user) return <LoginScreen onLogin={setUser} />;
+  return <CRMApp currentUser={user} onLogout={() => setUser(null)} />;
+}
+
+// ---- CRM APP ----
+function CRMApp({ currentUser, onLogout }) {
   const [tab, setTab] = useState("customers");
   const [customers, setCustomers] = useState(USE_DEMO ? DEMO_CUSTOMERS : []);
   const [employees, setEmployees] = useState(USE_DEMO ? DEMO_EMPLOYEES : []);
@@ -272,6 +374,10 @@ export default function CRMApp() {
         <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: 16 }}>C</div>
         <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM System</span>
         {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({currentUser?.role})</span>
+          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
+        </div>
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
