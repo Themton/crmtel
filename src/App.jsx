@@ -355,6 +355,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [sortDir, setSortDir] = useState("asc");
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState("");
+  const [multiAddEmp, setMultiAddEmp] = useState(null);
   const fileRef = useRef(null);
   const PAGE_SIZE = 500;
 
@@ -1095,7 +1096,7 @@ function CRMApp({ currentUser, onLogout }) {
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <button onClick={() => setModal({ type: "employee", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+              <button onClick={() => setMultiAddEmp([{ name: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
               {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
@@ -1387,6 +1388,61 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </div>}
 
+      {/* MULTI ADD EMPLOYEE MODAL */}
+      {multiAddEmp && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2500, padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 700, maxHeight: "85vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#3d2a0a" }}>เพิ่มพนักงาน ({multiAddEmp.length} คน)</h3>
+            <button onClick={() => setMultiAddEmp(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>✕</button>
+          </div>
+          <div style={{ padding: 24 }}>
+            {/* Header */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+              <span>ชื่อ</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
+            </div>
+            {/* Rows */}
+            {multiAddEmp.map((emp, idx) => (
+              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                  <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option>
+                </select>
+                <button onClick={() => { if (multiAddEmp.length > 1) setMultiAddEmp(multiAddEmp.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
+              </div>
+            ))}
+            {/* Add row button */}
+            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+              + เพิ่มอีกคน
+            </button>
+          </div>
+          {/* Footer */}
+          <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+              <button onClick={async () => {
+                const valid = multiAddEmp.filter((e) => e.name.trim());
+                if (!valid.length) { showToast("กรุณากรอกชื่ออย่างน้อย 1 คน", "warning"); return; }
+                setProgress({ current: 0, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
+                let ok = 0;
+                for (const emp of valid) {
+                  const res = await supabase.from("crm_employees").insert({ name: emp.name, username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
+                  if (!res.error) ok++;
+                  setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
+                }
+                setProgress(null);
+                await fetchAll();
+                showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
+                setMultiAddEmp(null);
+              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
+            </div>
+          </div>
+        </div>
+      </div>}
+
       {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
 
       {/* PROGRESS BAR */}
@@ -1480,7 +1536,6 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
           <div><label style={lS}>ชื่อผู้ใช้ (Login)</label><input style={iS} value={form.username || ""} onChange={(e) => u("username", e.target.value)} placeholder="username" /></div>
           <div><label style={lS}>รหัสผ่าน</label><input style={iS} value={form.password || ""} onChange={(e) => u("password", e.target.value)} placeholder="password" /></div>
           <div><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
-          <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
           <div><label style={lS}>ตำแหน่ง</label><select style={iS} value={form.role || "employee"} onChange={(e) => u("role", e.target.value)}><option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option></select></div>
         </>}
         {modal.type === "status" && <>
