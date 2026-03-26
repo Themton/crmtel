@@ -384,38 +384,43 @@ function CRMApp({ currentUser, onLogout }) {
     setLoading(false);
   }, []);
 
-  // Load column order on mount + poll for employee (supervisor's changes)
+  // Load column order + employee polls for supervisor/admin changes
   useEffect(() => {
     const loadColOrder = async () => {
       try {
         const res = await supabase.from("crm_settings").select();
         const settings = res.data || [];
-        if (settings.length > 0) {
-          let orderKey = "col_order_" + (currentUser?.name || "default");
-          let setting = settings.find((s) => s.key === orderKey);
-          // Employee uses supervisor's order
-          if (!setting && (currentUser?.role === "employee" || !setting)) {
-            const empRes = await supabase.from("crm_customers").select();
-            const mySupervisor = (empRes.data || []).find((cx) => cx.assigned_to === currentUser?.name)?.supervisor;
-            if (mySupervisor) setting = settings.find((s) => s.key === "col_order_" + mySupervisor);
-          }
+        const colSettings = settings.filter((s) => s.key.startsWith("col_order_"));
+        if (colSettings.length === 0) return;
+        
+        if (currentUser?.role === "employee") {
+          // Employee: find supervisor's or admin's setting
+          let setting = null;
+          const myCust = customers.find((cx) => cx.assigned_to === currentUser?.name && cx.supervisor);
+          if (myCust?.supervisor) setting = colSettings.find((s) => s.key === "col_order_" + myCust.supervisor);
+          if (!setting) setting = colSettings.find((s) => s.key === "col_order_Admin");
+          if (!setting) setting = colSettings[0];
           if (setting) {
             try {
               const newOrder = JSON.parse(setting.value);
               setColOrder((prev) => JSON.stringify(prev) !== JSON.stringify(newOrder) ? newOrder : prev);
             } catch {}
           }
+        } else if (!colOrderLoaded) {
+          // Admin/Supervisor: load own setting once
+          let setting = colSettings.find((s) => s.key === "col_order_" + currentUser?.name);
+          if (setting) { try { setColOrder(JSON.parse(setting.value)); } catch {} }
         }
       } catch {}
       setColOrderLoaded(true);
     };
     loadColOrder();
-    // Employee polls for supervisor's column changes every 10 seconds
+    // Employee polls every 5 seconds
     if (currentUser?.role === "employee") {
-      const interval = setInterval(loadColOrder, 10000);
+      const interval = setInterval(loadColOrder, 5000);
       return () => clearInterval(interval);
     }
-  }, [currentUser?.name]);
+  }, [currentUser?.name, customers.length]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
