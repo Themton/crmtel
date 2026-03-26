@@ -595,7 +595,7 @@ function CRMApp({ currentUser, onLogout }) {
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
               <PillDropdown label="สถานะ: ทั้งหมด" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
-              <PillDropdown label="มอบหมาย: ทั้งหมด" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />
+              {currentUser?.role === "admin" && <PillDropdown label="มอบหมาย: ทั้งหมด" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />}
               <PillDropdown label="หัวข้อโทร: ทั้งหมด" value={subjectFilter} options={subjectOpts} onChange={setSubjectFilter} color="#ea580c" />
               <PillDropdown label="ได้รับสินค้า: ทั้งหมด" value={receivedFilter} options={receivedOpts} onChange={setReceivedFilter} color="#16a34a" />
               <PillDropdown label="ความสัมพันธ์: ทั้งหมด" value={relationFilter} options={relationOpts} onChange={setRelationFilter} color="#7c3aed" />
