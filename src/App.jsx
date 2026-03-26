@@ -1119,20 +1119,20 @@ function CRMApp({ currentUser, onLogout }) {
                         onMouseEnter={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; } }}
                         onMouseLeave={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}>
                         <span style={{ cursor: "grab", fontSize: 12, opacity: 0.5 }}>☰</span>
-                        <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 14, padding: 0, fontWeight: 900 }}>◀</button>
+                        <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); setDragCol(idx - 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>◀</button>
                         <span style={{ fontSize: 12 }}>{COL_DEFS[key].label}</span>
-                        <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 14, padding: 0, fontWeight: 900 }}>▶</button>
+                        <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); setDragCol(idx + 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>▶</button>
                       </div>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>รีเซ็ต</button>
+                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
                     <button onClick={async () => {
                       const settingKey = "col_order_" + (currentUser?.name || "default");
                       await supabase.from("crm_settings").delete().eq("key", settingKey);
                       await supabase.from("crm_settings").insert({ key: settingKey, value: JSON.stringify(activeColOrder) });
                       showToast("บันทึกลำดับคอลัมน์สำเร็จ ✓ (พนักงานในทีมจะเห็นเหมือนกัน)");
-                    }} style={{ padding: "6px 16px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
+                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
                   </div>
                 </div>
               )}
