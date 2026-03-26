@@ -493,9 +493,24 @@ function CRMApp({ currentUser, onLogout }) {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const lines = ev.target.result.split("\n").filter((l) => l.trim());
+      let text = ev.target.result;
+      // Strip BOM
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      const lines = text.split(/\r?\n/).filter((l) => l.trim());
       if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-      const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, "").toLowerCase());
+      // Parse CSV properly (handle commas inside quotes)
+      const parseCSVLine = (line) => {
+        const result = []; let cur = ""; let inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQuote = !inQuote; }
+          else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
+          else { cur += ch; }
+        }
+        result.push(cur.trim());
+        return result;
+      };
+      const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
       const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
       const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
       const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
@@ -508,7 +523,7 @@ function CRMApp({ currentUser, onLogout }) {
       const successList = []; const dupeList = [];
       const allRows = [];
       for (let i = 1; i < lines.length; i++) {
-        const v = lines[i].match(/(".*?"|[^",]+)/g)?.map((x) => x.trim().replace(/^"|"$/g, "")) || [];
+        const v = parseCSVLine(lines[i]).map((x) => x.replace(/^"|"$/g, ""));
         const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
         if (!name && !phone) continue;
         const cleanPhone = phone.replace(/\D/g, "");
