@@ -1,0 +1,542 @@
+import { useState, useEffect, useCallback, useRef } from "react";
+
+const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
+const USE_DEMO = true;
+const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json(); return r.ok ? { data: d } : { error: d }; }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }) }) }; } };
+
+const COLOR_PRESETS = [
+  { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
+  { color: "#2563eb", bg: "#dbeafe" }, { color: "#7c3aed", bg: "#ede9fe" }, { color: "#db2777", bg: "#fce7f3" },
+  { color: "#0891b2", bg: "#cffafe" }, { color: "#6b7280", bg: "#f3f4f6" }, { color: "#ea580c", bg: "#fff7ed" },
+  { color: "#16a34a", bg: "#f0fdf4" }, { color: "#334155", bg: "#e2e8f0" }, { color: "#0d9488", bg: "#ccfbf1" },
+];
+const RATING_COLORS = { 1: "#6b7280", 2: "#2563eb", 3: "#16a34a", 4: "#d97706", 5: "#dc2626" };
+
+// ---- DEMO DATA ----
+const DEMO_STATUSES = [
+  { id: 1, key: "not_called", label: "ยังไม่ได้โทร", color: "#d97706" },
+  { id: 2, key: "not_available", label: "ไม่สะดวกคุย", color: "#ea580c" },
+  { id: 3, key: "answered", label: "รับสาย", color: "#16a34a" },
+  { id: 4, key: "no_answer", label: "ไม่รับสาย", color: "#dc2626" },
+  { id: 5, key: "vvip", label: "Vvip", color: "#2563eb" },
+  { id: 6, key: "reserved", label: "จอง", color: "#0891b2" },
+];
+const DEMO_CALL_SUBJECTS = [
+  { id: 1, label: "ดูแลหลังการขาย", color: "#ea580c" },
+  { id: 2, label: "Re_order", color: "#16a34a" },
+  { id: 3, label: "3-5วัน", color: "#d97706" },
+  { id: 4, label: "10-15วัน", color: "#dc2626" },
+  { id: 5, label: "20-25วัน", color: "#dc2626" },
+  { id: 6, label: "30วัน", color: "#dc2626" },
+  { id: 7, label: "CROSS", color: "#7c3aed" },
+  { id: 8, label: "UpSell", color: "#db2777" },
+];
+const DEMO_SUPERVISORS = [
+  { id: 1, name: "คุณสมศักดิ์", phone: "081-111-0001", email: "somsak@co.com", department: "ฝ่ายขาย" },
+  { id: 2, name: "คุณวิไล", phone: "081-111-0002", email: "wilai@co.com", department: "ฝ่ายบริการ" },
+];
+const DEMO_EMPLOYEES = [
+  { id: 1, name: "Kiri Suksawat", email: "kiri@co.com", role: "Sales", phone: "081-000-0001", active: true },
+  { id: 2, name: "ออย(ญ)", email: "oiy@co.com", role: "Sales", phone: "081-000-0002", active: true },
+  { id: 3, name: "ฝน", email: "fon@co.com", role: "Sales", phone: "081-000-0003", active: true },
+  { id: 4, name: "sawatdee", email: "sawatdee@co.com", role: "Sales", phone: "081-000-0004", active: true },
+  { id: 5, name: "KHUNFLUKE", email: "fluke@co.com", role: "Sales", phone: "081-000-0005", active: true },
+  { id: 6, name: "อาหมวย", email: "muay@co.com", role: "Sales", phone: "081-000-0006", active: true },
+];
+// Customer + Call fields merged
+const DEMO_CUSTOMERS = [
+  { id: 1, name: "พุทิสา.ชิดชอบ", phone: "0800015319", note: "สุรินทร์ เมือง กาเกาะ 15ม.7ต.อ.จ.", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-18T10:56:57", received_product: true, status: "answered", assigned_to: "Kiri Suksawat", supervisor: "คุณสมศักดิ์", created_at: "2026-03-01", call_date: "2026-03-21", call_subject: "ดูแลหลังการขาย", call_note: "21/3..หมองคล้ำ อยากให้ใส 23/3..โทรมาสั่ง 2...", customer_relation: 5, next_follow: "2026-04-18", offer: "ขายได้", product_price: 190 },
+  { id: 2, name: "สมหญิง รักเรียน", phone: "0899876543", note: "456 ถ.พหลโยธิน กรุงเทพฯ", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-15T14:30:00", received_product: false, status: "not_called", assigned_to: "ออย(ญ)", supervisor: "คุณวิไล", created_at: "2026-03-05", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..ดีใช้เหลือ 1กป", customer_relation: 2, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 3, name: "วิชัย มั่นคง", phone: "0621112233", note: "789 ม.สุขสันต์ เชียงใหม่", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-02-20T09:00:00", received_product: true, status: "vvip", assigned_to: "Kiri Suksawat", supervisor: "คุณสมศักดิ์", created_at: "2026-02-15", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..มรส", customer_relation: 1, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 4, name: "นารี สุขใส", phone: "0954445566", note: "12 ซ.ลาดพร้าว 71 กรุงเทพฯ", previous_promo: "หลงเลย 1แถม1(190)", order_date: "", received_product: false, status: "no_answer", assigned_to: "ฝน", supervisor: "", created_at: "2026-03-20", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..ชุดแรก ดีเหลือ 1", customer_relation: 3, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 5, name: "ธนา รุ่งเรือง", phone: "0889990011", note: "99 ถ.ราชดำเนิน นครราชสีมา", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-22T16:20:00", received_product: true, status: "answered", assigned_to: "sawatdee", supervisor: "คุณวิไล", created_at: "2026-03-18", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..มรส", customer_relation: 1, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 6, name: "พิมพ์ ดาวประดับ", phone: "0632223344", note: "", previous_promo: "", order_date: "", received_product: false, status: "not_called", assigned_to: "", supervisor: "", created_at: "2026-03-25", call_date: "", call_subject: "", call_note: "", customer_relation: 0, next_follow: "", offer: "", product_price: 0 },
+  { id: 7, name: "กิตติ บุญมา", phone: "0917778899", note: "55 ถ.มิตรภาพ ขอนแก่น", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-12T11:00:00", received_product: true, status: "reserved", assigned_to: "KHUNFLUKE", supervisor: "คุณสมศักดิ์", created_at: "2026-03-08", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..ตัดสาย", customer_relation: 1, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 8, name: "อรุณ แสงทอง", phone: "0845556677", note: "88 ถ.เพชรเกษม นครปฐม", previous_promo: "หลงเลย 1แถม1(190)", order_date: "", received_product: false, status: "not_available", assigned_to: "อาหมวย", supervisor: "", created_at: "2026-03-24", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3..ดีขึ้น ใช้กระปุก 2", customer_relation: 2, next_follow: "2026-03-27", offer: "", product_price: 0 },
+  { id: 9, name: "ปรีชา จันทร์เพ็ญ", phone: "0923334455", note: "3 ม.3 บ.เล่า ต.โนนทอง เกษตรสมบูรณ์ ชัยภูมิ", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-23T09:44:26", received_product: false, status: "not_called", assigned_to: "", supervisor: "", created_at: "2026-03-26", call_date: "", call_subject: "", call_note: "", customer_relation: 0, next_follow: "", offer: "", product_price: 0 },
+  { id: 10, name: "มานี สุดสวย", phone: "0867778800", note: "2 ม.1 ต.ลำสมพุง มวกเหล็ก สระบุรี", previous_promo: "หลงเลย 1แถม1(190)", order_date: "2026-03-23T09:44:26", received_product: true, status: "answered", assigned_to: "ออย(ญ)", supervisor: "คุณวิไล", created_at: "2026-03-19", call_date: "2026-03-21", call_subject: "10-15วัน", call_note: "21/3...ชุดแรก//ฝ้า หมองคล้ำ พักผ่อนน้อย ไม่สบ...", customer_relation: 2, next_follow: "2026-03-27", offer: "", product_price: 0 },
+];
+
+// ---- ICONS ----
+const I = {
+  Users: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+  User: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Plus: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Edit: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Trash: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>,
+  Search: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  X: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  Chart: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  Check: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>,
+  Settings: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+  Shield: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  Tag: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  Send: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Undo: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>,
+  ChevDown: () => <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>,
+  ChevUp: () => <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>,
+  Upload: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
+  Download: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+};
+
+// ---- COMPONENTS ----
+function PillDropdown({ label, value, options, onChange, color = "#2563eb" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  const sel = options.find((o) => o.value === value);
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
+        {open ? <I.ChevUp /> : <I.ChevDown />}
+      </button>
+      {open && <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", padding: 8, zIndex: 200, minWidth: 200, maxHeight: 360, overflowY: "auto", animation: "fadeIn .15s" }}>
+        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#f0f7ff" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
+          onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
+          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
+          {value === o.value && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+        </button>))}
+      </div>}
+    </div>
+  );
+}
+
+function InlineStatusDropdown({ value, statuses, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const cur = statuses.find((s) => s.key === value);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
+      {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
+        {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+          onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          {value === s.key && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+        </button>))}
+      </div>}
+    </div>
+  );
+}
+
+function SubjectDropdown({ value, subjects, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const cur = subjects.find((s) => s.label === value);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
+        {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+          onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          {value === s.label && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+        </button>))}
+      </div>}
+    </div>
+  );
+}
+
+function RatingSelector({ value, onChange }) {
+  return (<div style={{ display: "flex", gap: 3 }}>{[1,2,3,4,5].map((n) => (
+    <button key={n} onClick={() => onChange(n)} style={{ width: 28, height: 28, borderRadius: 8, border: value === n ? "2px solid #1e293b" : "2px solid transparent", background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: value === n ? 1 : 0.5 }}>{n}</button>
+  ))}</div>);
+}
+
+function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value || "");
+  const ref = useRef(null);
+  useEffect(() => { setVal(value || ""); }, [value]);
+  useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
+  const save = () => { setEditing(false); if (val !== (value || "")) onSave(val); };
+  const inputType = type === "datetime" ? "datetime-local" : type === "date" ? "date" : "text";
+  if (editing) {
+    return type === "textarea" ? (
+      <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #2563eb", fontSize: 12, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+    ) : (
+      <input ref={ref} type={inputType} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #2563eb", fontSize: 12, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+    );
+  }
+  let display = value || "—";
+  if (type === "datetime" && value) { try { display = new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }); } catch {} }
+  if (type === "date" && value) { try { display = new Date(value + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch {} }
+  return (
+    <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "3px 6px", borderRadius: 6, border: "2px solid transparent", minHeight: 20, ...sx }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#f0f7ff"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
+      <span style={{ fontSize: 12, color: value ? "#1e293b" : "#9ca3af" }}>{display}</span>
+    </div>
+  );
+}
+
+// ---- MAIN ----
+export default function CRMApp() {
+  const [tab, setTab] = useState("customers");
+  const [customers, setCustomers] = useState(USE_DEMO ? DEMO_CUSTOMERS : []);
+  const [employees, setEmployees] = useState(USE_DEMO ? DEMO_EMPLOYEES : []);
+  const [statuses, setStatuses] = useState(USE_DEMO ? DEMO_STATUSES : []);
+  const [callSubjects, setCallSubjects] = useState(USE_DEMO ? DEMO_CALL_SUBJECTS : []);
+  const [supervisors, setSupervisors] = useState(USE_DEMO ? DEMO_SUPERVISORS : []);
+  const [search, setSearch] = useState("");
+  const [modal, setModal] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [assignFilter, setAssignFilter] = useState("all");
+  const [settingsSubTab, setSettingsSubTab] = useState("statuses");
+  const [selectedSupervisor, setSelectedSupervisor] = useState(null);
+  const [assignSelected, setAssignSelected] = useState([]);
+  const [assignEmployee, setAssignEmployee] = useState("");
+  const [toast, setToast] = useState(null);
+  const [quickUpdate, setQuickUpdate] = useState(null);
+  const fileRef = useRef(null);
+
+  const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const setterMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
+
+  const handleSave = (table, data, mode) => { const s = setterMap[table]; if (!s) return; if (mode === "add") s((p) => [...p, { ...data, id: Date.now(), created_at: new Date().toISOString().slice(0, 10) }]); else s((p) => p.map((r) => r.id === data.id ? { ...r, ...data } : r)); setModal(null); };
+  const handleDelete = (table, id) => { if (!confirm("ต้องการลบ?")) return; setterMap[table]?.((p) => p.filter((r) => r.id !== id)); };
+  const handleBulkDelete = () => { if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return; setCustomers((p) => p.filter((r) => !selectedRows.includes(r.id))); setSelectedRows([]); };
+  const upd = (id, f, v) => setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
+
+  const handleImport = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const lines = ev.target.result.split("\n").filter((l) => l.trim());
+      if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
+      const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, "").toLowerCase());
+      const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
+      const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
+      const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
+      const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
+      if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
+      const nc = [];
+      for (let i = 1; i < lines.length; i++) {
+        const v = lines[i].match(/(".*?"|[^",]+)/g)?.map((x) => x.trim().replace(/^"|"$/g, "")) || [];
+        const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
+        if (!name && !phone) continue;
+        nc.push({ id: Date.now() + i, name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", order_date: "", received_product: false, status: "not_called", assigned_to: "", supervisor: "", created_at: new Date().toISOString().slice(0, 10), call_date: "", call_subject: "", call_note: "", customer_relation: 0, next_follow: "", offer: "", product_price: 0 });
+      }
+      if (nc.length) { setCustomers((p) => [...nc, ...p]); showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)"); } else showToast("ไม่พบข้อมูล", "warning");
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExport = () => {
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","สถานะ","มอบหมาย","หัวหน้า","วันที่โทร","หัวข้อโทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","เสนอขาย","ราคา"];
+    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.status,c.assigned_to,c.supervisor,c.call_date,c.call_subject,c.call_note,c.customer_relation,c.next_follow,c.offer,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+    const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+  };
+
+  const handleAssign = () => { if (!assignSelected.length || !assignEmployee) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: assignEmployee, supervisor: selectedSupervisor?.name || c.supervisor } : c)); showToast("มอบหมาย " + assignSelected.length + " ลูกค้า"); setAssignSelected([]); setAssignEmployee(""); };
+  const handleRevoke = () => { if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: "", supervisor: "" } : c)); showToast("ถอนสิทธิ์แล้ว", "warning"); setAssignSelected([]); };
+
+  const fc = customers.filter((c) => {
+    const ms = !search || c.name?.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search);
+    return ms && (statusFilter === "all" || c.status === statusFilter) && (assignFilter === "all" || (assignFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignFilter));
+  });
+
+  const stats = [{ l: "ทั้งหมด", v: customers.length, c: "#2563eb" }, ...statuses.map((s) => ({ l: s.label, v: customers.filter((c) => c.status === s.key).length, c: s.color }))];
+  const statusOpts = [{ value: "all", label: "ทั้งหมด" }, ...statuses.map((s) => ({ value: s.key, label: s.label, badge: s.color }))];
+  const assignOpts = [{ value: "all", label: "ทั้งหมด" }, { value: "unassigned", label: "ยังไม่ได้มอบหมาย" }, ...employees.map((e) => ({ value: e.name, label: e.name }))];
+  const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
+  const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
+
+  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" };
+  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+  const bi = (d) => ({ padding: "6px 8px", borderRadius: 8, border: "1px solid " + (d ? "#fee2e2" : "#e5e7eb"), background: "#fff", cursor: "pointer", color: d ? "#ef4444" : "#6b7280", display: "flex", alignItems: "center" });
+  const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer" };
+  const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" };
+  const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
+
+  // Table headers: customer fields + call fields
+  const TH = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","วันที่สร้าง","วันที่โทร","หัวข้อโทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย2...","ราคาสินค้า(…",""];
+
+  return (
+    <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      <header style={{ background: "linear-gradient(135deg, #1e3a5f, #0f2744)", padding: "0 32px", height: 64, display: "flex", alignItems: "center", gap: 12, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: 16 }}>C</div>
+        <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM System</span>
+        {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
+      </header>
+      <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
+        <nav style={{ width: 220, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0 }}>
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart /> }, { key: "customers", label: "ลูกค้า", icon: <I.Users /> }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield /> }, { key: "employees", label: "พนักงาน", icon: <I.User /> }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings /> }].map((item) => (
+            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setStatusFilter("all"); setAssignFilter("all"); setAssignSelected([]); }}
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 24px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent" }}>
+              {item.icon} {item.label}
+            </button>))}
+        </nav>
+        <main style={{ flex: 1, padding: 28, overflowX: "auto" }}>
+
+          {/* DASHBOARD */}
+          {tab === "dashboard" && <div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>แดชบอร์ด</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
+              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
+            </div>
+          </div>}
+
+          {/* CUSTOMERS — SINGLE BIG TABLE with call columns */}
+          {tab === "customers" && <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ลูกค้า ({fc.length})</h2>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {selectedRows.length > 0 && <>
+                  <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #2563eb", background: "#eff6ff", color: "#2563eb" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
+                  <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
+                </>}
+                <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
+                <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
+                <button onClick={handleExport} style={bo}><I.Download /> Export</button>
+                <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <PillDropdown label="สถานะ" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
+              <PillDropdown label="มอบหมาย" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />
+              <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 300 }}>
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ ...iS, paddingLeft: 40, borderRadius: 20, border: "2px solid #e5e7eb" }} />
+              </div>
+            </div>
+            <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
+                    <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
+                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", borderLeft: i === 9 ? "3px solid #2563eb" : "none" }}>{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {fc.map((c) => (
+                      <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
+                        {/* Customer columns */}
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#1e3a5f" }} /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
+                        <td style={{ padding: "4px 4px", maxWidth: 180 }}><EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /></td>
+                        <td style={{ padding: "6px 8px" }}>{c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span>}</td>
+                        <td style={{ padding: "6px 4px" }}><InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => upd(c.id, "status", v)} /></td>
+                        <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#4b5563" : "#d97706", fontWeight: 500 }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
+                        <td style={{ padding: "6px 8px", color: "#9ca3af", fontSize: 11 }}>{c.created_at}</td>
+                        {/* Call columns — separated with blue border */}
+                        <td style={{ padding: "4px 4px", borderLeft: "3px solid #2563eb" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
+                        <td style={{ padding: "6px 4px" }}><SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /></td>
+                        <td style={{ padding: "4px 4px", maxWidth: 250 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
+                        <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
+                        <td style={{ padding: "6px 4px" }}>{c.offer ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: "#d97706", cursor: "pointer" }} onClick={() => { const v = prompt("เสนอขาย:", c.offer); if (v !== null) upd(c.id, "offer", v); }}>{c.offer}</span> : <span style={{ color: "#9ca3af", cursor: "pointer", fontSize: 11 }} onClick={() => { const v = prompt("เสนอขาย:"); if (v) upd(c.id, "offer", v); }}>—</span>}</td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
+                        <td style={{ padding: "6px 8px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>
+                      </tr>
+                    ))}
+                    {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>}
+
+          {/* SUPERVISOR */}
+          {tab === "supervisor" && <div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>หัวหน้า / มอบหมาย</h2>
+            <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+              {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
+                <button key={sv.id} onClick={() => { setSelectedSupervisor(is2 ? null : sv); setAssignSelected([]); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 14, border: is2 ? "2px solid #2563eb" : "2px solid #e5e7eb", background: is2 ? "#eff6ff" : "#fff", cursor: "pointer" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: "50%", background: is2 ? "#2563eb" : "#fde68a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: is2 ? "#fff" : "#92400e" }}>{sv.name?.charAt(0)}</div>
+                  <div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, fontSize: 14 }}>{sv.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sv.department} · {customers.filter((c2) => c2.supervisor === sv.name).length}</div></div>
+                </button>); })}
+            </div>
+            {selectedSupervisor ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+                <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" }}>
+                    <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 12, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
+                    <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...svC, ...unC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
+                  </div>
+                  <div style={{ maxHeight: 500, overflowY: "auto" }}>
+                    {svC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({svC.length})</div>{svC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#dbeafe", color: "#1e40af", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
+                    {unC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({unC.length})</div>{unC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone}</div></div></label>))}</>}
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#1e3a5f" }}>มอบหมายให้พนักงาน</h4>
+                    <select value={assignEmployee} onChange={(e2) => setAssignEmployee(e2.target.value)} style={{ ...iS, marginBottom: 14 }}><option value="">— เลือก —</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select>
+                    <button onClick={handleAssign} disabled={!assignSelected.length || !assignEmployee} style={{ ...bp, width: "100%", justifyContent: "center", opacity: (!assignSelected.length || !assignEmployee) ? 0.5 : 1 }}>มอบหมาย {assignSelected.length}</button>
+                  </div>
+                  <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#dc2626" }}>ถอนสิทธิ์</h4>
+                    <button onClick={handleRevoke} disabled={!assignSelected.length} style={{ ...bd, width: "100%", justifyContent: "center", padding: "10px", opacity: !assignSelected.length ? 0.5 : 1 }}>ถอนสิทธิ์ {assignSelected.length}</button>
+                  </div>
+                </div>
+              </div>
+            ) : <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center" }}><div style={{ fontSize: 48, opacity: 0.3 }}>👆</div><div style={{ color: "#6b7280" }}>เลือกหัวหน้าด้านบน</div></div>}
+          </div>}
+
+          {/* EMPLOYEES */}
+          {tab === "employees" && <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>พนักงาน ({employees.length})</h2>
+              <button onClick={() => setModal({ type: "employee", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+              {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
+                <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
+                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
+                <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
+                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#dbeafe", color: "#1e40af" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
+              </div>))}
+            </div>
+          </div>}
+
+          {/* SETTINGS */}
+          {tab === "settings" && <div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>ตั้งค่าระบบ</h2>
+            <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#fff", borderRadius: 12, padding: 4, width: "fit-content", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              {[{ key: "statuses", label: "สถานะ" }, { key: "call_subjects", label: "หัวข้อโทร" }, { key: "supervisors", label: "หัวหน้า" }].map((st) => (
+                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>{st.label}</button>))}
+            </div>
+            {settingsSubTab === "statuses" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>สถานะ</h3><button onClick={() => setModal({ type: "status", mode: "add", data: { key: "", label: "", color: COLOR_PRESETS[0].color } })} style={bp}><I.Plus /> เพิ่ม</button></div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{statuses.map((s) => (<div key={s.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span><div style={{ display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "status", mode: "edit", data: { ...s } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_statuses", s.id)} style={bi(true)}><I.Trash /></button></div></div>))}</div>
+            </div>}
+            {settingsSubTab === "call_subjects" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวข้อโทร</h3><button onClick={() => setModal({ type: "call_subject", mode: "add", data: { label: "", color: COLOR_PRESETS[0].color } })} style={bp}><I.Plus /> เพิ่ม</button></div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{callSubjects.map((s) => (<div key={s.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span><div style={{ display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "call_subject", mode: "edit", data: { ...s } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_call_subjects", s.id)} style={bi(true)}><I.Trash /></button></div></div>))}</div>
+            </div>}
+            {settingsSubTab === "supervisors" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวหน้า</h3><button onClick={() => setModal({ type: "supervisor", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่ม</button></div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{supervisors.map((sv) => (<div key={sv.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, position: "relative" }}>
+                <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "supervisor", mode: "edit", data: { ...sv } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_supervisors", sv.id)} style={bi(true)}><I.Trash /></button></div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 13, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
+              </div>))}</div>
+            </div>}
+          </div>}
+        </main>
+      </div>
+
+      {/* MODAL */}
+      {modal && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={(e) => e.target === e.currentTarget && setModal(null)}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #f3f4f6" }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e3a5f" }}>{modal.mode === "add" ? "เพิ่ม" : "แก้ไข"}{{ customer: "ลูกค้า", employee: "พนักงาน", status: "สถานะ", supervisor: "หัวหน้า", call_subject: "หัวข้อโทร" }[modal.type]}</h3>
+            <button onClick={() => setModal(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
+          </div>
+          <ModalForm modal={modal} setModal={setModal} onSave={handleSave} employees={employees} statuses={statuses} supervisors={supervisors} callSubjects={callSubjects} iS={iS} lS={lS} />
+        </div>
+      </div>}
+
+      {/* QUICK UPDATE */}
+      {quickUpdate && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }} onClick={(e) => e.target === e.currentTarget && setQuickUpdate(null)}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 700, maxHeight: "90vh", overflow: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "20px 28px", borderBottom: "1px solid #e5e7eb" }}>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1e3a5f" }}>อัปเดตด่วน</h3>
+            <button onClick={() => setQuickUpdate(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
+          </div>
+          <div style={{ padding: 28 }}>
+            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#1e40af" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
+            <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>เลือกฟิลด์</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#dbeafe", color: "#1e40af", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#1e40af", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 14, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
+                  <option value="">+ เพิ่มฟิลด์...</option>
+                  {[{ v: "assigned_to", l: "Assigned To" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
+                </select>
+              </div>
+            </div>
+            {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>การตั้งค่า</label>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 13, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
+                {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                  <span style={{ fontSize: 14, color: "#2563eb" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
+                  <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
+                  <div>
+                    {f === "assigned_to" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}</select>}
+                    {f === "status" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}</select>}
+                    {f === "supervisor" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select>}
+                    {f === "previous_promo" && <input style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} />}
+                    {f === "received_product" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">ยังไม่ได้รับ</option></select>}
+                  </div>
+                </div>))}
+              </div>
+            </div>}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 12 }}>{selectedRows.length}</span></div>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, maxHeight: 180, overflowY: "auto" }}>
+                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 12 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => { if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; } const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); }); setCustomers((p) => p.map((c2) => selectedRows.includes(c2.id) ? { ...c2, ...u2 } : c2)); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null); }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    </div>
+  );
+}
+
+function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, callSubjects, iS, lS }) {
+  const [form, setForm] = useState(modal.data || {});
+  const u = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+  const table = { customer: "crm_customers", employee: "crm_employees", status: "crm_statuses", supervisor: "crm_supervisors", call_subject: "crm_call_subjects" }[modal.type];
+  return (
+    <div style={{ padding: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        {modal.type === "customer" && <>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
+          <div><label style={lS}>สถานะ</label><select style={iS} value={form.status || "not_called"} onChange={(e) => u("status", e.target.value)}>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}</select></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>ที่อยู่ (Note)</label><textarea style={{ ...iS, minHeight: 60, resize: "vertical" }} value={form.note || ""} onChange={(e) => u("note", e.target.value)} /></div>
+          <div><label style={lS}>โปรก่อนหน้า</label><input style={iS} value={form.previous_promo || ""} onChange={(e) => u("previous_promo", e.target.value)} /></div>
+          <div><label style={lS}>วันที่สั่งซื้อ</label><input type="datetime-local" style={iS} value={form.order_date || ""} onChange={(e) => u("order_date", e.target.value)} /></div>
+          <div><label style={lS}>หัวหน้า</label><select style={iS} value={form.supervisor || ""} onChange={(e) => u("supervisor", e.target.value)}><option value="">—</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div>
+          <div><label style={lS}>มอบหมาย</label><select style={iS} value={form.assigned_to || ""} onChange={(e) => u("assigned_to", e.target.value)}><option value="">—</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select></div>
+        </>}
+        {modal.type === "employee" && <>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
+          <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
+          <div><label style={lS}>ตำแหน่ง</label><input style={iS} value={form.role || ""} onChange={(e) => u("role", e.target.value)} /></div>
+        </>}
+        {modal.type === "status" && <>
+          <div><label style={lS}>Key</label><input style={iS} value={form.key || ""} onChange={(e) => u("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} /></div>
+          <div><label style={lS}>Label</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{COLOR_PRESETS.map((cp, i) => <button key={i} onClick={() => u("color", cp.color)} style={{ width: 40, height: 40, borderRadius: 10, background: cp.color, border: form.color === cp.color ? "3px solid #1e293b" : "3px solid transparent", cursor: "pointer" }} />)}</div></div>
+          <div style={{ gridColumn: "1/3" }}><span style={{ padding: "6px 16px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
+        </>}
+        {modal.type === "call_subject" && <>
+          <div><label style={lS}>ชื่อหัวข้อ</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
+          <div><label style={lS}>สี</label><div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{COLOR_PRESETS.map((cp, i) => <button key={i} onClick={() => u("color", cp.color)} style={{ width: 36, height: 36, borderRadius: 8, background: cp.color, border: form.color === cp.color ? "3px solid #1e293b" : "3px solid transparent", cursor: "pointer" }} />)}</div></div>
+          <div style={{ gridColumn: "1/3" }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
+        </>}
+        {modal.type === "supervisor" && <>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>แผนก</label><input style={iS} value={form.department || ""} onChange={(e) => u("department", e.target.value)} /></div>
+          <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
+        </>}
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
+        <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
+      </div>
+    </div>
+  );
+}
