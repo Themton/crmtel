@@ -293,9 +293,13 @@ function LoginScreen({ onLogin }) {
 
 // ---- MAIN WRAPPER ----
 export default function AppWrapper() {
-  const [user, setUser] = useState(null);
-  if (!user) return <LoginScreen onLogin={setUser} />;
-  return <CRMApp currentUser={user} onLogout={() => setUser(null)} />;
+  const [user, setUser] = useState(() => {
+    try { const s = sessionStorage.getItem("crm_user"); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
+  const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); };
+  const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); };
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
+  return <CRMApp currentUser={user} onLogout={handleLogout} />;
 }
 
 // ---- CRM APP ----
