@@ -369,6 +369,8 @@ function CRMApp({ currentUser, onLogout }) {
   const [empSearch, setEmpSearch] = useState("");
   const [sortCol, setSortCol] = useState("");
   const [sortDir, setSortDir] = useState("asc");
+  const [assignEmployees, setAssignEmployees] = useState([]);
+  const [promoFilter, setPromoFilter] = useState("");
   const fileRef = useRef(null);
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
@@ -530,8 +532,6 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   // ---- SUPERVISOR ASSIGN ----
-  const [assignEmployees, setAssignEmployees] = useState([]);
-  const [promoFilter, setPromoFilter] = useState("");
   const handleAssign = async () => {
     if (!assignSelected.length || !assignEmployees.length) return;
     const total = assignSelected.length;
