@@ -1050,43 +1050,40 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {viewMode === "list" ? (
                 <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
-                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 12 }} className="crm-table">
+                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 13 }} className="crm-table">
                     <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                      <th style={{ padding: "8px 10px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
-                      <th style={{ padding: "8px 8px", width: 36, fontWeight: 700, color: "#374151" }}>#</th>
-                      {activeColOrder.map((key) => <th key={key} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap" }}>{COL_DEFS[key].label}</th>)}
+                      <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
+                      <th style={{ padding: "10px 10px", width: 40, fontWeight: 700, color: "#374151" }}></th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 150 }}>ชื่อ</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 120 }}>Phone Num...</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 280 }}>โน้ต</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 140 }}>โปรก่อนหน้า</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 170 }}>วันที่สั่งซื้อ</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 90 }}>ได้รับสินค้า</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 120 }}>Assigned To</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 110 }}>สถานะ</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 100 }}>ชื่อพนักงาน</th>
+                      <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 130 }}>วันที่โทร</th>
                     </tr></thead>
                     <tbody>
                       {pagedFc.map((c, idx) => {
                         const st = statuses.find((s) => s.key === c.status);
-                        const subj = callSubjects.find((s) => s.label === c.call_subject) || callSubjects.find((s) => s.label?.toLowerCase().trim() === (c.call_subject || "").toLowerCase().trim());
                         const emp = employees.find((e) => e.name === c.assigned_to);
-                        const readCell = (key) => {
-                          switch (key) {
-                            case "name": return <span style={{ fontWeight: 600, color: "#3d2a0a" }}>{c.name}</span>;
-                            case "phone": return c.phone;
-                            case "note": return <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{c.note}</span>;
-                            case "previous_promo": return c.previous_promo;
-                            case "order_date": return c.order_date;
-                            case "received_product": return c.received_product ? <span style={{ color: "#059669", fontWeight: 600 }}>✓ ได้รับ</span> : <span style={{ color: "#d97706" }}>รอส่ง</span>;
-                            case "status": return st ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : c.status;
-                            case "call_subject": return subj ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, color: "#fff", background: subj.color }}>{subj.label}</span> : c.call_subject;
-                            case "call_date": return c.call_date;
-                            case "call_note": return <span style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "inline-block" }}>{c.call_note}</span>;
-                            case "customer_relation": return c.customer_relation != null ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, color: "#fff", background: RATING_COLORS[c.customer_relation] || "#9ca3af" }}>{c.customer_relation}</span> : "";
-                            case "next_follow": return c.next_follow;
-                            case "product_price": return c.product_price || "";
-                            case "assigned_to": return <span style={{ color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600 }}>{c.assigned_to || ""}</span>;
-                            case "nickname": return emp?.nickname || "";
-                            default: return c[key] || "";
-                          }
-                        };
-                        return <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}
-                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")}
+                        return <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 38 }}
+                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f8fafc")}
                           onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                          <td style={{ padding: "6px 10px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
-                          <td style={{ padding: "6px 8px", color: "#9ca3af", fontSize: 11 }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
-                          {activeColOrder.map((key) => <td key={key} style={{ padding: "6px 10px", fontSize: 11, color: "#374151", whiteSpace: "nowrap" }}>{readCell(key)}</td>)}
+                          <td style={{ padding: "4px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
+                          <td style={{ padding: "4px 10px", color: "#9ca3af", fontSize: 12, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                          <td style={{ padding: "4px 12px", fontWeight: 500, color: "#1a1a2e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 180 }}>{c.name}</td>
+                          <td style={{ padding: "4px 12px", color: "#374151", fontSize: 12 }}><span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>📞 {c.phone}</span></td>
+                          <td style={{ padding: "4px 12px", color: "#6b7280", fontSize: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 300 }}>{c.note}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12, color: "#374151" }}>{c.previous_promo}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12, color: "#6b7280" }}>{c.order_date}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12 }}>{c.received_product ? <span style={{ color: "#059669" }}>✓ ได้รับ</span> : <span style={{ color: "#d97706" }}>รอส่ง</span>}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12, color: "#374151" }}>{c.assigned_to || ""}</td>
+                          <td style={{ padding: "4px 12px" }}>{st ? <span style={{ display: "inline-block", padding: "3px 12px", borderRadius: 4, fontSize: 11, fontWeight: 600, color: "#fff", background: st.color, whiteSpace: "nowrap" }}>{st.label}</span> : ""}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12, color: "#6b7280" }}>{emp?.nickname || ""}</td>
+                          <td style={{ padding: "4px 12px", fontSize: 12, color: "#6b7280" }}>{c.call_date || ""}</td>
                         </tr>;
                       })}
                     </tbody>
