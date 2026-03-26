@@ -966,7 +966,21 @@ function CRMApp({ currentUser, onLogout }) {
                   <span style={{ fontSize: 14, color: "#2563eb" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
-                    {f === "assigned_to" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}</select>}
+                    {f === "assigned_to" && <div>
+                      <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto" }}>
+                        {employees.map((em) => {
+                          const sel = quickUpdate.fieldValues.assigned_to_list || [];
+                          return <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
+                            <input type="checkbox" checked={sel.includes(em.name)} onChange={(e2) => {
+                              const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
+                              setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
+                            }} style={{ accentColor: "#2563eb" }} />
+                            <span style={{ fontSize: 13 }}>{em.name}</span>
+                          </label>;
+                        })}
+                      </div>
+                      {(quickUpdate.fieldValues.assigned_to_list || []).length > 1 && <div style={{ background: "#eff6ff", borderRadius: 6, padding: "6px 10px", marginTop: 8, fontSize: 11, color: "#1e40af" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {(quickUpdate.fieldValues.assigned_to_list || []).length} คน</div>}
+                    </div>}
                     {f === "status" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}</select>}
                     {f === "supervisor" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select>}
                     {f === "previous_promo" && <input style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} />}
@@ -982,7 +996,22 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={async () => { if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; } const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); }); for (const rid of selectedRows) { await supabase.from("crm_customers").update(u2).eq("id", rid); } await fetchAll(); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null); }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
+              <button onClick={async () => {
+                if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; }
+                const assignList = quickUpdate.fieldValues.assigned_to_list || [];
+                if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
+                  // กระจายเท่ากัน
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
+                  for (let i = 0; i < selectedRows.length; i++) {
+                    const emp = assignList[i % assignList.length];
+                    await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", selectedRows[i]);
+                  }
+                } else {
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
+                  for (const rid of selectedRows) { await supabase.from("crm_customers").update(u2).eq("id", rid); }
+                }
+                await fetchAll(); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null);
+              }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
             </div>
           </div>
         </div>
