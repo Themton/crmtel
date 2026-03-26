@@ -379,13 +379,6 @@ function CRMApp({ currentUser, onLogout }) {
         safeFetch("crm_settings"),
       ]);
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
-      // Fetch notifications for current user
-      if (currentUser?.name) {
-        try {
-          const nRes = await supabase.from("crm_notifications").select();
-          if (nRes.data) setNotifications(nRes.data.filter((n) => n.to_user === currentUser.name && !n.read));
-        } catch {}
-      }
       // Load column order
       if (settings.length > 0) {
         let orderKey = "col_order_" + (currentUser?.name || "default");
@@ -407,6 +400,30 @@ function CRMApp({ currentUser, onLogout }) {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Real-time notification polling every 10 seconds
+  useEffect(() => {
+    if (!currentUser?.name) return;
+    const pollNotifications = async () => {
+      try {
+        const res = await supabase.from("crm_notifications").select();
+        if (res.data) {
+          const unread = res.data.filter((n) => n.to_user === currentUser.name && !n.read);
+          setNotifications((prev) => {
+            if (unread.length > prev.length && prev.length > 0) {
+              // New notification arrived - show toast
+              const newest = unread.find((n) => !prev.some((p) => p.id === n.id));
+              if (newest) showToast("🔔 " + newest.message);
+            }
+            return unread;
+          });
+        }
+      } catch {}
+    };
+    pollNotifications();
+    const interval = setInterval(pollNotifications, 10000);
+    return () => clearInterval(interval);
+  }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
   const tableMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
@@ -733,7 +750,7 @@ function CRMApp({ currentUser, onLogout }) {
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
           <div style={{ position: "relative" }}>
-            <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }}>
+            <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }} className={notifications.length > 0 ? "bell-shake" : ""}>
               🔔
               {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
             </button>
@@ -1677,7 +1694,7 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </div>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-table td{line-height:1.3} .crm-table tr{height:24px}`}</style>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-table td{line-height:1.3} .crm-table tr{height:24px} @keyframes bellShake{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(10deg)}} .bell-shake{animation:bellShake .5s ease 3}`}</style>
     </div>
   );
 }
