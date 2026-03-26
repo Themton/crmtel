@@ -361,6 +361,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
+  const [colOrderLoaded, setColOrderLoaded] = useState(false);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
   const [viewMode, setViewMode] = useState("table"); // "table" or "list"
@@ -374,31 +375,36 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr, settings] = await Promise.all([
+      const [c, e, s, cs, sv, tr] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
-        safeFetch("crm_settings"),
       ]);
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
-      // Load column order
-      if (settings.length > 0) {
-        let orderKey = "col_order_" + (currentUser?.name || "default");
-        let setting = settings.find((s) => s.key === orderKey);
-        // If employee, try supervisor's order
-        if (!setting && currentUser?.role === "employee") {
-          const myEmp = e.find((em) => em.name === currentUser.name);
-          const mySupervisor = c.find((cx) => cx.assigned_to === currentUser.name)?.supervisor;
-          if (mySupervisor) {
-            setting = settings.find((s) => s.key === "col_order_" + mySupervisor);
-          }
-        }
-        if (setting) {
-          try { setColOrder(JSON.parse(setting.value)); } catch {}
-        }
-      }
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
+
+  // Load column order ONCE on mount
+  useEffect(() => {
+    if (colOrderLoaded) return;
+    (async () => {
+      try {
+        const res = await supabase.from("crm_settings").select();
+        const settings = res.data || [];
+        if (settings.length > 0) {
+          let orderKey = "col_order_" + (currentUser?.name || "default");
+          let setting = settings.find((s) => s.key === orderKey);
+          if (!setting && currentUser?.role === "employee") {
+            const empRes = await supabase.from("crm_customers").select();
+            const mySupervisor = (empRes.data || []).find((cx) => cx.assigned_to === currentUser.name)?.supervisor;
+            if (mySupervisor) setting = settings.find((s) => s.key === "col_order_" + mySupervisor);
+          }
+          if (setting) { try { setColOrder(JSON.parse(setting.value)); } catch {} }
+        }
+      } catch {}
+      setColOrderLoaded(true);
+    })();
+  }, [currentUser?.name]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
