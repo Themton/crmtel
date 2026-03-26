@@ -697,7 +697,7 @@ function CRMApp({ currentUser, onLogout }) {
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
-  const TH = [...(currentUser?.role === "admin" ? [""] : []), ...activeColOrder.map((k) => COL_DEFS[k].label)];
+  const TH = activeColOrder.map((k) => COL_DEFS[k].label);
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -1069,7 +1069,6 @@ function CRMApp({ currentUser, onLogout }) {
                       <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 22 }} onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fafafa")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                         <td style={{ padding: "1px 6px", color: "#b0b0b0", fontSize: 9, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                         <td style={{ padding: "1px 6px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => { if (e.nativeEvent.shiftKey && lastChecked !== null) { const curIdx = pagedFc.findIndex((x) => x.id === c.id); const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked); if (curIdx >= 0 && lastIdx >= 0) { const start = Math.min(curIdx, lastIdx); const end2 = Math.max(curIdx, lastIdx); const rangeIds = pagedFc.slice(start, end2 + 1).map((x) => x.id); setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]); setLastChecked(c.id); return; } } setLastChecked(c.id); setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id)); }} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></td>
-                        {currentUser?.role === "admin" && <td style={{ padding: "1px 3px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
                         {activeColOrder.map((key) => { const col = COL_DEFS[key]; return <td key={key} style={{ padding: "1px 2px", minWidth: col.minW ? col.minW * 0.55 : undefined, maxWidth: col.maxW ? col.maxW * 0.6 : undefined }}>{col.render(c)}</td>; })}
                       </tr>
                     ))}
