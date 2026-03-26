@@ -654,12 +654,16 @@ function CRMApp({ currentUser, onLogout }) {
             myCustomers.forEach((c) => {
               if (c.status !== "not_called" && c.call_date) {
                 const d = c.call_date.slice(0, 10);
-                if (!dailyCalls[d]) dailyCalls[d] = { total: 0 };
+                if (!dailyCalls[d]) dailyCalls[d] = { total: 0, byEmp: {} };
                 dailyCalls[d].total++;
                 // Count by status
                 const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status;
                 if (!dailyCalls[d][stLabel]) dailyCalls[d][stLabel] = 0;
                 dailyCalls[d][stLabel]++;
+                // Count by employee
+                const emp = c.assigned_to || "ไม่ระบุ";
+                if (!dailyCalls[d].byEmp[emp]) dailyCalls[d].byEmp[emp] = 0;
+                dailyCalls[d].byEmp[emp]++;
               }
             });
             const dailyKeys = Object.keys(dailyCalls).sort((a, b) => b.localeCompare(a)).slice(0, 14);
@@ -722,6 +726,7 @@ function CRMApp({ currentUser, onLogout }) {
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017" }}>โทรแล้ว</th>
                     {statuses.filter((s) => s.key !== "not_called").map((s) => <th key={s.id} style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: s.color }}>{s.label}</th>)}
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#92400e" }}>พนักงาน</th>
                   </tr></thead>
                   <tbody>
                     {[...dailyKeys].reverse().map((d, idx) => {
@@ -730,6 +735,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
                         <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017", fontSize: 16 }}>{dailyCalls[d].total}</td>
                         {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
+                        <td style={{ padding: "10px 14px", fontSize: 12 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
                       </tr>;
                     })}
                   </tbody>
