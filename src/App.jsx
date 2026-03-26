@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
-const USE_DEMO = true;
+const USE_DEMO = false;
 const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json(); return r.ok ? { data: d } : { error: d }; }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }) }) }; } };
 
 const COLOR_PRESETS = [
@@ -203,11 +203,16 @@ function LoginScreen({ onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [allUsers, setAllUsers] = useState([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }]);
 
-  const allUsers = [
-    { username: "admin", password: "admin123", name: "Admin", role: "admin" },
-    ...DEMO_EMPLOYEES.map((e) => ({ username: e.username, password: e.password, name: e.name, role: "employee" })),
-  ];
+  useEffect(() => {
+    supabase.from("crm_employees").select().then((res) => {
+      if (res.data) {
+        const empUsers = res.data.map((e) => ({ username: e.username || e.name, password: e.password || "1234", name: e.name, role: "employee" }));
+        setAllUsers([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }, ...empUsers]);
+      }
+    });
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -304,13 +309,12 @@ export default function AppWrapper() {
 
 // ---- CRM APP ----
 function CRMApp({ currentUser, onLogout }) {
-  const load = (key, fallback) => { try { const s = sessionStorage.getItem("crm_" + key); return s ? JSON.parse(s) : fallback; } catch { return fallback; } };
   const [tab, setTab] = useState(currentUser?.role === "admin" ? "customers" : "dashboard");
-  const [customers, setCustomers] = useState(() => load("customers", DEMO_CUSTOMERS));
-  const [employees, setEmployees] = useState(() => load("employees", DEMO_EMPLOYEES));
-  const [statuses, setStatuses] = useState(() => load("statuses", DEMO_STATUSES));
-  const [callSubjects, setCallSubjects] = useState(() => load("call_subjects", DEMO_CALL_SUBJECTS));
-  const [supervisors, setSupervisors] = useState(() => load("supervisors", DEMO_SUPERVISORS));
+  const [customers, setCustomers] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [callSubjects, setCallSubjects] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -323,59 +327,117 @@ function CRMApp({ currentUser, onLogout }) {
   const [toast, setToast] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
-  const [trash, setTrash] = useState(() => load("trash", []));
-
-  // Auto-save to sessionStorage
-  useEffect(() => { sessionStorage.setItem("crm_customers", JSON.stringify(customers)); }, [customers]);
-  useEffect(() => { sessionStorage.setItem("crm_employees", JSON.stringify(employees)); }, [employees]);
-  useEffect(() => { sessionStorage.setItem("crm_statuses", JSON.stringify(statuses)); }, [statuses]);
-  useEffect(() => { sessionStorage.setItem("crm_call_subjects", JSON.stringify(callSubjects)); }, [callSubjects]);
-  useEffect(() => { sessionStorage.setItem("crm_supervisors", JSON.stringify(supervisors)); }, [supervisors]);
-  useEffect(() => { sessionStorage.setItem("crm_trash", JSON.stringify(trash)); }, [trash]);
+  const [trash, setTrash] = useState([]);
+  const [loading, setLoading] = useState(true);
   const fileRef = useRef(null);
 
-  const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
-  const setterMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
+  // ---- FETCH ALL DATA FROM SUPABASE ----
+  const fetchAll = useCallback(async () => {
+    try {
+      const [c, e, s, cs, sv, tr] = await Promise.all([
+        supabase.from("crm_customers").select(),
+        supabase.from("crm_employees").select(),
+        supabase.from("crm_statuses").select(),
+        supabase.from("crm_call_subjects").select(),
+        supabase.from("crm_supervisors").select(),
+        supabase.from("crm_trash").select(),
+      ]);
+      if (c.data) setCustomers(c.data);
+      if (e.data) setEmployees(e.data);
+      if (s.data) setStatuses(s.data);
+      if (cs.data) setCallSubjects(cs.data);
+      if (sv.data) setSupervisors(sv.data);
+      if (tr.data) setTrash(tr.data);
+    } catch (err) { console.error("Fetch error:", err); }
+    setLoading(false);
+  }, []);
 
-  const handleSave = (table, data, mode) => { const s = setterMap[table]; if (!s) return; if (mode === "add") s((p) => [...p, { ...data, id: Date.now(), created_at: new Date().toISOString().slice(0, 10) }]); else s((p) => p.map((r) => r.id === data.id ? { ...r, ...data } : r)); setModal(null); };
-  const handleDelete = (table, id) => {
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const tableMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
+
+  // ---- SAVE (ADD / EDIT) ----
+  const handleSave = async (table, data, mode) => {
+    if (mode === "add") {
+      const { id, ...rest } = data;
+      const res = await supabase.from(table).insert(rest);
+      if (res.data) showToast("เพิ่มสำเร็จ");
+      else showToast("เกิดข้อผิดพลาด", "warning");
+    } else {
+      const { id, ...rest } = data;
+      await supabase.from(table).update(rest).eq("id", id);
+      showToast("บันทึกแล้ว");
+    }
+    setModal(null);
+    await fetchAll();
+  };
+
+  // ---- DELETE → MOVE TO TRASH ----
+  const handleDelete = async (table, id) => {
     if (!confirm("ต้องการลบ?")) return;
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
-      if (item) setTrash((p) => [{ ...item, deleted_at: new Date().toISOString().slice(0, 10), deleted_by: currentUser?.name || "admin" }, ...p]);
+      if (item) {
+        const { id: oid, ...rest } = item;
+        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
+      }
     }
-    setterMap[table]?.((p) => p.filter((r) => r.id !== id));
+    await supabase.from(table).delete().eq("id", id);
+    await fetchAll();
+    showToast("ลบแล้ว");
   };
-  const handleBulkDelete = () => {
+
+  const handleBulkDelete = async () => {
     if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
-    const deleted = customers.filter((r) => selectedRows.includes(r.id));
-    setTrash((p) => [...deleted.map((d) => ({ ...d, deleted_at: new Date().toISOString().slice(0, 10), deleted_by: currentUser?.name || "admin" })), ...p]);
-    setCustomers((p) => p.filter((r) => !selectedRows.includes(r.id)));
+    for (const rid of selectedRows) {
+      const item = customers.find((c) => c.id === rid);
+      if (item) {
+        const { id: oid, ...rest } = item;
+        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
+      }
+      await supabase.from("crm_customers").delete().eq("id", rid);
+    }
     setSelectedRows([]);
+    await fetchAll();
+    showToast("ลบ " + selectedRows.length + " รายการ");
   };
-  const handleRestore = (id) => {
+
+  // ---- RESTORE FROM TRASH ----
+  const handleRestore = async (id) => {
     const item = trash.find((t) => t.id === id);
     if (!item) return;
-    const { deleted_at, ...rest } = item;
-    setCustomers((p) => [rest, ...p]);
-    setTrash((p) => p.filter((t) => t.id !== id));
+    const { id: tid, original_id, deleted_at, deleted_by, ...rest } = item;
+    await supabase.from("crm_customers").insert(rest);
+    await supabase.from("crm_trash").delete().eq("id", tid);
+    await fetchAll();
     showToast("กู้คืนแล้ว");
   };
-  const handlePermanentDelete = (id) => {
+
+  const handlePermanentDelete = async (id) => {
     if (!confirm("ลบถาวร?")) return;
-    setTrash((p) => p.filter((t) => t.id !== id));
+    await supabase.from("crm_trash").delete().eq("id", id);
+    await fetchAll();
   };
-  const handleEmptyTrash = () => {
+
+  const handleEmptyTrash = async () => {
     if (!confirm("ลบถาวรทั้งหมด " + trash.length + " รายการ?")) return;
-    setTrash([]);
+    for (const t of trash) await supabase.from("crm_trash").delete().eq("id", t.id);
+    await fetchAll();
     showToast("ล้างถังขยะแล้ว");
   };
-  const upd = (id, f, v) => setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
 
+  // ---- INLINE UPDATE ----
+  const upd = async (id, f, v) => {
+    setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
+    await supabase.from("crm_customers").update({ [f]: v }).eq("id", id);
+  };
+
+  // ---- IMPORT CSV ----
   const handleImport = (e) => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const lines = ev.target.result.split("\n").filter((l) => l.trim());
       if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
       const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, "").toLowerCase());
@@ -389,12 +451,36 @@ function CRMApp({ currentUser, onLogout }) {
         const v = lines[i].match(/(".*?"|[^",]+)/g)?.map((x) => x.trim().replace(/^"|"$/g, "")) || [];
         const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
         if (!name && !phone) continue;
-        nc.push({ id: Date.now() + i, name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", order_date: "", received_product: false, status: "not_called", assigned_to: "", supervisor: "", created_at: new Date().toISOString().slice(0, 10), call_date: "", call_subject: "", call_note: "", customer_relation: 0, next_follow: "", offer: "", product_price: 0 });
+        nc.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", status: "not_called" });
       }
-      if (nc.length) { setCustomers((p) => [...nc, ...p]); showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)"); } else showToast("ไม่พบข้อมูล", "warning");
+      if (nc.length) {
+        for (const row of nc) await supabase.from("crm_customers").insert(row);
+        await fetchAll();
+        showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)");
+      } else showToast("ไม่พบข้อมูล", "warning");
       e.target.value = "";
     };
     reader.readAsText(file);
+  };
+
+  // ---- SUPERVISOR ASSIGN ----
+  const handleAssign = async () => {
+    if (!assignSelected.length || !assignEmployee) return;
+    for (const rid of assignSelected) {
+      await supabase.from("crm_customers").update({ assigned_to: assignEmployee, supervisor: selectedSupervisor?.name || "" }).eq("id", rid);
+    }
+    await fetchAll();
+    showToast("มอบหมาย " + assignSelected.length + " ลูกค้า");
+    setAssignSelected([]); setAssignEmployee("");
+  };
+  const handleRevoke = async () => {
+    if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return;
+    for (const rid of assignSelected) {
+      await supabase.from("crm_customers").update({ assigned_to: "", supervisor: "" }).eq("id", rid);
+    }
+    await fetchAll();
+    showToast("ถอนสิทธิ์แล้ว", "warning");
+    setAssignSelected([]);
   };
 
   const handleExport = () => {
@@ -403,9 +489,6 @@ function CRMApp({ currentUser, onLogout }) {
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
-
-  const handleAssign = () => { if (!assignSelected.length || !assignEmployee) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: assignEmployee, supervisor: selectedSupervisor?.name || c.supervisor } : c)); showToast("มอบหมาย " + assignSelected.length + " ลูกค้า"); setAssignSelected([]); setAssignEmployee(""); };
-  const handleRevoke = () => { if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: "", supervisor: "" } : c)); showToast("ถอนสิทธิ์แล้ว", "warning"); setAssignSelected([]); };
 
   const fc = customers.filter((c) => {
     // พนักงานเห็นแค่ลูกค้าตัวเอง
@@ -727,14 +810,15 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => { if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; } const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); }); setCustomers((p) => p.map((c2) => selectedRows.includes(c2.id) ? { ...c2, ...u2 } : c2)); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null); }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
+              <button onClick={async () => { if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; } const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); }); for (const rid of selectedRows) { await supabase.from("crm_customers").update(u2).eq("id", rid); } await fetchAll(); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null); }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
             </div>
           </div>
         </div>
       </div>}
 
       {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#1e3a5f", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
