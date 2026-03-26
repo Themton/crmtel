@@ -303,21 +303,7 @@ function LoginScreen({ onLogin }) {
             เข้าสู่ระบบ
           </button>
 
-          {/* Demo accounts */}
-          <div style={{ marginTop: 24, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e5e7eb" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 10, textAlign: "center" }}>บัญชีทดลอง</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {allUsers.map((u) => (
-                <button key={u.username} onClick={() => { setUsername(u.username); setPassword(u.password); }}
-                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#4b5563", textAlign: "left", transition: "background 0.1s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                  <span><strong>{u.name}</strong> ({u.role})</span>
-                  <span style={{ color: "#9ca3af", fontSize: 12 }}>{u.username} / {u.password}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
