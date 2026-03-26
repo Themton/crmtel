@@ -444,7 +444,7 @@ function CRMApp({ currentUser, onLogout }) {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", borderLeft: i === 9 ? "3px solid #2563eb" : "none" }}>{h}</th>)}
+                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>)}
                   </tr></thead>
                   <tbody>
                     {fc.map((c) => (
@@ -461,7 +461,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#4b5563" : "#d97706", fontWeight: 500 }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
                         <td style={{ padding: "6px 8px", color: "#9ca3af", fontSize: 11 }}>{c.created_at}</td>
                         {/* Call columns — separated with blue border */}
-                        <td style={{ padding: "4px 4px", borderLeft: "3px solid #2563eb" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
                         <td style={{ padding: "6px 4px" }}><SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /></td>
                         <td style={{ padding: "4px 4px", maxWidth: 250 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
                         <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
