@@ -355,6 +355,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
+  const [colWidths, setColWidths] = useState({});
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null); // { current, total, label }
   const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
@@ -899,10 +900,27 @@ function CRMApp({ currentUser, onLogout }) {
             </div>
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }} className="crm-table">
+                <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>)}
+                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 60, position: "relative", userSelect: "none" }}>
+                      {h}
+                      <div
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          const startX = e.clientX;
+                          const th = e.target.parentElement;
+                          const startW = th.offsetWidth;
+                          const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(60, startW + diff) })); };
+                          const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+                          document.addEventListener("mousemove", onMove);
+                          document.addEventListener("mouseup", onUp);
+                        }}
+                        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 6, cursor: "col-resize", background: "transparent" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#2563eb40")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      />
+                    </th>)}
                   </tr></thead>
                   <tbody>
                     {fc.map((c) => (
