@@ -338,6 +338,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [assignSelected, setAssignSelected] = useState([]);
   const [toast, setToast] = useState(null);
+  const [successModal, setSuccessModal] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
@@ -600,6 +601,7 @@ function CRMApp({ currentUser, onLogout }) {
     await fetchAll();
     const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
     showToast("กระจาย " + total + " ลูกค้าสำเร็จ ✓ → " + summary);
+    setSuccessModal({ count: total, detail: summary });
     setAssignSelected([]); setAssignEmployees([]);
   };
   const handleRevoke = async () => {
@@ -1484,7 +1486,7 @@ function CRMApp({ currentUser, onLogout }) {
                   }
                 }
                 setProgress(null);
-                await fetchAll(); showToast("อัปเดต " + total + " ลูกค้าสำเร็จ ✓"); setSelectedRows([]); setQuickUpdate(null);
+                await fetchAll(); setSuccessModal({ count: total, detail: quickUpdate.fields.map((f) => COL_DEFS[f] ? COL_DEFS[f].label : f).join(", ") }); setSelectedRows([]); setQuickUpdate(null);
               }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
             </div>
           </div>
@@ -1544,6 +1546,20 @@ function CRMApp({ currentUser, onLogout }) {
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
             </div>
           </div>
+        </div>
+      </div>}
+
+      {/* SUCCESS MODAL */}
+      {successModal && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }} onClick={() => setSuccessModal(null)}>
+        <div style={{ background: "#fff", borderRadius: 20, padding: "40px 50px", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxWidth: 400, animation: "fadeIn .2s" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", border: "4px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "fadeIn .3s" }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 8 }}>อัพเดทสำเร็จ! {successModal.count} CRM THE MT</div>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
+            {successModal.detail}
+          </div>
+          <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
         </div>
       </div>}
 
