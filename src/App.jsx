@@ -326,6 +326,8 @@ function CRMApp({ currentUser, onLogout }) {
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(null); // { current, total, label }
+  const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
   const [toolbarTab, setToolbarTab] = useState(null);
   const [advFilters, setAdvFilters] = useState([]);
   const [empFilter, setEmpFilter] = useState([]);
@@ -450,24 +452,28 @@ function CRMApp({ currentUser, onLogout }) {
       const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
       if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
       const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
-      const nc = []; const dupes = [];
+      const successList = []; const dupeList = [];
+      const allRows = [];
       for (let i = 1; i < lines.length; i++) {
         const v = lines[i].match(/(".*?"|[^",]+)/g)?.map((x) => x.trim().replace(/^"|"$/g, "")) || [];
         const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
         if (!name && !phone) continue;
         const cleanPhone = phone.replace(/\D/g, "");
-        if (cleanPhone && existingPhones.has(cleanPhone)) { dupes.push(phone); continue; }
+        if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
         if (cleanPhone) existingPhones.add(cleanPhone);
-        nc.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", status: "not_called" });
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", status: "not_called" });
       }
-      if (nc.length) {
-        for (const row of nc) await supabase.from("crm_customers").insert(row);
+      if (allRows.length) {
+        setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+        for (let i = 0; i < allRows.length; i++) {
+          await supabase.from("crm_customers").insert(allRows[i]);
+          successList.push({ name: allRows[i].name, phone: allRows[i].phone });
+          setProgress({ current: i + 1, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+        }
         await fetchAll();
+        setProgress(null);
       }
-      if (dupes.length && nc.length) showToast("นำเข้า " + nc.length + " ลูกค้า, ข้าม " + dupes.length + " เบอร์ซ้ำ: " + dupes.slice(0, 5).join(", ") + (dupes.length > 5 ? "..." : ""), "warning");
-      else if (dupes.length && !nc.length) showToast("เบอร์ซ้ำทั้งหมด " + dupes.length + " รายการ ไม่ได้นำเข้า", "warning");
-      else if (nc.length) showToast("นำเข้า " + nc.length + " ลูกค้า (สถานะ: ยังไม่ได้โทร)");
-      else showToast("ไม่พบข้อมูล", "warning");
+      setImportResult({ success: successList, dupes: dupeList });
       e.target.value = "";
     };
     reader.readAsText(file);
@@ -477,17 +483,23 @@ function CRMApp({ currentUser, onLogout }) {
   const [assignEmployees, setAssignEmployees] = useState([]);
   const handleAssign = async () => {
     if (!assignSelected.length || !assignEmployees.length) return;
+    const total = assignSelected.length;
+    setProgress({ current: 0, total, label: "กำลังมอบหมาย..." });
     const chunks = [];
     for (let i = 0; i < assignEmployees.length; i++) chunks.push([]);
     assignSelected.forEach((rid, idx) => chunks[idx % assignEmployees.length].push(rid));
+    let done = 0;
     for (let i = 0; i < assignEmployees.length; i++) {
       for (const rid of chunks[i]) {
         await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], supervisor: selectedSupervisor?.name || "" }).eq("id", rid);
+        done++;
+        setProgress({ current: done, total, label: "กำลังมอบหมาย..." });
       }
     }
+    setProgress(null);
     await fetchAll();
     const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
-    showToast("กระจาย " + assignSelected.length + " ลูกค้า → " + summary);
+    showToast("กระจาย " + total + " ลูกค้าสำเร็จ ✓ → " + summary);
     setAssignSelected([]); setAssignEmployees([]);
   };
   const handleRevoke = async () => {
@@ -998,19 +1010,25 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button onClick={async () => {
                 if (!quickUpdate.fields.length) { showToast("เลือกฟิลด์ก่อน", "warning"); return; }
+                const total = selectedRows.length;
+                setProgress({ current: 0, total, label: "กำลังอัปเดตข้อมูล..." });
                 const assignList = quickUpdate.fieldValues.assigned_to_list || [];
                 if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
-                  // กระจายเท่ากัน
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
-                  for (let i = 0; i < selectedRows.length; i++) {
+                  for (let i = 0; i < total; i++) {
                     const emp = assignList[i % assignList.length];
                     await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", selectedRows[i]);
+                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
                   }
                 } else {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
-                  for (const rid of selectedRows) { await supabase.from("crm_customers").update(u2).eq("id", rid); }
+                  for (let i = 0; i < total; i++) {
+                    await supabase.from("crm_customers").update(u2).eq("id", selectedRows[i]);
+                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
+                  }
                 }
-                await fetchAll(); showToast("อัปเดต " + selectedRows.length + " ลูกค้า"); setSelectedRows([]); setQuickUpdate(null);
+                setProgress(null);
+                await fetchAll(); showToast("อัปเดต " + total + " ลูกค้าสำเร็จ ✓"); setSelectedRows([]); setQuickUpdate(null);
               }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
             </div>
           </div>
@@ -1018,6 +1036,70 @@ function CRMApp({ currentUser, onLogout }) {
       </div>}
 
       {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
+
+      {/* PROGRESS BAR */}
+      {progress && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
+        <div style={{ background: "#fff", borderRadius: 16, padding: 36, width: "100%", maxWidth: 420, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#1e3a5f", marginBottom: 20 }}>{progress.label}</div>
+          <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #2563eb, #38bdf8)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 14, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
+        </div>
+      </div>}
+
+      {/* IMPORT RESULT MODAL */}
+      {importResult && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2500, padding: 20 }} onClick={(e2) => e2.target === e2.currentTarget && setImportResult(null)}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "80vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e3a5f" }}>ผลการนำเข้า</h3>
+            <button onClick={() => setImportResult(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
+          </div>
+          <div style={{ padding: 24 }}>
+            {/* Summary */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+              <div style={{ flex: 1, background: "#d1fae5", borderRadius: 12, padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "#059669" }}>{importResult.success.length}</div>
+                <div style={{ fontSize: 13, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+              </div>
+              <div style={{ flex: 1, background: "#fef3c7", borderRadius: 12, padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "#d97706" }}>{importResult.dupes.length}</div>
+                <div style={{ fontSize: 13, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
+              </div>
+            </div>
+
+            {/* Success list */}
+            {importResult.success.length > 0 && <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
+              <div style={{ border: "1px solid #d1fae5", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
+                {importResult.success.map((s, i) => (
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#059669" }}>✓ {s.name}</span><span style={{ color: "#9ca3af" }}>{s.phone}</span>
+                  </div>
+                ))}
+              </div>
+            </div>}
+
+            {/* Dupe list */}
+            {importResult.dupes.length > 0 && <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
+              <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
+                {importResult.dupes.map((d, i) => (
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#92400e" }}>✗ {d.name}</span><span style={{ color: "#d97706" }}>{d.phone}</span>
+                  </div>
+                ))}
+              </div>
+            </div>}
+
+            {importResult.success.length === 0 && importResult.dupes.length === 0 && <div style={{ textAlign: "center", color: "#9ca3af", padding: 20 }}>ไม่พบข้อมูล</div>}
+
+            <button onClick={() => setImportResult(null)} style={{ ...bp, width: "100%", justifyContent: "center", marginTop: 8 }}>ตกลง</button>
+          </div>
+        </div>
+      </div>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#1e3a5f", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
