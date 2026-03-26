@@ -520,9 +520,12 @@ function CRMApp({ currentUser, onLogout }) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
 
+  const extractPromoPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
   const fc = (() => {
     let result = customers.filter((c) => {
       if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
+      // Promo filter
+      if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
       if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter
@@ -580,7 +583,7 @@ function CRMApp({ currentUser, onLogout }) {
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
           {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
-            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); }}
+            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
@@ -634,6 +637,21 @@ function CRMApp({ currentUser, onLogout }) {
             </div>
             {/* TOOLBAR */}
             <div style={{ background: "#fff", borderRadius: "14px 14px 0 0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: 0 }}>
+              {/* PROMO PRICE QUICK FILTER */}
+              {(() => {
+                const extractPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
+                const myC = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
+                const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
+                if (allPrices.length === 0) return null;
+                return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
+                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
+                  {allPrices.map((p) => {
+                    const count = myC.filter((c) => extractPrice(c.previous_promo) === p).length;
+                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                  })}
+                </div>;
+              })()}
               <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
