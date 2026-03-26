@@ -237,7 +237,7 @@ function LoginScreen({ onLogin }) {
   useEffect(() => {
     supabase.from("crm_employees").select().then((res) => {
       if (res.data) {
-        const empUsers = res.data.map((e) => ({ username: e.username || e.name, password: e.password || "1234", name: e.name, role: "employee" }));
+        const empUsers = res.data.map((e) => ({ username: e.username || e.name, password: e.password || "1234", name: e.name, role: e.role || "employee" }));
         setAllUsers([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }, ...empUsers]);
       }
     });
@@ -562,6 +562,7 @@ function CRMApp({ currentUser, onLogout }) {
   const fc = (() => {
     let result = customers.filter((c) => {
       if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
+      if (currentUser?.role === "supervisor" && c.supervisor !== currentUser.name && c.assigned_to !== currentUser.name) return false;
       // Promo filter
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
@@ -590,7 +591,7 @@ function CRMApp({ currentUser, onLogout }) {
     return result;
   })();
 
-  const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
+  const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : currentUser?.role === "supervisor" ? customers.filter((c) => c.supervisor === currentUser.name || c.assigned_to === currentUser.name) : customers;
   const totalPages = Math.max(1, Math.ceil(fc.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedFc = fc.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
@@ -617,13 +618,13 @@ function CRMApp({ currentUser, onLogout }) {
         <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM THE MT</span>
         {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({currentUser?.role})</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
           <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => currentUser?.role === "supervisor" ? (t.supervisor === currentUser?.name || t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name) : (t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name)).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); setPage(1); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
@@ -752,7 +753,7 @@ function CRMApp({ currentUser, onLogout }) {
               {/* PROMO PRICE QUICK FILTER */}
               {(() => {
                 const extractPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
-                const myC = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
+                const myC = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : currentUser?.role === "supervisor" ? customers.filter((c) => c.supervisor === currentUser.name || c.assigned_to === currentUser.name) : customers;
                 const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
                 if (allPrices.length === 0) return null;
                 return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
@@ -767,7 +768,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
-                  ...(currentUser?.role === "admin" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
+                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
                   { key: "sort", label: "ตัวเรียงลำดับ", icon: "↕" },
                   { key: "quickupdate", label: "อัพเดทด่วน", icon: "⚡" },
                 ].map((t) => (
@@ -1085,7 +1086,7 @@ function CRMApp({ currentUser, onLogout }) {
 
           {/* TRASH */}
           {tab === "trash" && (() => {
-            const myTrash = currentUser?.role === "admin" ? trash : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name);
+            const myTrash = currentUser?.role === "admin" ? trash : currentUser?.role === "supervisor" ? trash.filter((t) => t.supervisor === currentUser?.name || t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name) : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name);
             const filteredTrash = trashSearch ? myTrash.filter((t) => t.phone?.includes(trashSearch) || t.name?.toLowerCase().includes(trashSearch.toLowerCase())) : myTrash;
             return <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
@@ -1412,7 +1413,7 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
           <div><label style={lS}>รหัสผ่าน</label><input style={iS} value={form.password || ""} onChange={(e) => u("password", e.target.value)} placeholder="password" /></div>
           <div><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
           <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
-          <div><label style={lS}>ตำแหน่ง</label><input style={iS} value={form.role || ""} onChange={(e) => u("role", e.target.value)} /></div>
+          <div><label style={lS}>ตำแหน่ง</label><select style={iS} value={form.role || "employee"} onChange={(e) => u("role", e.target.value)}><option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option></select></div>
         </>}
         {modal.type === "status" && <>
           <div><label style={lS}>Key</label><input style={iS} value={form.key || ""} onChange={(e) => u("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} /></div>
