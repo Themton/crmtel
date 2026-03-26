@@ -299,7 +299,7 @@ export default function AppWrapper() {
 
 // ---- CRM APP ----
 function CRMApp({ currentUser, onLogout }) {
-  const [tab, setTab] = useState("customers");
+  const [tab, setTab] = useState(currentUser?.role === "admin" ? "customers" : "dashboard");
   const [customers, setCustomers] = useState(USE_DEMO ? DEMO_CUSTOMERS : []);
   const [employees, setEmployees] = useState(USE_DEMO ? DEMO_EMPLOYEES : []);
   const [statuses, setStatuses] = useState(USE_DEMO ? DEMO_STATUSES : []);
@@ -398,7 +398,7 @@ function CRMApp({ currentUser, onLogout }) {
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart /> }, { key: "customers", label: "ลูกค้า", icon: <I.Users /> }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield /> }, { key: "employees", label: "พนักงาน", icon: <I.User /> }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings /> }].map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "admin" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setStatusFilter("all"); setAssignFilter("all"); setAssignSelected([]); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
