@@ -959,7 +959,6 @@ function CRMApp({ currentUser, onLogout }) {
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
-                  { key: "quickupdate", label: "อัพเดทด่วน", icon: "⚡" },
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
@@ -1092,18 +1091,6 @@ function CRMApp({ currentUser, onLogout }) {
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
-              )}
-
-              {/* SORT PANEL */}
-              {/* QUICK UPDATE TAB */}
-              {toolbarTab === "quickupdate" && selectedRows.length > 0 && (
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>เลือกแล้ว {selectedRows.length} รายการ</div>
-                  <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bp, fontSize: 13, padding: "8px 20px" }}><I.Edit /> เปิดอัพเดทด่วน</button>
-                </div>
-              )}
-              {toolbarTab === "quickupdate" && selectedRows.length === 0 && (
-                <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc", color: "#9ca3af", fontSize: 13 }}>เลือกลูกค้าก่อน แล้วกดอัพเดทด่วน</div>
               )}
 
               {/* COLUMN REORDER PANEL */}
