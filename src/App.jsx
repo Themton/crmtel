@@ -356,6 +356,9 @@ function CRMApp({ currentUser, onLogout }) {
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 500;
+  useEffect(() => { setPage(1); }, [search, advFilters, empFilter, promoFilter]);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null); // { current, total, label }
   const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
@@ -607,6 +610,9 @@ function CRMApp({ currentUser, onLogout }) {
   })();
 
   const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
+  const totalPages = Math.max(1, Math.ceil(fc.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedFc = fc.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   const stats = [{ l: "ทั้งหมด", v: myCustomers.length, c: "#2563eb" }, ...statuses.map((s) => ({ l: s.label, v: myCustomers.filter((c) => c.status === s.key).length, c: s.color }))];
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
@@ -637,7 +643,7 @@ function CRMApp({ currentUser, onLogout }) {
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
           {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
-            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); }}
+            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); setPage(1); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
@@ -902,7 +908,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
+                    <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === pagedFc.length && pagedFc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
                     {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 60, position: "relative", userSelect: "none" }}>
                       {h}
                       <div
@@ -923,7 +929,7 @@ function CRMApp({ currentUser, onLogout }) {
                     </th>)}
                   </tr></thead>
                   <tbody>
-                    {fc.map((c) => (
+                    {pagedFc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
                         {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
@@ -953,6 +959,20 @@ function CRMApp({ currentUser, onLogout }) {
                   </tbody>
                 </table>
               </div>
+              {/* PAGINATION */}
+              {totalPages > 1 && <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderTop: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>แสดง {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก {fc.length} รายการ</span>
+                <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                  <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
+                  <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
+                    <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
+                    <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #2563eb" : "1px solid #d1d5db", background: p === safePage ? "#2563eb" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
+                  ))}
+                  <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
+                  <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
+                </div>
+              </div>}
             </div>
           </div>}
 
