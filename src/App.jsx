@@ -599,8 +599,8 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleExport = () => {
-    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
-    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.offer,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า"];
+    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
@@ -613,7 +613,7 @@ function CRMApp({ currentUser, onLogout }) {
       // Promo filter
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
-      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
+      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter
       if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
       // Advanced filters
@@ -654,7 +654,7 @@ function CRMApp({ currentUser, onLogout }) {
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Table headers: customer fields + call fields
-  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า","มอบหมาย"];
+  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","โปรสินค้า","มอบหมาย"];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -845,7 +845,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <option value="status">สถานะ</option><option value="call_subject">หัวข้อโทร</option>
                         <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
                         <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
-                        <option value="previous_promo">โปรก่อนหน้า</option><option value="offer">เสนอขาย</option>
+                        <option value="previous_promo">โปรก่อนหน้า</option>
                       </select>
                       <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                         style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 130 }}>
@@ -1031,7 +1031,6 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px", minWidth: 300 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
                         <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
-                        <td style={{ padding: "6px 4px" }}><OfferDropdown value={c.offer} onChange={(v) => upd(c.id, "offer", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
                         <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
                       </tr>
