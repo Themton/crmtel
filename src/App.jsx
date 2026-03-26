@@ -936,7 +936,6 @@ function CRMApp({ currentUser, onLogout }) {
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
-                  { key: "sort", label: "ตัวเรียงลำดับ", icon: "↕" },
                   { key: "quickupdate", label: "อัพเดทด่วน", icon: "⚡" },
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
@@ -1073,24 +1072,6 @@ function CRMApp({ currentUser, onLogout }) {
               )}
 
               {/* SORT PANEL */}
-              {toolbarTab === "sort" && (
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>ตัวเรียงลำดับ</div>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <select value={sortCol} onChange={(e) => setSortCol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 160 }}>
-                      <option value="">ไม่เรียง</option>
-                      <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="status">สถานะ</option>
-                      <option value="assigned_to">มอบหมาย</option><option value="created_at">วันที่สร้าง</option>
-                      <option value="call_date">วันที่โทร</option><option value="call_subject">หัวข้อโทร</option>
-                      <option value="customer_relation">ความสัมพันธ์</option><option value="product_price">ราคาสินค้า</option>
-                    </select>
-                    <select value={sortDir} onChange={(e) => setSortDir(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13 }}>
-                      <option value="asc">น้อย → มาก (A-Z)</option><option value="desc">มาก → น้อย (Z-A)</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
               {/* QUICK UPDATE TAB */}
               {toolbarTab === "quickupdate" && selectedRows.length > 0 && (
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
