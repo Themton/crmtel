@@ -1015,21 +1015,67 @@ function CRMApp({ currentUser, onLogout }) {
                   <span style={{ fontSize: 14, color: "#2563eb" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
-                    {f === "assigned_to" && <div>
-                      <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto" }}>
-                        {employees.map((em) => {
-                          const sel = quickUpdate.fieldValues.assigned_to_list || [];
-                          return <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
-                            <input type="checkbox" checked={sel.includes(em.name)} onChange={(e2) => {
-                              const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
-                              setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
-                            }} style={{ accentColor: "#2563eb" }} />
-                            <span style={{ fontSize: 13 }}>{em.name}</span>
-                          </label>;
-                        })}
-                      </div>
-                      {(quickUpdate.fieldValues.assigned_to_list || []).length > 1 && <div style={{ background: "#eff6ff", borderRadius: 6, padding: "6px 10px", marginTop: 8, fontSize: 11, color: "#1e40af" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {(quickUpdate.fieldValues.assigned_to_list || []).length} คน</div>}
-                    </div>}
+                    {f === "assigned_to" && (() => {
+                      const sel = quickUpdate.fieldValues.assigned_to_list || [];
+                      const promoMap = quickUpdate.fieldValues.promo_map || {};
+                      const assignMode = quickUpdate.fieldValues.assign_mode || "equal"; // "equal" or "promo"
+                      // Extract promos from selected customers
+                      const selCustomers = customers.filter((c) => selectedRows.includes(c.id));
+                      const promoGroups = {};
+                      selCustomers.forEach((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; if (!promoGroups[p]) promoGroups[p] = 0; promoGroups[p]++; });
+                      const promoKeys = Object.keys(promoGroups).sort((a, b) => Number(a) - Number(b));
+                      return <div>
+                        {/* Employee selection */}
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
+                        <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto", marginBottom: 12 }}>
+                          {employees.map((em) => (
+                            <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
+                              <input type="checkbox" checked={sel.includes(em.name)} onChange={(e2) => {
+                                const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
+                                setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
+                              }} style={{ accentColor: "#2563eb" }} />
+                              <span style={{ fontSize: 13 }}>{em.name}</span>
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Mode selection */}
+                        {sel.length > 0 && <div style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #2563eb" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#eff6ff" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
+                          </div>
+                        </div>}
+
+                        {/* Equal mode summary */}
+                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#eff6ff", borderRadius: 6, padding: "6px 10px", fontSize: 11, color: "#1e40af" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
+
+                        {/* Promo mode mapping */}
+                        {sel.length > 0 && assignMode === "promo" && <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน</div>
+                          <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
+                            {promoKeys.map((pk) => (
+                              <div key={pk} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "10px 12px", alignItems: "center", borderBottom: "1px solid #f3f4f6" }}>
+                                <span style={{ fontSize: 13 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
+                                <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
+                                <select value={promoMap[pk] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, promo_map: { ...promoMap, [pk]: e2.target.value } } })} style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 12 }}>
+                                  <option value="">— เลือก —</option>
+                                  {sel.map((name) => <option key={name} value={name}>{name}</option>)}
+                                </select>
+                              </div>
+                            ))}
+                          </div>
+                          {Object.keys(promoMap).length > 0 && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 11, color: "#92400e" }}>
+                            {sel.map((name) => {
+                              const count = selCustomers.filter((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; return promoMap[p] === name; }).length;
+                              return count > 0 ? name + " (" + count + ")" : null;
+                            }).filter(Boolean).join(", ")}
+                          </div>}
+                        </div>}
+                      </div>;
+                    })()}
                     {f === "status" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}</select>}
                     {f === "supervisor" && <select value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} style={iS}><option value="">เลือก</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select>}
                     {f === "previous_promo" && <input style={iS} value={quickUpdate.fieldValues[f] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, [f]: e2.target.value } })} />}
@@ -1050,7 +1096,21 @@ function CRMApp({ currentUser, onLogout }) {
                 const total = selectedRows.length;
                 setProgress({ current: 0, total, label: "กำลังอัปเดตข้อมูล..." });
                 const assignList = quickUpdate.fieldValues.assigned_to_list || [];
-                if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
+                const assignMode = quickUpdate.fieldValues.assign_mode || "equal";
+                const promoMap = quickUpdate.fieldValues.promo_map || {};
+                if (quickUpdate.fields.includes("assigned_to") && assignMode === "promo" && Object.keys(promoMap).length > 0) {
+                  // Assign by promo
+                  const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
+                  for (let i = 0; i < total; i++) {
+                    const c = customers.find((cx) => cx.id === selectedRows[i]);
+                    const m = String(c?.previous_promo || "").match(/\((\d+)\)/);
+                    const pk = m ? m[1] : "ไม่มีโปร";
+                    const emp = promoMap[pk] || assignList[0] || "";
+                    if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", selectedRows[i]);
+                    else await supabase.from("crm_customers").update(u2).eq("id", selectedRows[i]);
+                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
+                  }
+                } else if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
                   for (let i = 0; i < total; i++) {
                     const emp = assignList[i % assignList.length];
