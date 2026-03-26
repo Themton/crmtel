@@ -318,8 +318,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [assignFilter, setAssignFilter] = useState("all");
+  const [colFilters, setColFilters] = useState({});
   const [settingsSubTab, setSettingsSubTab] = useState("statuses");
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [assignSelected, setAssignSelected] = useState([]);
@@ -490,18 +489,22 @@ function CRMApp({ currentUser, onLogout }) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
 
+  const colKeys = ["name","phone","note","previous_promo","order_date","received_product","status","assigned_to","created_at","call_date","call_subject","call_note","customer_relation","next_follow","offer","product_price"];
+  const setColF = (key, val) => setColFilters((p) => ({ ...p, [key]: val }));
+
   const fc = customers.filter((c) => {
-    // พนักงานเห็นแค่ลูกค้าตัวเอง
     if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
-    const q = search?.toLowerCase();
-    const ms = !search || [c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q));
-    return ms && (statusFilter === "all" || c.status === statusFilter) && (assignFilter === "all" || (assignFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignFilter));
+    for (const key of colKeys) {
+      const fv = colFilters[key];
+      if (!fv) continue;
+      const cv = String(c[key] || "").toLowerCase();
+      if (!cv.includes(fv.toLowerCase())) return false;
+    }
+    return true;
   });
 
   const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
   const stats = [{ l: "ทั้งหมด", v: myCustomers.length, c: "#2563eb" }, ...statuses.map((s) => ({ l: s.label, v: myCustomers.filter((c) => c.status === s.key).length, c: s.color }))];
-  const statusOpts = [{ value: "all", label: "ทั้งหมด" }, ...statuses.map((s) => ({ value: s.key, label: s.label, badge: s.color }))];
-  const assignOpts = [{ value: "all", label: "ทั้งหมด" }, { value: "unassigned", label: "ยังไม่ได้มอบหมาย" }, ...employees.map((e) => ({ value: e.name, label: e.name }))];
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
@@ -583,21 +586,54 @@ function CRMApp({ currentUser, onLogout }) {
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-              <PillDropdown label="สถานะ: ทั้งหมด" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
-              <PillDropdown label="มอบหมาย: ทั้งหมด" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />
-              <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 300 }}>
-                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาทุกคอลัมน์..." style={{ ...iS, paddingLeft: 40, borderRadius: 20, border: "2px solid #e5e7eb" }} />
-              </div>
-            </div>
             <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                  <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>)}
-                  </tr></thead>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
+                      <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === fc.length && fc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
+                      {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap" }}>{h}</th>)}
+                    </tr>
+                    <tr style={{ background: "#f0f7ff", borderBottom: "1px solid #dbeafe" }}>
+                      <td style={{ padding: "4px 6px" }}>
+                        {Object.values(colFilters).some((v) => v) && <button onClick={() => setColFilters({})} style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>ล้าง</button>}
+                      </td>
+                      {colKeys.map((key, i) => (
+                        <td key={i} style={{ padding: "4px 4px" }}>
+                          {key === "status" ? (
+                            <select value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", background: colFilters[key] ? "#dbeafe" : "#fff" }}>
+                              <option value="">ทั้งหมด</option>
+                              {statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
+                            </select>
+                          ) : key === "assigned_to" ? (
+                            <select value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", background: colFilters[key] ? "#dbeafe" : "#fff" }}>
+                              <option value="">ทั้งหมด</option>
+                              {employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
+                            </select>
+                          ) : key === "call_subject" ? (
+                            <select value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", background: colFilters[key] ? "#dbeafe" : "#fff" }}>
+                              <option value="">ทั้งหมด</option>
+                              {callSubjects.map((cs) => <option key={cs.id} value={cs.label}>{cs.label}</option>)}
+                            </select>
+                          ) : key === "received_product" ? (
+                            <select value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", background: colFilters[key] ? "#dbeafe" : "#fff" }}>
+                              <option value="">ทั้งหมด</option>
+                              <option value="true">ได้รับ</option>
+                              <option value="false">รอส่ง</option>
+                            </select>
+                          ) : key === "customer_relation" ? (
+                            <select value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", background: colFilters[key] ? "#dbeafe" : "#fff" }}>
+                              <option value="">ทั้งหมด</option>
+                              {[1,2,3,4,5].map((n) => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          ) : (
+                            <input value={colFilters[key] || ""} onChange={(e) => setColF(key, e.target.value)} placeholder="🔍" style={{ width: "100%", padding: "4px 6px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, outline: "none", boxSizing: "border-box", background: colFilters[key] ? "#dbeafe" : "#fff", minWidth: 60 }} />
+                          )}
+                        </td>
+                      ))}
+                      <td></td>
+                    </tr>
+                  </thead>
                   <tbody>
                     {fc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
