@@ -339,6 +339,8 @@ function CRMApp({ currentUser, onLogout }) {
   const [assignSelected, setAssignSelected] = useState([]);
   const [toast, setToast] = useState(null);
   const [successModal, setSuccessModal] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotif, setShowNotif] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
@@ -377,6 +379,13 @@ function CRMApp({ currentUser, onLogout }) {
         safeFetch("crm_settings"),
       ]);
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // Fetch notifications for current user
+      if (currentUser?.name) {
+        try {
+          const nRes = await supabase.from("crm_notifications").select();
+          if (nRes.data) setNotifications(nRes.data.filter((n) => n.to_user === currentUser.name && !n.read));
+        } catch {}
+      }
       // Load column order
       if (settings.length > 0) {
         let orderKey = "col_order_" + (currentUser?.name || "default");
@@ -600,6 +609,12 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress(null);
     await fetchAll();
     const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
+    // Send notifications to assigned employees
+    for (let i = 0; i < assignEmployees.length; i++) {
+      if (chunks[i].length > 0) {
+        try { await supabase.from("crm_notifications").insert({ to_user: assignEmployees[i], from_user: currentUser?.name || "admin", message: "มอบหมายลูกค้า " + chunks[i].length + " คนให้คุณ", type: "assign", count: chunks[i].length, read: false, created_at: new Date().toISOString() }); } catch {}
+      }
+    }
     showToast("กระจาย " + total + " ลูกค้าสำเร็จ ✓ → " + summary);
     setSuccessModal({ count: total, detail: summary });
     setAssignSelected([]); setAssignEmployees([]);
@@ -717,6 +732,31 @@ function CRMApp({ currentUser, onLogout }) {
         {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }}>
+              🔔
+              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
+            </button>
+            {showNotif && <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 340, zIndex: 200, animation: "fadeIn .15s" }}>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
+                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>อ่านทั้งหมด</button>}
+              </div>
+              <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>ไม่มีแจ้งเตือน</div>
+                ) : notifications.map((n) => (
+                  <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", background: "#fffbeb" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
+                      <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>}
+          </div>
           <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
@@ -1486,7 +1526,15 @@ function CRMApp({ currentUser, onLogout }) {
                   }
                 }
                 setProgress(null);
-                await fetchAll(); setSuccessModal({ count: total, detail: quickUpdate.fields.map((f) => COL_DEFS[f] ? COL_DEFS[f].label : f).join(", ") }); setSelectedRows([]); setQuickUpdate(null);
+                await fetchAll();
+                // Send notifications if assigned_to was updated
+                if (quickUpdate.fields.includes("assigned_to")) {
+                  const assignList2 = quickUpdate.fieldValues.assigned_to_list || [];
+                  for (const empName of assignList2) {
+                    try { await supabase.from("crm_notifications").insert({ to_user: empName, from_user: currentUser?.name || "admin", message: "อัปเดตลูกค้า " + total + " คนให้คุณ", type: "assign", count: total, read: false, created_at: new Date().toISOString() }); } catch {}
+                  }
+                }
+                setSuccessModal({ count: total, detail: quickUpdate.fields.map((f) => COL_DEFS[f] ? COL_DEFS[f].label : f).join(", ") }); setSelectedRows([]); setQuickUpdate(null);
               }} style={{ ...bp, padding: "12px 32px", fontSize: 16 }}>อัปเดต</button>
             </div>
           </div>
@@ -1570,7 +1618,7 @@ function CRMApp({ currentUser, onLogout }) {
         <div style={{ background: "#fff", borderRadius: 16, padding: 36, width: "100%", maxWidth: 420, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: "#3d2a0a", marginBottom: 20 }}>{progress.label}</div>
           <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
-            <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #2563eb, #38bdf8)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #d4a017, #f59e0b)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
             </div>
           </div>
