@@ -1049,23 +1049,23 @@ function CRMApp({ currentUser, onLogout }) {
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {viewMode === "list" ? (
-                <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
-                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 12 }} className="crm-table">
+                <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 280px)" }}>
+                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 10.5 }} className="crm-table">
                     <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                      <th style={{ padding: "6px 10px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
-                      <th style={{ padding: "6px 8px", width: 36, fontWeight: 700, color: "#374151", fontSize: 11 }}>#</th>
-                      {activeColOrder.map((key) => <th key={key} style={{ padding: "6px 10px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", fontSize: 11 }}>{COL_DEFS[key].label}</th>)}
+                      <th style={{ padding: "4px 8px", width: 30 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></th>
+                      <th style={{ padding: "4px 6px", width: 28, fontWeight: 700, color: "#374151", fontSize: 10 }}>#</th>
+                      {activeColOrder.map((key) => <th key={key} style={{ padding: "4px 6px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", fontSize: 10 }}>{COL_DEFS[key].label}</th>)}
                     </tr></thead>
                     <tbody>
                       {pagedFc.map((c, idx) => (
-                        <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 34 }}
+                        <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 26 }}
                           onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f8fafc")}
                           onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                          <td style={{ padding: "2px 10px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
-                          <td style={{ padding: "2px 8px", color: "#9ca3af", fontSize: 11, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                          <td style={{ padding: "1px 8px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></td>
+                          <td style={{ padding: "1px 6px", color: "#9ca3af", fontSize: 10, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                           {activeColOrder.map((key) => {
                             const col = COL_DEFS[key];
-                            return <td key={key} style={{ padding: "2px 4px", minWidth: col.minW ? col.minW * 0.7 : undefined, maxWidth: col.maxW }}>{col.render(c)}</td>;
+                            return <td key={key} style={{ padding: "1px 3px", minWidth: col.minW ? col.minW * 0.6 : undefined, maxWidth: col.maxW ? col.maxW * 0.7 : undefined }}>{col.render(c)}</td>;
                           })}
                         </tr>
                       ))}
