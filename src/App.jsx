@@ -896,11 +896,7 @@ function CRMApp({ currentUser, onLogout }) {
                           <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
-                            <option value="status">สถานะ</option><option value="call_subject">หัวข้อโทร</option>
-                            <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
-                            <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
-                            <option value="previous_promo">โปรก่อนหน้า</option>
-                            <option value="assigned_to">มอบหมาย</option>
+                            {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                           </select>
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
