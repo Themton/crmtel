@@ -362,7 +362,8 @@ function CRMApp({ currentUser, onLogout }) {
   const handleRevoke = () => { if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: "", supervisor: "" } : c)); showToast("ถอนสิทธิ์แล้ว", "warning"); setAssignSelected([]); };
 
   const fc = customers.filter((c) => {
-    const ms = !search || c.name?.toLowerCase().includes(search.toLowerCase()) || c.phone?.includes(search);
+    const q = search?.toLowerCase();
+    const ms = !search || [c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q));
     return ms && (statusFilter === "all" || c.status === statusFilter) && (assignFilter === "all" || (assignFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignFilter));
   });
 
@@ -451,11 +452,11 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-              <PillDropdown label="สถานะ" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
-              <PillDropdown label="มอบหมาย" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />
+              <PillDropdown label="สถานะ: ทั้งหมด" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
+              <PillDropdown label="มอบหมาย: ทั้งหมด" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />
               <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 300 }}>
                 <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ ...iS, paddingLeft: 40, borderRadius: 20, border: "2px solid #e5e7eb" }} />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาทุกคอลัมน์..." style={{ ...iS, paddingLeft: 40, borderRadius: 20, border: "2px solid #e5e7eb" }} />
               </div>
             </div>
             <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
