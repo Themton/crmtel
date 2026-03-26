@@ -1049,33 +1049,43 @@ function CRMApp({ currentUser, onLogout }) {
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {viewMode === "list" ? (
-                <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
+                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 12 }} className="crm-table">
                     <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                      <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151", width: 50 }}>#</th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>ชื่อ</th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>เบอร์โทร</th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>โปร</th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>สถานะ</th>
-                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>มอบหมาย</th>
-                      <th style={{ padding: "10px 14px", width: 40 }}></th>
+                      <th style={{ padding: "8px 10px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
+                      <th style={{ padding: "8px 8px", width: 36, fontWeight: 700, color: "#374151" }}>#</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 120 }}>ชื่อ</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 100 }}>เบอร์โทร</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 200 }}>โน้ต</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 130 }}>โปรก่อนหน้า</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 150 }}>วันที่สั่งซื้อ</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 80 }}>ได้รับสินค้า</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 100 }}>Assigned To</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 100 }}>สถานะ</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 80 }}>ชื่อพนักงาน</th>
+                      <th style={{ padding: "8px 10px", textAlign: "left", fontWeight: 700, color: "#374151", minWidth: 100 }}>วันที่โทร</th>
                     </tr></thead>
                     <tbody>
-                      {pagedFc.map((c, idx) => (
-                        <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                          <td style={{ padding: "10px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
-                          <td style={{ padding: "10px 14px", color: "#9ca3af", fontSize: 12 }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
-                          <td style={{ padding: "10px 14px", fontWeight: 600, color: "#3d2a0a" }}>{c.name}</td>
-                          <td style={{ padding: "10px 14px", color: "#6b7280", fontSize: 12 }}>{c.phone}</td>
-                          <td style={{ padding: "10px 14px" }}>{c.previous_promo && <span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11 }}>{(() => { const m = String(c.previous_promo).match(/\((\d+)\)/); return m ? m[1] : c.previous_promo; })()}</span>}</td>
-                          <td style={{ padding: "10px 14px" }}>{(() => { const st = statuses.find((s) => s.key === c.status); return st ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : c.status; })()}</td>
-                          <td style={{ padding: "10px 14px", fontSize: 12, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600 }}>{c.assigned_to || "—"}</td>
-                          <td style={{ padding: "10px 14px" }}><button onClick={() => setModal({ type: "customer", mode: "edit", data: { ...c } })} style={{ background: "none", border: "1px solid #e5e7eb", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", color: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⊕</button></td>
-                        </tr>
-                      ))}
+                      {pagedFc.map((c, idx) => {
+                        const st = statuses.find((s) => s.key === c.status);
+                        const emp = employees.find((e) => e.name === c.assigned_to);
+                        return <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}
+                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")}
+                          onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                          <td style={{ padding: "6px 10px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
+                          <td style={{ padding: "6px 8px", color: "#9ca3af", fontSize: 11 }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                          <td style={{ padding: "6px 10px", fontWeight: 600, color: "#3d2a0a", whiteSpace: "nowrap", maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</td>
+                          <td style={{ padding: "6px 10px", color: "#6b7280", fontSize: 11 }}>{c.phone}</td>
+                          <td style={{ padding: "6px 10px", color: "#6b7280", fontSize: 11, maxWidth: 250, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.note}</td>
+                          <td style={{ padding: "6px 10px", fontSize: 11 }}>{c.previous_promo}</td>
+                          <td style={{ padding: "6px 10px", fontSize: 11, color: "#6b7280" }}>{c.order_date}</td>
+                          <td style={{ padding: "6px 10px" }}>{c.received_product ? <span style={{ color: "#059669", fontWeight: 600, fontSize: 11 }}>✓ ได้รับ</span> : <span style={{ color: "#d97706", fontSize: 11 }}>รอส่ง</span>}</td>
+                          <td style={{ padding: "6px 10px", fontSize: 11, color: "#92400e", fontWeight: 600 }}>{c.assigned_to || ""}</td>
+                          <td style={{ padding: "6px 10px" }}>{st ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : ""}</td>
+                          <td style={{ padding: "6px 10px", fontSize: 11, color: "#6b7280" }}>{emp?.nickname || ""}</td>
+                          <td style={{ padding: "6px 10px", fontSize: 11, color: "#6b7280" }}>{c.call_date || ""}</td>
+                        </tr>;
+                      })}
                     </tbody>
                   </table>
                   {fc.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
