@@ -553,7 +553,7 @@ function CRMApp({ currentUser, onLogout }) {
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + trash.length + ")", icon: <I.Trash2 />, role: "admin" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
@@ -595,7 +595,7 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ลูกค้า ({fc.length})</h2>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {selectedRows.length > 0 && <>
+                {selectedRows.length > 0 && currentUser?.role === "admin" && <>
                   <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #2563eb", background: "#eff6ff", color: "#2563eb" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
                   <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
                 </>}
@@ -746,7 +746,7 @@ function CRMApp({ currentUser, onLogout }) {
                     {fc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
-                        <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>
+                        {currentUser?.role === "admin" ? <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td> : <td></td>}
                         {/* Customer columns */}
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#1e3a5f" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
@@ -853,7 +853,7 @@ function CRMApp({ currentUser, onLogout }) {
 
           {/* TRASH */}
           {tab === "trash" && (() => {
-            const myTrash = currentUser?.role === "admin" ? trash : trash.filter((t) => t.deleted_by === currentUser?.name);
+            const myTrash = currentUser?.role === "admin" ? trash : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name);
             return <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({myTrash.length})</h2>
