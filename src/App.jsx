@@ -360,6 +360,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [promoFilter, setPromoFilter] = useState("");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
+  const [dragCol, setDragCol] = useState(null);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
   const [viewMode, setViewMode] = useState("table"); // "table" or "list"
@@ -1086,23 +1087,35 @@ function CRMApp({ currentUser, onLogout }) {
               {/* COLUMN REORDER PANEL */}
               {toolbarTab === "columns" && (
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศรเพื่อสลับ)</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศร)</span></div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {activeColOrder.map((key, idx) => (
-                      <div key={key} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", borderRadius: 8, background: "#fff", border: "1px solid #e5e7eb", fontSize: 13, fontWeight: 600, color: "#3d2a0a", cursor: "grab" }}
+                      <div key={key}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 13, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
                         draggable
-                        onDragStart={(e) => e.dataTransfer.setData("colIdx", String(idx))}
-                        onDragOver={(e) => e.preventDefault()}
+                        onDragStart={(e) => { setDragCol(idx); e.dataTransfer.effectAllowed = "move"; }}
+                        onDragEnd={() => setDragCol(null)}
+                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+                        onDragEnter={(e) => { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; }}
+                        onDragLeave={(e) => { if (dragCol !== idx) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}
                         onDrop={(e) => {
-                          const fromIdx = parseInt(e.dataTransfer.getData("colIdx"));
-                          const newOrder = [...activeColOrder];
-                          const [item] = newOrder.splice(fromIdx, 1);
-                          newOrder.splice(idx, 0, item);
-                          setColOrder(newOrder);
-                        }}>
-                        <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: idx > 0 ? "#d4a017" : "#e5e7eb", fontSize: 14, padding: 0 }}>◀</button>
-                        <span>{COL_DEFS[key].label}</span>
-                        <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb", fontSize: 14, padding: 0 }}>▶</button>
+                          e.preventDefault();
+                          if (dragCol !== null && dragCol !== idx) {
+                            const newOrder = [...activeColOrder];
+                            const [item] = newOrder.splice(dragCol, 1);
+                            newOrder.splice(idx, 0, item);
+                            setColOrder(newOrder);
+                          }
+                          setDragCol(null);
+                          e.currentTarget.style.borderColor = "#e5e7eb";
+                          e.currentTarget.style.background = "#fff";
+                        }}
+                        onMouseEnter={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; } }}
+                        onMouseLeave={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}>
+                        <span style={{ cursor: "grab", fontSize: 12, opacity: 0.5 }}>☰</span>
+                        <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 14, padding: 0, fontWeight: 900 }}>◀</button>
+                        <span style={{ fontSize: 12 }}>{COL_DEFS[key].label}</span>
+                        <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 14, padding: 0, fontWeight: 900 }}>▶</button>
                       </div>
                     ))}
                   </div>
