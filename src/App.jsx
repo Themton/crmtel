@@ -80,6 +80,8 @@ const I = {
   Download: () => <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
   Menu: () => <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
   FileDown: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>,
+  Trash2: () => <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+  Restore: () => <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>,
 };
 
 // ---- COMPONENTS ----
@@ -316,14 +318,45 @@ function CRMApp({ currentUser, onLogout }) {
   const [toast, setToast] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
+  const [trash, setTrash] = useState([]);
   const fileRef = useRef(null);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
   const setterMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
 
   const handleSave = (table, data, mode) => { const s = setterMap[table]; if (!s) return; if (mode === "add") s((p) => [...p, { ...data, id: Date.now(), created_at: new Date().toISOString().slice(0, 10) }]); else s((p) => p.map((r) => r.id === data.id ? { ...r, ...data } : r)); setModal(null); };
-  const handleDelete = (table, id) => { if (!confirm("ต้องการลบ?")) return; setterMap[table]?.((p) => p.filter((r) => r.id !== id)); };
-  const handleBulkDelete = () => { if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return; setCustomers((p) => p.filter((r) => !selectedRows.includes(r.id))); setSelectedRows([]); };
+  const handleDelete = (table, id) => {
+    if (!confirm("ต้องการลบ?")) return;
+    if (table === "crm_customers") {
+      const item = customers.find((c) => c.id === id);
+      if (item) setTrash((p) => [{ ...item, deleted_at: new Date().toISOString().slice(0, 10) }, ...p]);
+    }
+    setterMap[table]?.((p) => p.filter((r) => r.id !== id));
+  };
+  const handleBulkDelete = () => {
+    if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
+    const deleted = customers.filter((r) => selectedRows.includes(r.id));
+    setTrash((p) => [...deleted.map((d) => ({ ...d, deleted_at: new Date().toISOString().slice(0, 10) })), ...p]);
+    setCustomers((p) => p.filter((r) => !selectedRows.includes(r.id)));
+    setSelectedRows([]);
+  };
+  const handleRestore = (id) => {
+    const item = trash.find((t) => t.id === id);
+    if (!item) return;
+    const { deleted_at, ...rest } = item;
+    setCustomers((p) => [rest, ...p]);
+    setTrash((p) => p.filter((t) => t.id !== id));
+    showToast("กู้คืนแล้ว");
+  };
+  const handlePermanentDelete = (id) => {
+    if (!confirm("ลบถาวร?")) return;
+    setTrash((p) => p.filter((t) => t.id !== id));
+  };
+  const handleEmptyTrash = () => {
+    if (!confirm("ลบถาวรทั้งหมด " + trash.length + " รายการ?")) return;
+    setTrash([]);
+    showToast("ล้างถังขยะแล้ว");
+  };
   const upd = (id, f, v) => setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
 
   const handleImport = (e) => {
@@ -362,6 +395,8 @@ function CRMApp({ currentUser, onLogout }) {
   const handleRevoke = () => { if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return; setCustomers((p) => p.map((c) => assignSelected.includes(c.id) ? { ...c, assigned_to: "", supervisor: "" } : c)); showToast("ถอนสิทธิ์แล้ว", "warning"); setAssignSelected([]); };
 
   const fc = customers.filter((c) => {
+    // พนักงานเห็นแค่ลูกค้าตัวเอง
+    if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
     const q = search?.toLowerCase();
     const ms = !search || [c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q));
     return ms && (statusFilter === "all" || c.status === statusFilter) && (assignFilter === "all" || (assignFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignFilter));
@@ -398,7 +433,7 @@ function CRMApp({ currentUser, onLogout }) {
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + trash.length + ")", icon: <I.Trash2 />, role: "admin" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setStatusFilter("all"); setAssignFilter("all"); setAssignSelected([]); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
@@ -574,6 +609,52 @@ function CRMApp({ currentUser, onLogout }) {
               </div>))}</div>
             </div>}
           </div>}
+
+          {/* TRASH */}
+          {tab === "trash" && <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({trash.length})</h2>
+              {trash.length > 0 && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
+            </div>
+            {trash.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 12 }}>🗑️</div>
+                <div style={{ color: "#9ca3af", fontSize: 16 }}>ไม่มีข้อมูลที่ลบ</div>
+              </div>
+            ) : (
+              <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
+                      {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>
+                      {trash.map((t) => {
+                        const st = statuses.find((s) => s.key === t.status);
+                        return (
+                          <tr key={t.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                            <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1e3a5f" }}>{t.name}</td>
+                            <td style={{ padding: "12px 14px" }}>{t.phone}</td>
+                            <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
+                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
+                            <td style={{ padding: "12px 14px", color: "#6b7280" }}>{t.assigned_to || "—"}</td>
+                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 12 }}>{t.deleted_at}</td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <div style={{ display: "flex", gap: 8 }}>
+                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
+                                <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>}
+
         </main>
       </div>
 
