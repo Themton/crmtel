@@ -619,6 +619,11 @@ function CRMApp({ currentUser, onLogout }) {
       // Advanced filters
       for (const af of advFilters) {
         if (!af.field || !af.value) continue;
+        if (af.field === "assigned_to" && af.value === "__unassigned__") {
+          if (af.op === "eq" && c.assigned_to) return false;
+          if (af.op === "neq" && !c.assigned_to) return false;
+          continue;
+        }
         const cv = String(c[af.field] || "").toLowerCase();
         const fv = af.value.toLowerCase();
         if (af.op === "contains" && !cv.includes(fv)) return false;
@@ -846,6 +851,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
                         <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
                         <option value="previous_promo">โปรก่อนหน้า</option>
+                        <option value="assigned_to">มอบหมาย</option>
                       </select>
                       <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                         style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 130 }}>
@@ -866,6 +872,10 @@ function CRMApp({ currentUser, onLogout }) {
                       ) : af.field === "customer_relation" ? (
                         <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
                           <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                        </select>
+                      ) : af.field === "assigned_to" ? (
+                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
+                          <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
                         </select>
                       ) : (
                         <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }} />
