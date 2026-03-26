@@ -408,12 +408,32 @@ function CRMApp({ currentUser, onLogout }) {
         <main style={{ flex: 1, padding: 28, overflowX: "auto" }}>
 
           {/* DASHBOARD */}
-          {tab === "dashboard" && <div>
+          {tab === "dashboard" && (() => {
+            const maxVal = Math.max(...stats.map((s) => s.v), 1);
+            return <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>แดชบอร์ด</h2>
+            {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
               {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
             </div>
-          </div>}
+            {/* Bar chart */}
+            <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>สถานะลูกค้า</h3>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, height: 280, padding: "0 10px" }}>
+                {stats.filter((_, i) => i > 0).map((s, i) => {
+                  const pct = (s.v / maxVal) * 100;
+                  return (
+                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: s.c }}>{s.v}</span>
+                      <div style={{ width: "100%", maxWidth: 60, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
+                      <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>;
+          })()}
 
           {/* CUSTOMERS — SINGLE BIG TABLE with call columns */}
           {tab === "customers" && <div>
