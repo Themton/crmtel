@@ -357,7 +357,9 @@ function CRMApp({ currentUser, onLogout }) {
   const [promoFilter, setPromoFilter] = useState("");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const fileRef = useRef(null);
-  const PAGE_SIZE = 500;
+  const [pageSize, setPageSize] = useState(100);
+  const PAGE_SIZE = pageSize;
+  const [lastChecked, setLastChecked] = useState(null);
 
   // ---- EFFECTS ----
   useEffect(() => { setPage(1); }, [search, promoFilter]);
@@ -936,8 +938,14 @@ function CRMApp({ currentUser, onLogout }) {
               )}
             </div>
             {/* PAGINATION TOP */}
-            {totalPages > 1 && <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 600 }}>แสดง {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017" }}>{fc.length}</span> รายการ</span>
+            {<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>แสดง</span>
+                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 13, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
+                  <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
+                </select>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
+              </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
                 <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
@@ -986,7 +994,20 @@ function CRMApp({ currentUser, onLogout }) {
                   <tbody>
                     {pagedFc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
+                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onClick={(e) => {
+                          if (e.shiftKey && lastChecked !== null) {
+                            const curIdx = pagedFc.findIndex((x) => x.id === c.id);
+                            const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked);
+                            if (curIdx >= 0 && lastIdx >= 0) {
+                              const start = Math.min(curIdx, lastIdx);
+                              const end = Math.max(curIdx, lastIdx);
+                              const rangeIds = pagedFc.slice(start, end + 1).map((x) => x.id);
+                              setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]);
+                              e.preventDefault(); return;
+                            }
+                          }
+                          setLastChecked(c.id);
+                        }} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
                         {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
                         <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#3d2a0a" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
