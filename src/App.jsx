@@ -1076,24 +1076,35 @@ function CRMApp({ currentUser, onLogout }) {
 
                         {/* Promo mode mapping */}
                         {sel.length > 0 && assignMode === "promo" && <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
-                            {promoKeys.map((pk) => (
-                              <div key={pk} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "10px 12px", alignItems: "center", borderBottom: "1px solid #f3f4f6" }}>
-                                <span style={{ fontSize: 13 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
-                                <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
-                                <select value={promoMap[pk] || ""} onChange={(e2) => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, promo_map: { ...promoMap, [pk]: e2.target.value } } })} style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 12 }}>
-                                  <option value="">— เลือก —</option>
-                                  {sel.map((name) => <option key={name} value={name}>{name}</option>)}
-                                </select>
-                              </div>
-                            ))}
+                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
+                            {promoKeys.map((pk) => {
+                              const pkSel = promoMap[pk] || [];
+                              return <div key={pk} style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", padding: "10px 12px", alignItems: "start", borderBottom: "1px solid #f3f4f6" }}>
+                                <span style={{ fontSize: 13, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
+                                <span style={{ textAlign: "center", color: "#9ca3af", paddingTop: 6 }}>→</span>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                                  {sel.map((name) => (
+                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 12 }}
+                                      onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f0f7ff")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                                      <input type="checkbox" checked={pkSel.includes(name)} onChange={(e2) => {
+                                        const nv = e2.target.checked ? [...pkSel, name] : pkSel.filter((n) => n !== name);
+                                        setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, promo_map: { ...promoMap, [pk]: nv } } });
+                                      }} style={{ accentColor: "#ea580c", width: 16, height: 16 }} />
+                                      <span>{name}</span>
+                                    </label>
+                                  ))}
+                                  {pkSel.length > 1 && <div style={{ fontSize: 10, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
+                                </div>
+                              </div>;
+                            })}
                           </div>
-                          {Object.keys(promoMap).length > 0 && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 11, color: "#92400e" }}>
-                            {sel.map((name) => {
-                              const count = selCustomers.filter((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; return promoMap[p] === name; }).length;
-                              return count > 0 ? name + " (" + count + ")" : null;
+                          {Object.values(promoMap).some((v) => v?.length > 0) && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 11, color: "#92400e" }}>
+                            สรุป: {sel.map((name) => {
+                              let count = 0;
+                              selCustomers.forEach((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; const pkList = promoMap[p] || []; if (pkList.includes(name)) count += Math.ceil(promoGroups[p] / pkList.length); });
+                              return count > 0 ? name + " (~" + count + ")" : null;
                             }).filter(Boolean).join(", ")}
                           </div>}
                         </div>}
@@ -1122,16 +1133,28 @@ function CRMApp({ currentUser, onLogout }) {
                 const assignMode = quickUpdate.fieldValues.assign_mode || "equal";
                 const promoMap = quickUpdate.fieldValues.promo_map || {};
                 if (quickUpdate.fields.includes("assigned_to") && assignMode === "promo" && Object.keys(promoMap).length > 0) {
-                  // Assign by promo
+                  // Assign by promo - each promo can have multiple employees
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
-                  for (let i = 0; i < total; i++) {
-                    const c = customers.find((cx) => cx.id === selectedRows[i]);
+                  // Group selected customers by promo
+                  const promoGroups = {};
+                  selectedRows.forEach((rid) => {
+                    const c = customers.find((cx) => cx.id === rid);
                     const m = String(c?.previous_promo || "").match(/\((\d+)\)/);
                     const pk = m ? m[1] : "ไม่มีโปร";
-                    const emp = promoMap[pk] || assignList[0] || "";
-                    if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", selectedRows[i]);
-                    else await supabase.from("crm_customers").update(u2).eq("id", selectedRows[i]);
-                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
+                    if (!promoGroups[pk]) promoGroups[pk] = [];
+                    promoGroups[pk].push(rid);
+                  });
+                  let done = 0;
+                  for (const pk of Object.keys(promoGroups)) {
+                    const empList = promoMap[pk] || [];
+                    const rids = promoGroups[pk];
+                    for (let j = 0; j < rids.length; j++) {
+                      const emp = empList.length > 0 ? empList[j % empList.length] : (assignList[0] || "");
+                      if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", rids[j]);
+                      else await supabase.from("crm_customers").update(u2).eq("id", rids[j]);
+                      done++;
+                      setProgress({ current: done, total, label: "กำลังอัปเดตข้อมูล..." });
+                    }
                   }
                 } else if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
