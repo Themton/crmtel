@@ -114,7 +114,7 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
         {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
@@ -133,7 +133,7 @@ function SubjectDropdown({ value, subjects, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
         {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
@@ -218,10 +218,10 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (type === "datetime" && value) { try { display = new Date(value).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }); } catch {} }
   if (type === "date" && value) { try { display = new Date(value + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch {} }
   return (
-    <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "3px 6px", borderRadius: 6, border: "2px solid transparent", minHeight: 20, ...sx }}
+    <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", minHeight: 16, overflow: "hidden", ...sx }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
-      <span style={{ fontSize: 12, color: value ? "#1e293b" : "#9ca3af" }}>{display}</span>
+      <span style={{ fontSize: 10, color: value ? "#1e293b" : "#c0c0c0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: 200 }}>{display}</span>
     </div>
   );
 }
@@ -684,7 +684,7 @@ function CRMApp({ currentUser, onLogout }) {
     note: { label: "ที่อยู่", render: (c) => <EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" />, maxW: 180 },
     previous_promo: { label: "โปรก่อนหน้า", render: (c) => <EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /> },
     order_date: { label: "วันที่สั่งซื้อ", render: (c) => <EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /> },
-    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
+    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 9 }} onClick={() => upd(c.id, "received_product", false)}>✓ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 9 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
     status: { label: "สถานะ", render: (c) => <InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => { upd(c.id, "status", v); if (c.status === "not_called" && v !== "not_called") upd(c.id, "call_date", new Date().toISOString().slice(0, 10)); }} />, minW: 120 },
     call_subject: { label: "หัวข้อโทร", render: (c) => <SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /> },
     call_date: { label: "วันที่โทร", render: (c) => <EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /> },
@@ -692,8 +692,8 @@ function CRMApp({ currentUser, onLogout }) {
     customer_relation: { label: "ความสัมพันธ์ลูกค้า", render: (c) => <RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /> },
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
-    assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
-    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
+    assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 9, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 9, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
@@ -1567,7 +1567,7 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </div>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b}`}</style>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-table td{max-height:22px;line-height:1.2} .crm-table tr{height:22px!important}`}</style>
     </div>
   );
 }
