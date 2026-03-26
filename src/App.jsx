@@ -647,28 +647,93 @@ function CRMApp({ currentUser, onLogout }) {
           {/* DASHBOARD */}
           {tab === "dashboard" && (() => {
             const maxVal = Math.max(...stats.map((s) => s.v), 1);
+            // Daily call stats - count customers where status != not_called, grouped by call_date
+            const dailyCalls = {};
+            myCustomers.forEach((c) => {
+              if (c.status !== "not_called" && c.call_date) {
+                const d = c.call_date.slice(0, 10);
+                if (!dailyCalls[d]) dailyCalls[d] = { total: 0 };
+                dailyCalls[d].total++;
+                // Count by status
+                const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status;
+                if (!dailyCalls[d][stLabel]) dailyCalls[d][stLabel] = 0;
+                dailyCalls[d][stLabel]++;
+              }
+            });
+            const dailyKeys = Object.keys(dailyCalls).sort((a, b) => b.localeCompare(a)).slice(0, 14);
+            const maxDaily = Math.max(...dailyKeys.map((k) => dailyCalls[k].total), 1);
             return <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>แดชบอร์ด</h2>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
               {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
             </div>
-            {/* Bar chart */}
-            <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>สถานะลูกค้า</h3>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, height: 280, padding: "0 10px" }}>
-                {stats.filter((_, i) => i > 0).map((s, i) => {
-                  const pct = (s.v / maxVal) * 100;
-                  return (
-                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: s.c }}>{s.v}</span>
-                      <div style={{ width: "100%", maxWidth: 60, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
-                      <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
-                    </div>
-                  );
-                })}
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
+              {/* Bar chart - สถานะ */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>สถานะลูกค้า</h3>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 220, padding: "0 10px" }}>
+                  {stats.filter((_, i) => i > 0).map((s, i) => {
+                    const pct = (s.v / maxVal) * 100;
+                    return (
+                      <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</span>
+                        <div style={{ width: "100%", maxWidth: 50, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
+                        <span style={{ fontSize: 10, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Daily calls chart */}
+              <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>โทรรายวัน (สถานะ ≠ ยังไม่ได้โทร)</h3>
+                {dailyKeys.length === 0 ? (
+                  <div style={{ textAlign: "center", color: "#9ca3af", padding: 40 }}>ยังไม่มีข้อมูลการโทร</div>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 220, padding: "0 4px" }}>
+                    {dailyKeys.reverse().map((d) => {
+                      const pct = (dailyCalls[d].total / maxDaily) * 100;
+                      const dateStr = (() => { try { const dt = new Date(d + "T00:00:00"); return dt.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }); } catch { return d; } })();
+                      return (
+                        <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#2563eb" }}>{dailyCalls[d].total}</span>
+                          <div style={{ width: "100%", maxWidth: 40, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, #2563eb, #38bdf8)", height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8, cursor: "pointer", position: "relative" }}
+                            title={Object.entries(dailyCalls[d]).filter(([k]) => k !== "total").map(([k, v]) => k + ": " + v).join(", ")} />
+                          <span style={{ fontSize: 9, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Daily detail table */}
+            {dailyKeys.length > 0 && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 16 }}>สรุปรายวัน</h3>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
+                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#2563eb" }}>โทรแล้ว</th>
+                    {statuses.filter((s) => s.key !== "not_called").map((s) => <th key={s.id} style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: s.color }}>{s.label}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {[...dailyKeys].reverse().map((d, idx) => {
+                      const dateStr = (() => { try { return new Date(d + "T00:00:00").toLocaleDateString("th-TH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })();
+                      return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#eff6ff" : "transparent" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#2563eb", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#2563eb", fontSize: 16 }}>{dailyCalls[d].total}</td>
+                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
+                      </tr>;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>}
           </div>;
           })()}
 
