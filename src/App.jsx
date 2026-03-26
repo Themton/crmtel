@@ -145,6 +145,35 @@ function SubjectDropdown({ value, subjects, onChange }) {
   );
 }
 
+const OFFER_OPTIONS = [
+  { value: "ขายได้", color: "#059669", bg: "#d1fae5" },
+  { value: "ขายไม่ได้", color: "#dc2626", bg: "#fee2e2" },
+];
+function OfferDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const cur = OFFER_OPTIONS.find((o) => o.value === value);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
+        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
+          onMouseEnter={(e) => { if (value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value) e.currentTarget.style.background = "transparent"; }}>
+          — ว่าง —
+        </button>
+        {OFFER_OPTIONS.map((o) => (
+          <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: value === o.value ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+            onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
+            <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
+            {value === o.value && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+          </button>
+        ))}
+      </div>}
+    </div>
+  );
+}
+
 function RatingSelector({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -830,7 +859,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px", minWidth: 300 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
                         <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
-                        <td style={{ padding: "6px 4px" }}>{c.offer ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: "#d97706", cursor: "pointer" }} onClick={() => { const v = prompt("เสนอขาย:", c.offer); if (v !== null) upd(c.id, "offer", v); }}>{c.offer}</span> : <span style={{ color: "#9ca3af", cursor: "pointer", fontSize: 11 }} onClick={() => { const v = prompt("เสนอขาย:"); if (v) upd(c.id, "offer", v); }}>—</span>}</td>
+                        <td style={{ padding: "6px 4px" }}><OfferDropdown value={c.offer} onChange={(v) => upd(c.id, "offer", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
                       </tr>
                     ))}
