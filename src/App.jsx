@@ -338,6 +338,7 @@ export default function AppWrapper() {
 
 // ---- CRM APP ----
 function CRMApp({ currentUser, onLogout }) {
+  // ---- ALL STATE ----
   const [tab, setTab] = useState(currentUser?.role === "admin" ? "customers" : "dashboard");
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -357,12 +358,9 @@ function CRMApp({ currentUser, onLogout }) {
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 500;
-  useEffect(() => { setPage(1); }, [search, promoFilter]);
-  useEffect(() => { setPage(1); }, [JSON.stringify(advFilters), JSON.stringify(empFilter)]);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(null); // { current, total, label }
-  const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
+  const [progress, setProgress] = useState(null);
+  const [importResult, setImportResult] = useState(null);
   const [toolbarTab, setToolbarTab] = useState(null);
   const [advFilters, setAdvFilters] = useState([]);
   const [empFilter, setEmpFilter] = useState([]);
@@ -372,6 +370,10 @@ function CRMApp({ currentUser, onLogout }) {
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState("");
   const fileRef = useRef(null);
+  const PAGE_SIZE = 500;
+
+  // ---- EFFECTS ----
+  useEffect(() => { setPage(1); }, [search, promoFilter]);
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
   const fetchAll = useCallback(async () => {
