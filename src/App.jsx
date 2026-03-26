@@ -643,7 +643,13 @@ function CRMApp({ currentUser, onLogout }) {
           if (af.op === "neq" && !c.assigned_to) return false;
           continue;
         }
-        const cv = String(c[af.field] || "").toLowerCase();
+        let cv;
+        if (af.field === "nickname") {
+          const emp = employees.find((em) => em.name === c.assigned_to);
+          cv = String(emp?.nickname || "").toLowerCase();
+        } else {
+          cv = String(c[af.field] || "").toLowerCase();
+        }
         const fv = af.value.toLowerCase();
         if (af.op === "contains" && !cv.includes(fv)) return false;
         if (af.op === "eq" && cv !== fv) return false;
@@ -924,7 +930,9 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                           ) : (
                             (() => {
-                              const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              const vals = af.field === "nickname"
+                                ? [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort()
+                                : [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
