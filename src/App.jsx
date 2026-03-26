@@ -654,7 +654,7 @@ function CRMApp({ currentUser, onLogout }) {
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Table headers: customer fields + call fields
-  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","โปรสินค้า","มอบหมาย"];
+  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","โปรสินค้า","มอบหมาย","ชื่อเล่น"];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -1033,6 +1033,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
                         <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
+                        <td style={{ padding: "6px 8px", fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</td>
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
@@ -1115,7 +1116,7 @@ function CRMApp({ currentUser, onLogout }) {
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <button onClick={() => setMultiAddEmp([{ name: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+              <button onClick={() => setMultiAddEmp([{ name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
               {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
@@ -1416,13 +1417,14 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
           <div style={{ padding: 24 }}>
             {/* Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
-              <span>ชื่อ</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+              <span>ชื่อ</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
             </div>
             {/* Rows */}
             {multiAddEmp.map((emp, idx) => (
-              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
                 <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
@@ -1433,7 +1435,7 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             ))}
             {/* Add row button */}
-            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
               + เพิ่มอีกคน
             </button>
           </div>
@@ -1448,7 +1450,7 @@ function CRMApp({ currentUser, onLogout }) {
                 setProgress({ current: 0, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 let ok = 0;
                 for (const emp of valid) {
-                  const res = await supabase.from("crm_employees").insert({ name: emp.name, username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
+                  const res = await supabase.from("crm_employees").insert({ name: emp.name, nickname: emp.nickname || "", username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
                   if (!res.error) ok++;
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
@@ -1552,6 +1554,7 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         </>}
         {modal.type === "employee" && <>
           <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>ชื่อเล่น</label><input style={iS} value={form.nickname || ""} onChange={(e) => u("nickname", e.target.value)} placeholder="ชื่อเล่น" /></div>
           <div><label style={lS}>ชื่อผู้ใช้ (Login)</label><input style={iS} value={form.username || ""} onChange={(e) => u("username", e.target.value)} placeholder="username" /></div>
           <div><label style={lS}>รหัสผ่าน</label><input style={iS} value={form.password || ""} onChange={(e) => u("password", e.target.value)} placeholder="password" /></div>
           <div><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
