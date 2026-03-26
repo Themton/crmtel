@@ -37,12 +37,12 @@ const DEMO_SUPERVISORS = [
   { id: 2, name: "คุณวิไล", phone: "081-111-0002", email: "wilai@co.com", department: "ฝ่ายบริการ" },
 ];
 const DEMO_EMPLOYEES = [
-  { id: 1, name: "Kiri Suksawat", email: "kiri@co.com", role: "Sales", phone: "081-000-0001", active: true },
-  { id: 2, name: "ออย(ญ)", email: "oiy@co.com", role: "Sales", phone: "081-000-0002", active: true },
-  { id: 3, name: "ฝน", email: "fon@co.com", role: "Sales", phone: "081-000-0003", active: true },
-  { id: 4, name: "sawatdee", email: "sawatdee@co.com", role: "Sales", phone: "081-000-0004", active: true },
-  { id: 5, name: "KHUNFLUKE", email: "fluke@co.com", role: "Sales", phone: "081-000-0005", active: true },
-  { id: 6, name: "อาหมวย", email: "muay@co.com", role: "Sales", phone: "081-000-0006", active: true },
+  { id: 1, name: "Kiri Suksawat", username: "kiri", password: "1234", email: "kiri@co.com", role: "Sales", phone: "081-000-0001", active: true },
+  { id: 2, name: "ออย(ญ)", username: "oiy", password: "1234", email: "oiy@co.com", role: "Sales", phone: "081-000-0002", active: true },
+  { id: 3, name: "ฝน", username: "fon", password: "1234", email: "fon@co.com", role: "Sales", phone: "081-000-0003", active: true },
+  { id: 4, name: "sawatdee", username: "sawatdee", password: "1234", email: "sawatdee@co.com", role: "Sales", phone: "081-000-0004", active: true },
+  { id: 5, name: "KHUNFLUKE", username: "fluke", password: "1234", email: "fluke@co.com", role: "Sales", phone: "081-000-0005", active: true },
+  { id: 6, name: "อาหมวย", username: "muay", password: "1234", email: "muay@co.com", role: "Sales", phone: "081-000-0006", active: true },
 ];
 // Customer + Call fields merged
 const DEMO_CUSTOMERS = [
@@ -196,21 +196,20 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
 }
 
 // ---- LOGIN ----
-const DEMO_USERS = [
-  { username: "admin", password: "admin123", name: "Admin", role: "admin" },
-  { username: "kiri", password: "1234", name: "Kiri Suksawat", role: "employee" },
-  { username: "fluke", password: "1234", name: "KHUNFLUKE", role: "employee" },
-];
-
 function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
 
+  const allUsers = [
+    { username: "admin", password: "admin123", name: "Admin", role: "admin" },
+    ...DEMO_EMPLOYEES.map((e) => ({ username: e.username, password: e.password, name: e.name, role: "employee" })),
+  ];
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const user = DEMO_USERS.find((u) => u.username === username && u.password === password);
+    const user = allUsers.find((u) => u.username === username && u.password === password);
     if (user) { onLogin(user); }
     else { setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"); setTimeout(() => setError(""), 3000); }
   };
@@ -272,7 +271,7 @@ function LoginScreen({ onLogin }) {
           <div style={{ marginTop: 24, padding: "16px", background: "#f8fafc", borderRadius: 12, border: "1px solid #e5e7eb" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#9ca3af", marginBottom: 10, textAlign: "center" }}>บัญชีทดลอง</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {DEMO_USERS.map((u) => (
+              {allUsers.map((u) => (
                 <button key={u.username} onClick={() => { setUsername(u.username); setPassword(u.password); }}
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#4b5563", textAlign: "left", transition: "background 0.1s" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")}
@@ -660,6 +659,8 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         </>}
         {modal.type === "employee" && <>
           <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>ชื่อผู้ใช้ (Login)</label><input style={iS} value={form.username || ""} onChange={(e) => u("username", e.target.value)} placeholder="username" /></div>
+          <div><label style={lS}>รหัสผ่าน</label><input style={iS} value={form.password || ""} onChange={(e) => u("password", e.target.value)} placeholder="password" /></div>
           <div><label style={lS}>อีเมล</label><input style={iS} value={form.email || ""} onChange={(e) => u("email", e.target.value)} /></div>
           <div><label style={lS}>เบอร์โทร</label><input style={iS} value={form.phone || ""} onChange={(e) => u("phone", e.target.value)} /></div>
           <div><label style={lS}>ตำแหน่ง</label><input style={iS} value={form.role || ""} onChange={(e) => u("role", e.target.value)} /></div>
