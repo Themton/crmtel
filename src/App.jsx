@@ -7,7 +7,7 @@ const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${
 
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
-  { color: "#2563eb", bg: "#dbeafe" }, { color: "#7c3aed", bg: "#ede9fe" }, { color: "#db2777", bg: "#fce7f3" },
+  { color: "#d4a017", bg: "#fef3c7" }, { color: "#7c3aed", bg: "#ede9fe" }, { color: "#db2777", bg: "#fce7f3" },
   { color: "#0891b2", bg: "#cffafe" }, { color: "#6b7280", bg: "#f3f4f6" }, { color: "#ea580c", bg: "#fff7ed" },
   { color: "#16a34a", bg: "#f0fdf4" }, { color: "#334155", bg: "#e2e8f0" }, { color: "#0d9488", bg: "#ccfbf1" },
 ];
@@ -19,7 +19,7 @@ const DEMO_STATUSES = [
   { id: 2, key: "not_available", label: "ไม่สะดวกคุย", color: "#ea580c" },
   { id: 3, key: "answered", label: "รับสาย", color: "#16a34a" },
   { id: 4, key: "no_answer", label: "ไม่รับสาย", color: "#dc2626" },
-  { id: 5, key: "vvip", label: "Vvip", color: "#2563eb" },
+  { id: 5, key: "vvip", label: "Vvip", color: "#d4a017" },
   { id: 6, key: "reserved", label: "จอง", color: "#0891b2" },
 ];
 const DEMO_CALL_SUBJECTS = [
@@ -97,10 +97,10 @@ function PillDropdown({ label, value, options, onChange, color = "#2563eb" }) {
         {open ? <I.ChevUp /> : <I.ChevDown />}
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", padding: 8, zIndex: 200, minWidth: 200, maxHeight: 360, overflowY: "auto", animation: "fadeIn .15s" }}>
-        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#f0f7ff" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
+        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
           {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
-          {value === o.value && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+          {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
     </div>
@@ -116,10 +116,10 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
-        {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+        {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
           <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
-          {value === s.key && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+          {value === s.key && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
     </div>
@@ -135,10 +135,10 @@ function SubjectDropdown({ value, subjects, onChange }) {
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
-        {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+        {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
           <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
-          {value === s.label && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+          {value === s.label && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
     </div>
@@ -158,15 +158,15 @@ function OfferDropdown({ value, onChange }) {
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
-        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
+        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
           onMouseEnter={(e) => { if (value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value) e.currentTarget.style.background = "transparent"; }}>
           — ว่าง —
         </button>
         {OFFER_OPTIONS.map((o) => (
-          <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: value === o.value ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
+          <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
             onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
             <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
-            {value === o.value && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+            {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
         ))}
       </div>}
@@ -185,11 +185,11 @@ function RatingSelector({ value, onChange }) {
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
         {[0,1,2,3,4,5].map((n) => (
-          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#f0f7ff" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
+          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
             onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
             <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
             <span style={{ color: "#374151" }}>{{ 0: "ยังไม่ประเมิน", 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
-            {value === n && <span style={{ marginLeft: "auto", color: "#2563eb" }}><I.Check /></span>}
+            {value === n && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
         ))}
       </div>}
@@ -208,10 +208,10 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (editing) {
     return type === "textarea" ? (
       <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #2563eb", fontSize: 12, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
     ) : (
       <input ref={ref} type={inputType} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #2563eb", fontSize: 12, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
     );
   }
   let display = value || "—";
@@ -219,7 +219,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (type === "date" && value) { try { display = new Date(value + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }); } catch {} }
   return (
     <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "3px 6px", borderRadius: 6, border: "2px solid transparent", minHeight: 20, ...sx }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#bfdbfe"; e.currentTarget.style.background = "#f0f7ff"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
       <span style={{ fontSize: 12, color: value ? "#1e293b" : "#9ca3af" }}>{display}</span>
     </div>
@@ -251,19 +251,19 @@ function LoginScreen({ onLogin }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f2744 0%, #1e3a5f 50%, #0c4a6e 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Sarabun','Noto Sans Thai',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #2a1d06 0%, #3d2a0a 50%, #4a3310 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Sarabun','Noto Sans Thai',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <div style={{ width: "100%", maxWidth: 420, padding: 20 }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 16, background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: 28, marginBottom: 16, boxShadow: "0 8px 30px rgba(56,189,248,0.3)" }}>C</div>
-          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM System</h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>ระบบจัดการลูกค้า</p>
+          <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 16 }} />
+          <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM THE MT</h1>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>เพราะคุณคือ สุดยอดนำขายมือทอง</p>
         </div>
 
         {/* Login Card */}
         <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", marginBottom: 28, textAlign: "center" }}>เข้าสู่ระบบ</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", marginBottom: 28, textAlign: "center" }}>เข้าสู่ระบบ</h2>
 
           {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
 
@@ -297,7 +297,7 @@ function LoginScreen({ onLogin }) {
           </div>
 
           <button onClick={handleSubmit}
-            style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.3)", transition: "transform 0.1s" }}
+            style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(212,160,23,0.3)", transition: "transform 0.1s" }}
             onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
             onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}>
             เข้าสู่ระบบ
@@ -310,7 +310,7 @@ function LoginScreen({ onLogin }) {
               {allUsers.map((u) => (
                 <button key={u.username} onClick={() => { setUsername(u.username); setPassword(u.password); }}
                   style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", fontSize: 13, color: "#4b5563", textAlign: "left", transition: "background 0.1s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
                   <span><strong>{u.name}</strong> ({u.role})</span>
                   <span style={{ color: "#9ca3af", fontSize: 12 }}>{u.username} / {u.password}</span>
@@ -608,11 +608,11 @@ function CRMApp({ currentUser, onLogout }) {
   const totalPages = Math.max(1, Math.ceil(fc.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedFc = fc.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const stats = [{ l: "ทั้งหมด", v: myCustomers.length, c: "#2563eb" }, ...statuses.map((s) => ({ l: s.label, v: myCustomers.filter((c) => c.status === s.key).length, c: s.color }))];
+  const stats = [{ l: "ทั้งหมด", v: myCustomers.length, c: "#d4a017" }, ...statuses.map((s) => ({ l: s.label, v: myCustomers.filter((c) => c.status === s.key).length, c: s.color }))];
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
-  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 2px 8px rgba(37,99,235,0.3)" };
+  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
   const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" };
   const bi = (d) => ({ padding: "6px 8px", borderRadius: 8, border: "1px solid " + (d ? "#fee2e2" : "#e5e7eb"), background: "#fff", cursor: "pointer", color: d ? "#ef4444" : "#6b7280", display: "flex", alignItems: "center" });
   const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer" };
@@ -625,10 +625,10 @@ function CRMApp({ currentUser, onLogout }) {
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
       <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      <header style={{ background: "linear-gradient(135deg, #1e3a5f, #0f2744)", padding: "0 32px", height: 64, display: "flex", alignItems: "center", gap: 12, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
+      <header style={{ background: "linear-gradient(135deg, #3d2a0a, #2a1d06)", padding: "0 32px", height: 64, display: "flex", alignItems: "center", gap: 12, boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}><I.Menu /></button>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: 16 }}>C</div>
-        <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM System</span>
+        <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ height: 36, objectFit: "contain" }} />
+        <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM THE MT</span>
         {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({currentUser?.role})</span>
@@ -640,7 +640,7 @@ function CRMApp({ currentUser, onLogout }) {
           {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); setPage(1); }}
               title={item.label}
-              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
             </button>))}
         </nav>
@@ -665,7 +665,7 @@ function CRMApp({ currentUser, onLogout }) {
             const dailyKeys = Object.keys(dailyCalls).sort((a, b) => b.localeCompare(a)).slice(0, 14);
             const maxDaily = Math.max(...dailyKeys.map((k) => dailyCalls[k].total), 1);
             return <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>แดชบอร์ด</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>แดชบอร์ด</h2>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
               {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
@@ -674,7 +674,7 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
               {/* Bar chart - สถานะ */}
               <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>สถานะลูกค้า</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 24 }}>สถานะลูกค้า</h3>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 220, padding: "0 10px" }}>
                   {stats.filter((_, i) => i > 0).map((s, i) => {
                     const pct = (s.v / maxVal) * 100;
@@ -691,7 +691,7 @@ function CRMApp({ currentUser, onLogout }) {
 
               {/* Daily calls chart */}
               <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 24 }}>โทรรายวัน (สถานะ ≠ ยังไม่ได้โทร)</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 24 }}>โทรรายวัน (สถานะ ≠ ยังไม่ได้โทร)</h3>
                 {dailyKeys.length === 0 ? (
                   <div style={{ textAlign: "center", color: "#9ca3af", padding: 40 }}>ยังไม่มีข้อมูลการโทร</div>
                 ) : (
@@ -701,7 +701,7 @@ function CRMApp({ currentUser, onLogout }) {
                       const dateStr = (() => { try { const dt = new Date(d + "T00:00:00"); return dt.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }); } catch { return d; } })();
                       return (
                         <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: "#2563eb" }}>{dailyCalls[d].total}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#d4a017" }}>{dailyCalls[d].total}</span>
                           <div style={{ width: "100%", maxWidth: 40, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, #2563eb, #38bdf8)", height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8, cursor: "pointer", position: "relative" }}
                             title={Object.entries(dailyCalls[d]).filter(([k]) => k !== "total").map(([k, v]) => k + ": " + v).join(", ")} />
                           <span style={{ fontSize: 9, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
@@ -715,20 +715,20 @@ function CRMApp({ currentUser, onLogout }) {
 
             {/* Daily detail table */}
             {dailyKeys.length > 0 && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1e3a5f", marginBottom: 16 }}>สรุปรายวัน</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 16 }}>สรุปรายวัน</h3>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
-                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#2563eb" }}>โทรแล้ว</th>
+                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017" }}>โทรแล้ว</th>
                     {statuses.filter((s) => s.key !== "not_called").map((s) => <th key={s.id} style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: s.color }}>{s.label}</th>)}
                   </tr></thead>
                   <tbody>
                     {[...dailyKeys].reverse().map((d, idx) => {
                       const dateStr = (() => { try { return new Date(d + "T00:00:00").toLocaleDateString("th-TH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })();
-                      return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#eff6ff" : "transparent" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#2563eb", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
-                        <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#2563eb", fontSize: 16 }}>{dailyCalls[d].total}</td>
+                      return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#fffbeb" : "transparent" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
+                        <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017", fontSize: 16 }}>{dailyCalls[d].total}</td>
                         {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
                       </tr>;
                     })}
@@ -742,10 +742,10 @@ function CRMApp({ currentUser, onLogout }) {
           {/* CUSTOMERS — SINGLE BIG TABLE with call columns */}
           {tab === "customers" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ลูกค้า ({fc.length})</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>ลูกค้า ({fc.length})</h2>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {selectedRows.length > 0 && currentUser?.role === "admin" && <>
-                  <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #2563eb", background: "#eff6ff", color: "#2563eb" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
+                  <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #d4a017", background: "#fffbeb", color: "#d4a017" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
                   <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
                 </>}
                 <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
@@ -833,7 +833,7 @@ function CRMApp({ currentUser, onLogout }) {
                       <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>×</button>
                     </div>
                   ))}
-                  <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, fontSize: 13, cursor: "pointer", padding: "6px 0" }}>+ เพิ่มตัวกรอง</button>
+                  <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#d4a017", fontWeight: 600, fontSize: 13, cursor: "pointer", padding: "6px 0" }}>+ เพิ่มตัวกรอง</button>
                   <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
                     <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
                   </div>
@@ -850,15 +850,15 @@ function CRMApp({ currentUser, onLogout }) {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 300, overflowY: "auto" }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                      <input type="checkbox" checked={empFilter.length === 0} onChange={() => setEmpFilter([])} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                      <input type="checkbox" checked={empFilter.length === 0} onChange={() => setEmpFilter([])} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
                       <span style={{ fontSize: 14, color: "#374151" }}>บันทึกไม่มีคน (ยังไม่มอบหมาย)</span>
                     </label>
                     {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase())).map((em) => (
                       <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                        <input type="checkbox" checked={empFilter.includes(em.name)} onChange={(e) => setEmpFilter(e.target.checked ? [...empFilter, em.name] : empFilter.filter((n) => n !== em.name))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#1e40af" }}>{em.name.slice(0, 1)}</div>
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                        <input type="checkbox" checked={empFilter.includes(em.name)} onChange={(e) => setEmpFilter(e.target.checked ? [...empFilter, em.name] : empFilter.filter((n) => n !== em.name))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
                         <span style={{ fontSize: 14, color: "#374151" }}>{em.name}</span>
                       </label>
                     ))}
@@ -905,8 +905,8 @@ function CRMApp({ currentUser, onLogout }) {
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 12px", width: 60 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} />
-                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#2563eb", fontSize: 11, cursor: "pointer", padding: 0, width: 16 }}>
+                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} />
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", padding: 0, width: 16 }}>
                           <option value="">▾</option>
                           <option value="page">หน้าปัจจุบัน ({pagedFc.length})</option>
                           <option value="all">ทุกหน้า ({fc.length})</option>
@@ -936,9 +936,9 @@ function CRMApp({ currentUser, onLogout }) {
                   <tbody>
                     {pagedFc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
+                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
                         {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
-                        <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#1e3a5f" }} /></td>
+                        <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#3d2a0a" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
                         <td style={{ padding: "4px 4px", maxWidth: 180 }}><EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /></td>
@@ -972,7 +972,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
                     <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
-                    <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #2563eb" : "1px solid #d1d5db", background: p === safePage ? "#2563eb" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
+                    <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#2563eb" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
                   ))}
                   <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
                   <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
@@ -989,10 +989,10 @@ function CRMApp({ currentUser, onLogout }) {
             const promoFilteredSvC = selectedSupervisor ? svC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter) : [];
             const promoFilteredUnC = unC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter);
             return <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>หัวหน้า / มอบหมาย</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>หัวหน้า / มอบหมาย</h2>
             <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
               {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
-                <button key={sv.id} onClick={() => { setSelectedSupervisor(is2 ? null : sv); setAssignSelected([]); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 14, border: is2 ? "2px solid #2563eb" : "2px solid #e5e7eb", background: is2 ? "#eff6ff" : "#fff", cursor: "pointer" }}>
+                <button key={sv.id} onClick={() => { setSelectedSupervisor(is2 ? null : sv); setAssignSelected([]); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 14, border: is2 ? "2px solid #d4a017" : "2px solid #e5e7eb", background: is2 ? "#fffbeb" : "#fff", cursor: "pointer" }}>
                   <div style={{ width: 42, height: 42, borderRadius: "50%", background: is2 ? "#2563eb" : "#fde68a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: is2 ? "#fff" : "#92400e" }}>{sv.name?.charAt(0)}</div>
                   <div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, fontSize: 14 }}>{sv.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sv.department} · {customers.filter((c2) => c2.supervisor === sv.name).length}</div></div>
                 </button>); })}
@@ -1008,7 +1008,7 @@ function CRMApp({ currentUser, onLogout }) {
                     {/* Promo filter */}
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280" }}>กรองโปร:</span>
-                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #2563eb" : "1px solid #e5e7eb", background: !promoFilter ? "#eff6ff" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
+                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #d4a017" : "1px solid #e5e7eb", background: !promoFilter ? "#fffbeb" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
                       {allPrices.map((p) => {
                         const count = [...(selectedSupervisor ? svC : []), ...unC].filter((c) => extractPrice(c.previous_promo) === p).length;
                         return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 12px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
@@ -1016,26 +1016,26 @@ function CRMApp({ currentUser, onLogout }) {
                     </div>
                   </div>
                   <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#dbeafe", color: "#1e40af", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
-                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
+                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
+                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
                     {promoFilteredSvC.length === 0 && promoFilteredUnC.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                   <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#1e3a5f" }}>มอบหมายให้พนักงาน</h4>
+                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#3d2a0a" }}>มอบหมายให้พนักงาน</h4>
                     <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, maxHeight: 200, overflowY: "auto", marginBottom: 14 }}>
                       {employees.map((em) => (
                         <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
-                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f0f7ff")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                          <input type="checkbox" checked={assignEmployees.includes(em.name)} onChange={(e2) => setAssignEmployees(e2.target.checked ? [...assignEmployees, em.name] : assignEmployees.filter((n) => n !== em.name))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#1e40af" }}>{em.name.slice(0, 1)}</div>
+                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                          <input type="checkbox" checked={assignEmployees.includes(em.name)} onChange={(e2) => setAssignEmployees(e2.target.checked ? [...assignEmployees, em.name] : assignEmployees.filter((n) => n !== em.name))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
                           <span style={{ fontSize: 14 }}>{em.name}</span>
                         </label>
                       ))}
                     </div>
                     {assignEmployees.length > 1 && assignSelected.length > 0 && (
-                      <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#1e40af" }}>
+                      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#92400e" }}>
                         กระจายเท่ากัน: {assignEmployees.map((name) => name + " (" + Math.floor(assignSelected.length / assignEmployees.length) + (assignEmployees.indexOf(name) < assignSelected.length % assignEmployees.length ? "+1" : "") + ")").join(", ")}
                       </div>
                     )}
@@ -1053,7 +1053,7 @@ function CRMApp({ currentUser, onLogout }) {
           {/* EMPLOYEES */}
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>พนักงาน ({employees.length})</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
               <button onClick={() => setModal({ type: "employee", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
@@ -1061,24 +1061,24 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
                 <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
                 <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#dbeafe", color: "#1e40af" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
+                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
               </div>))}
             </div>
           </div>}
 
           {/* SETTINGS */}
           {tab === "settings" && <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>ตั้งค่าระบบ</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>ตั้งค่าระบบ</h2>
             <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#fff", borderRadius: 12, padding: 4, width: "fit-content", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {[{ key: "statuses", label: "สถานะ" }, { key: "call_subjects", label: "หัวข้อโทร" }, { key: "supervisors", label: "หัวหน้า" }].map((st) => (
-                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>{st.label}</button>))}
+                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #d4a017, #b8860b)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>{st.label}</button>))}
             </div>
             {settingsSubTab === "statuses" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>สถานะ</h3><button onClick={() => setModal({ type: "status", mode: "add", data: { key: "", label: "", color: "#2563eb" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>สถานะ</h3><button onClick={() => setModal({ type: "status", mode: "add", data: { key: "", label: "", color: "#d4a017" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{statuses.map((s) => (<div key={s.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span><div style={{ display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "status", mode: "edit", data: { ...s } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_statuses", s.id)} style={bi(true)}><I.Trash /></button></div></div>))}</div>
             </div>}
             {settingsSubTab === "call_subjects" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวข้อโทร</h3><button onClick={() => setModal({ type: "call_subject", mode: "add", data: { label: "", color: "#2563eb" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวข้อโทร</h3><button onClick={() => setModal({ type: "call_subject", mode: "add", data: { label: "", color: "#d4a017" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>{callSubjects.map((s) => (<div key={s.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span><div style={{ display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "call_subject", mode: "edit", data: { ...s } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_call_subjects", s.id)} style={bi(true)}><I.Trash /></button></div></div>))}</div>
             </div>}
             {settingsSubTab === "supervisors" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
@@ -1096,7 +1096,7 @@ function CRMApp({ currentUser, onLogout }) {
             const filteredTrash = trashSearch ? myTrash.filter((t) => t.phone?.includes(trashSearch) || t.name?.toLowerCase().includes(trashSearch.toLowerCase())) : myTrash;
             return <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({filteredTrash.length})</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>ข้อมูลที่ลบแล้ว ({filteredTrash.length})</h2>
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
@@ -1122,7 +1122,7 @@ function CRMApp({ currentUser, onLogout }) {
                         const st = statuses.find((s) => s.key === t.status);
                         return (
                           <tr key={t.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                            <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1e3a5f" }}>{t.name}</td>
+                            <td style={{ padding: "12px 14px", fontWeight: 600, color: "#3d2a0a" }}>{t.name}</td>
                             <td style={{ padding: "12px 14px" }}>{t.phone}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
                             <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
@@ -1153,7 +1153,7 @@ function CRMApp({ currentUser, onLogout }) {
       {modal && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }} onClick={(e) => e.target === e.currentTarget && setModal(null)}>
         <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 600, maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #f3f4f6" }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e3a5f" }}>{modal.mode === "add" ? "เพิ่ม" : "แก้ไข"}{{ customer: "ลูกค้า", employee: "พนักงาน", status: "สถานะ", supervisor: "หัวหน้า", call_subject: "หัวข้อโทร" }[modal.type]}</h3>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#3d2a0a" }}>{modal.mode === "add" ? "เพิ่ม" : "แก้ไข"}{{ customer: "ลูกค้า", employee: "พนักงาน", status: "สถานะ", supervisor: "หัวหน้า", call_subject: "หัวข้อโทร" }[modal.type]}</h3>
             <button onClick={() => setModal(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
           </div>
           <ModalForm modal={modal} setModal={setModal} onSave={handleSave} employees={employees} statuses={statuses} supervisors={supervisors} callSubjects={callSubjects} iS={iS} lS={lS} />
@@ -1164,14 +1164,14 @@ function CRMApp({ currentUser, onLogout }) {
       {quickUpdate && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }} onClick={(e) => e.target === e.currentTarget && setQuickUpdate(null)}>
         <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 700, maxHeight: "90vh", overflow: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", padding: "20px 28px", borderBottom: "1px solid #e5e7eb" }}>
-            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1e3a5f" }}>อัปเดตด่วน</h3>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#3d2a0a" }}>อัปเดตด่วน</h3>
             <button onClick={() => setQuickUpdate(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
           </div>
           <div style={{ padding: 28 }}>
-            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#1e40af" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
+            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
             <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>เลือกฟิลด์</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
-                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#dbeafe", color: "#1e40af", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#1e40af", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
                 <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 14, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
                   <option value="">+ เพิ่มฟิลด์...</option>
                   {[{ v: "assigned_to", l: "Assigned To" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
@@ -1182,7 +1182,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 13, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
                 {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                  <span style={{ fontSize: 14, color: "#2563eb" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
+                  <span style={{ fontSize: 14, color: "#d4a017" }}>{{ assigned_to: "Assigned To", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
                     {f === "assigned_to" && (() => {
@@ -1203,7 +1203,7 @@ function CRMApp({ currentUser, onLogout }) {
                               <input type="checkbox" checked={sel.includes(em.name)} onChange={(e2) => {
                                 const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
                                 setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
-                              }} style={{ accentColor: "#2563eb" }} />
+                              }} style={{ accentColor: "#d4a017" }} />
                               <span style={{ fontSize: 13 }}>{em.name}</span>
                             </label>
                           ))}
@@ -1213,13 +1213,13 @@ function CRMApp({ currentUser, onLogout }) {
                         {sel.length > 0 && <div style={{ marginBottom: 12 }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #2563eb" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#eff6ff" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
                             <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
                           </div>
                         </div>}
 
                         {/* Equal mode summary */}
-                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#eff6ff", borderRadius: 6, padding: "6px 10px", fontSize: 11, color: "#1e40af" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
+                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#fffbeb", borderRadius: 6, padding: "6px 10px", fontSize: 11, color: "#92400e" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
 
                         {/* Promo mode mapping */}
                         {sel.length > 0 && assignMode === "promo" && <div>
@@ -1234,7 +1234,7 @@ function CRMApp({ currentUser, onLogout }) {
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {sel.map((name) => (
                                     <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 12 }}
-                                      onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f0f7ff")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                                      onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                                       <input type="checkbox" checked={pkSel.includes(name)} onChange={(e2) => {
                                         const nv = e2.target.checked ? [...pkSel, name] : pkSel.filter((n) => n !== name);
                                         setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, promo_map: { ...promoMap, [pk]: nv } } });
@@ -1330,7 +1330,7 @@ function CRMApp({ currentUser, onLogout }) {
       {/* PROGRESS BAR */}
       {progress && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
         <div style={{ background: "#fff", borderRadius: 16, padding: 36, width: "100%", maxWidth: 420, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "#1e3a5f", marginBottom: 20 }}>{progress.label}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#3d2a0a", marginBottom: 20 }}>{progress.label}</div>
           <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
             <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #2563eb, #38bdf8)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
@@ -1344,7 +1344,7 @@ function CRMApp({ currentUser, onLogout }) {
       {importResult && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2500, padding: 20 }} onClick={(e2) => e2.target === e2.currentTarget && setImportResult(null)}>
         <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 520, maxHeight: "80vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
           <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#1e3a5f" }}>ผลการนำเข้า</h3>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#3d2a0a" }}>ผลการนำเข้า</h3>
             <button onClick={() => setImportResult(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
           </div>
           <div style={{ padding: 24 }}>
@@ -1390,7 +1390,7 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
-      {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#1e3a5f", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
+      {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db}`}</style>
     </div>
   );
@@ -1441,7 +1441,7 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
         <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
-        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
+        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
       </div>
     </div>
   );
