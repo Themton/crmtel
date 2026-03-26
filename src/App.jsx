@@ -915,7 +915,13 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /></td>
                         <td style={{ padding: "6px 8px" }}>{c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span>}</td>
-                        <td style={{ padding: "6px 4px", minWidth: 120 }}><InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => upd(c.id, "status", v)} /></td>
+                        <td style={{ padding: "6px 4px", minWidth: 120 }}><InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => {
+                          upd(c.id, "status", v);
+                          if (c.status === "not_called" && v !== "not_called") {
+                            const today = new Date().toISOString().slice(0, 10);
+                            upd(c.id, "call_date", today);
+                          }
+                        }} /></td>
                         <td style={{ padding: "6px 4px" }}><SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
                         <td style={{ padding: "4px 4px", minWidth: 300 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
