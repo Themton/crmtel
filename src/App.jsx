@@ -318,11 +318,6 @@ function CRMApp({ currentUser, onLogout }) {
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [assignFilter, setAssignFilter] = useState("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
-  const [receivedFilter, setReceivedFilter] = useState("all");
-  const [relationFilter, setRelationFilter] = useState("all");
   const [settingsSubTab, setSettingsSubTab] = useState("statuses");
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
   const [assignSelected, setAssignSelected] = useState([]);
@@ -332,6 +327,12 @@ function CRMApp({ currentUser, onLogout }) {
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toolbarTab, setToolbarTab] = useState(null);
+  const [advFilters, setAdvFilters] = useState([]);
+  const [empFilter, setEmpFilter] = useState([]);
+  const [empSearch, setEmpSearch] = useState("");
+  const [sortCol, setSortCol] = useState("");
+  const [sortDir, setSortDir] = useState("asc");
   const fileRef = useRef(null);
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
@@ -493,25 +494,37 @@ function CRMApp({ currentUser, onLogout }) {
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
 
-  const fc = customers.filter((c) => {
-    if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
-    const q = search?.toLowerCase();
-    const ms = !search || [c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q));
-    return ms
-      && (statusFilter === "all" || c.status === statusFilter)
-      && (assignFilter === "all" || (assignFilter === "unassigned" ? !c.assigned_to : c.assigned_to === assignFilter))
-      && (subjectFilter === "all" || c.call_subject === subjectFilter)
-      && (receivedFilter === "all" || String(c.received_product) === receivedFilter)
-      && (relationFilter === "all" || String(c.customer_relation) === relationFilter);
-  });
+  const fc = (() => {
+    let result = customers.filter((c) => {
+      if (currentUser?.role === "employee" && c.assigned_to !== currentUser.name) return false;
+      // Search
+      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.offer, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
+      // Employee filter
+      if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
+      // Advanced filters
+      for (const af of advFilters) {
+        if (!af.field || !af.value) continue;
+        const cv = String(c[af.field] || "").toLowerCase();
+        const fv = af.value.toLowerCase();
+        if (af.op === "contains" && !cv.includes(fv)) return false;
+        if (af.op === "eq" && cv !== fv) return false;
+        if (af.op === "neq" && cv === fv) return false;
+      }
+      return true;
+    });
+    // Sort
+    if (sortCol) {
+      result = [...result].sort((a, b) => {
+        const av = a[sortCol] ?? ""; const bv = b[sortCol] ?? "";
+        const cmp = typeof av === "number" ? av - bv : String(av).localeCompare(String(bv));
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
+    return result;
+  })();
 
   const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => c.assigned_to === currentUser.name) : customers;
   const stats = [{ l: "ทั้งหมด", v: myCustomers.length, c: "#2563eb" }, ...statuses.map((s) => ({ l: s.label, v: myCustomers.filter((c) => c.status === s.key).length, c: s.color }))];
-  const statusOpts = [{ value: "all", label: "ทั้งหมด" }, ...statuses.map((s) => ({ value: s.key, label: s.label, badge: s.color }))];
-  const assignOpts = [{ value: "all", label: "ทั้งหมด" }, { value: "unassigned", label: "ยังไม่ได้มอบหมาย" }, ...employees.map((e) => ({ value: e.name, label: e.name }))];
-  const subjectOpts = [{ value: "all", label: "ทั้งหมด" }, ...callSubjects.map((s) => ({ value: s.label, label: s.label, badge: s.color }))];
-  const receivedOpts = [{ value: "all", label: "ทั้งหมด" }, { value: "true", label: "ได้รับแล้ว" }, { value: "false", label: "รอส่ง" }];
-  const relationOpts = [{ value: "all", label: "ทั้งหมด" }, ...[1,2,3,4,5].map((n) => ({ value: String(n), label: n + " - " + {1:"น้อยมาก",2:"น้อย",3:"ปานกลาง",4:"ดี",5:"ดีมาก"}[n] }))];
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
@@ -541,7 +554,7 @@ function CRMApp({ currentUser, onLogout }) {
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
           {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "หัวหน้า / มอบหมาย", icon: <I.Shield />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + trash.length + ")", icon: <I.Trash2 />, role: "admin" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
-            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setStatusFilter("all"); setAssignFilter("all"); setSubjectFilter("all"); setReceivedFilter("all"); setRelationFilter("all"); setAssignSelected([]); }}
+            <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); }}
               title={item.label}
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #eff6ff, #dbeafe)" : "transparent", color: tab === item.key ? "#1e40af" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #2563eb" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
@@ -593,18 +606,136 @@ function CRMApp({ currentUser, onLogout }) {
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-              <PillDropdown label="สถานะ: ทั้งหมด" value={statusFilter} options={statusOpts} onChange={setStatusFilter} color="#2563eb" />
-              {currentUser?.role === "admin" && <PillDropdown label="มอบหมาย: ทั้งหมด" value={assignFilter} options={assignOpts} onChange={setAssignFilter} color="#0891b2" />}
-              <PillDropdown label="หัวข้อโทร: ทั้งหมด" value={subjectFilter} options={subjectOpts} onChange={setSubjectFilter} color="#ea580c" />
-              <PillDropdown label="ได้รับสินค้า: ทั้งหมด" value={receivedFilter} options={receivedOpts} onChange={setReceivedFilter} color="#16a34a" />
-              <PillDropdown label="ความสัมพันธ์: ทั้งหมด" value={relationFilter} options={relationOpts} onChange={setRelationFilter} color="#7c3aed" />
-              <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 300 }}>
-                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาทุกคอลัมน์..." style={{ ...iS, paddingLeft: 40, borderRadius: 20, border: "2px solid #e5e7eb" }} />
+            {/* TOOLBAR */}
+            <div style={{ background: "#fff", borderRadius: "14px 14px 0 0", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", marginBottom: 0 }}>
+              <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
+                {[
+                  { key: "filter", label: "ตัวกรอง", icon: "▼" },
+                  ...(currentUser?.role === "admin" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
+                  { key: "sort", label: "ตัวเรียงลำดับ", icon: "↕" },
+                  { key: "quickupdate", label: "อัพเดทด่วน", icon: "⚡" },
+                ].map((t) => (
+                  <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#2563eb" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+                <div style={{ flex: 1 }} />
+                <div style={{ padding: "6px 12px", display: "flex", alignItems: "center" }}>
+                  <div style={{ position: "relative" }}>
+                    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ padding: "7px 12px 7px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", width: 180 }} />
+                  </div>
+                </div>
               </div>
+
+              {/* FILTER PANEL */}
+              {toolbarTab === "filter" && (
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>กรอง <span style={{ color: "#9ca3af", fontWeight: 400 }}>ตรงตามเงื่อนไขทั้งหมด</span></div>
+                  {advFilters.map((af, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "center" }}>
+                      <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
+                        style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 140 }}>
+                        <option value="">เลือกฟิลด์</option>
+                        <option value="status">สถานะ</option><option value="call_subject">หัวข้อโทร</option>
+                        <option value="received_product">ได้รับสินค้า</option><option value="customer_relation">ความสัมพันธ์</option>
+                        <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="note">ที่อยู่</option>
+                        <option value="previous_promo">โปรก่อนหน้า</option><option value="offer">เสนอขาย</option>
+                      </select>
+                      <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
+                        style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 130 }}>
+                        <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
+                      </select>
+                      {af.field === "status" ? (
+                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
+                          <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
+                        </select>
+                      ) : af.field === "call_subject" ? (
+                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
+                          <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
+                        </select>
+                      ) : af.field === "received_product" ? (
+                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
+                          <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
+                        </select>
+                      ) : af.field === "customer_relation" ? (
+                        <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }}>
+                          <option value="">เลือก</option>{[1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                        </select>
+                      ) : (
+                        <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, flex: 1 }} />
+                      )}
+                      <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>×</button>
+                    </div>
+                  ))}
+                  <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, fontSize: 13, cursor: "pointer", padding: "6px 0" }}>+ เพิ่มตัวกรอง</button>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                    <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                  </div>
+                </div>
+              )}
+
+              {/* EMPLOYEE FILTER PANEL */}
+              {toolbarTab === "employee" && (
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>กรองตามผู้คน</div>
+                  <div style={{ position: "relative", marginBottom: 12 }}>
+                    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
+                    <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10, border: "1px solid #d1d5db", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 300, overflowY: "auto" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                      <input type="checkbox" checked={empFilter.length === 0} onChange={() => setEmpFilter([])} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
+                      <span style={{ fontSize: 14, color: "#374151" }}>บันทึกไม่มีคน (ยังไม่มอบหมาย)</span>
+                    </label>
+                    {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase())).map((em) => (
+                      <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#eff6ff")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                        <input type="checkbox" checked={empFilter.includes(em.name)} onChange={(e) => setEmpFilter(e.target.checked ? [...empFilter, em.name] : empFilter.filter((n) => n !== em.name))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} />
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#1e40af" }}>{em.name.slice(0, 1)}</div>
+                        <span style={{ fontSize: 14, color: "#374151" }}>{em.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
+                    <button onClick={() => setEmpFilter([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                  </div>
+                </div>
+              )}
+
+              {/* SORT PANEL */}
+              {toolbarTab === "sort" && (
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>ตัวเรียงลำดับ</div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <select value={sortCol} onChange={(e) => setSortCol(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, minWidth: 160 }}>
+                      <option value="">ไม่เรียง</option>
+                      <option value="name">ชื่อ</option><option value="phone">เบอร์โทร</option><option value="status">สถานะ</option>
+                      <option value="assigned_to">มอบหมาย</option><option value="created_at">วันที่สร้าง</option>
+                      <option value="call_date">วันที่โทร</option><option value="call_subject">หัวข้อโทร</option>
+                      <option value="customer_relation">ความสัมพันธ์</option><option value="product_price">ราคาสินค้า</option>
+                    </select>
+                    <select value={sortDir} onChange={(e) => setSortDir(e.target.value)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13 }}>
+                      <option value="asc">น้อย → มาก (A-Z)</option><option value="desc">มาก → น้อย (Z-A)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* QUICK UPDATE TAB */}
+              {toolbarTab === "quickupdate" && selectedRows.length > 0 && (
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>เลือกแล้ว {selectedRows.length} รายการ</div>
+                  <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bp, fontSize: 13, padding: "8px 20px" }}><I.Edit /> เปิดอัพเดทด่วน</button>
+                </div>
+              )}
+              {toolbarTab === "quickupdate" && selectedRows.length === 0 && (
+                <div style={{ padding: "20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc", color: "#9ca3af", fontSize: 13 }}>เลือกลูกค้าก่อน แล้วกดอัพเดทด่วน</div>
+              )}
             </div>
-            <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
