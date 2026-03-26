@@ -1031,10 +1031,6 @@ function CRMApp({ currentUser, onLogout }) {
                   <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
                 </select>
                 <span style={{ fontSize: 13, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
-                <div style={{ display: "flex", gap: 2, marginLeft: 8 }}>
-                  <button onClick={() => setViewMode("table")} style={{ padding: "4px 8px", borderRadius: "6px 0 0 6px", border: "1px solid #d1d5db", background: viewMode === "table" ? "#d4a017" : "#fff", color: viewMode === "table" ? "#fff" : "#6b7280", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>☰ ตาราง</button>
-                  <button onClick={() => setViewMode("list")} style={{ padding: "4px 8px", borderRadius: "0 6px 6px 0", border: "1px solid #d1d5db", background: viewMode === "list" ? "#d4a017" : "#fff", color: viewMode === "list" ? "#fff" : "#6b7280", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>☷ รายชื่อ</button>
-                </div>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
@@ -1048,39 +1044,13 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              {viewMode === "list" ? (
-                <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 280px)" }}>
-                  <table style={{ width: "max-content", minWidth: "100%", borderCollapse: "collapse", fontSize: 10.5 }} className="crm-table">
-                    <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                      <th style={{ padding: "4px 8px", width: 30 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></th>
-                      <th style={{ padding: "4px 6px", width: 28, fontWeight: 700, color: "#374151", fontSize: 10 }}>#</th>
-                      {activeColOrder.map((key) => <th key={key} style={{ padding: "4px 6px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", fontSize: 10 }}>{COL_DEFS[key].label}</th>)}
-                    </tr></thead>
-                    <tbody>
-                      {pagedFc.map((c, idx) => (
-                        <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 26 }}
-                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#f8fafc")}
-                          onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                          <td style={{ padding: "1px 8px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e2) => setSelectedRows(e2.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></td>
-                          <td style={{ padding: "1px 6px", color: "#9ca3af", fontSize: 10, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
-                          {activeColOrder.map((key) => {
-                            const col = COL_DEFS[key];
-                            return <td key={key} style={{ padding: "1px 3px", minWidth: col.minW ? col.minW * 0.6 : undefined, maxWidth: col.maxW ? col.maxW * 0.7 : undefined }}>{col.render(c)}</td>;
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {fc.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
-                </div>
-              ) : (
-              <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
-                <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
+              <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 280px)" }}>
+                <table style={{ borderCollapse: "collapse", fontSize: 11, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "10px 12px", width: 60 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} />
-                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", padding: 0, width: 16 }}>
+                    <th style={{ padding: "5px 8px", width: 50 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#d4a017", fontSize: 10, cursor: "pointer", padding: 0, width: 14 }}>
                           <option value="">▾</option>
                           <option value="page">หน้าปัจจุบัน ({pagedFc.length})</option>
                           <option value="all">ทุกหน้า ({fc.length})</option>
@@ -1088,56 +1058,23 @@ function CRMApp({ currentUser, onLogout }) {
                         </select>
                       </div>
                     </th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 60, position: "relative", userSelect: "none" }}>
+                    {TH.map((h, i) => <th key={i} style={{ padding: "5px 6px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 50, position: "relative", userSelect: "none", fontSize: 11 }}>
                       {h}
-                      <div
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          const startX = e.clientX;
-                          const th = e.target.parentElement;
-                          const startW = th.offsetWidth;
-                          const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(60, startW + diff) })); };
-                          const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
-                          document.addEventListener("mousemove", onMove);
-                          document.addEventListener("mouseup", onUp);
-                        }}
-                        style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 6, cursor: "col-resize", background: "transparent" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#2563eb40")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      />
+                      <div onMouseDown={(e) => { e.preventDefault(); const startX = e.clientX; const th = e.target.parentElement; const startW = th.offsetWidth; const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(50, startW + diff) })); }; const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }; document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); }} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 5, cursor: "col-resize", background: "transparent" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#d4a01740")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")} />
                     </th>)}
                   </tr></thead>
                   <tbody>
                     {pagedFc.map((c) => (
-                      <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => {
-                          if (e.nativeEvent.shiftKey && lastChecked !== null) {
-                            const curIdx = pagedFc.findIndex((x) => x.id === c.id);
-                            const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked);
-                            if (curIdx >= 0 && lastIdx >= 0) {
-                              const start = Math.min(curIdx, lastIdx);
-                              const end = Math.max(curIdx, lastIdx);
-                              const rangeIds = pagedFc.slice(start, end + 1).map((x) => x.id);
-                              setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]);
-                              setLastChecked(c.id);
-                              return;
-                            }
-                          }
-                          setLastChecked(c.id);
-                          setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id));
-                        }} style={{ accentColor: "#d4a017" }} /></td>
-                        {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
-                        {activeColOrder.map((key) => {
-                          const col = COL_DEFS[key];
-                          return <td key={key} style={{ padding: key === "received_product" || key === "assigned_to" || key === "nickname" ? "6px 8px" : key === "status" || key === "call_subject" || key === "customer_relation" ? "6px 4px" : "4px 4px", minWidth: col.minW, maxWidth: col.maxW }}>{col.render(c)}</td>;
-                        })}
+                      <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 28 }} onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fafafa")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                        <td style={{ padding: "2px 8px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => { if (e.nativeEvent.shiftKey && lastChecked !== null) { const curIdx = pagedFc.findIndex((x) => x.id === c.id); const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked); if (curIdx >= 0 && lastIdx >= 0) { const start = Math.min(curIdx, lastIdx); const end2 = Math.max(curIdx, lastIdx); const rangeIds = pagedFc.slice(start, end2 + 1).map((x) => x.id); setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]); setLastChecked(c.id); return; } } setLastChecked(c.id); setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id)); }} style={{ accentColor: "#d4a017", width: 14, height: 14 }} /></td>
+                        {currentUser?.role === "admin" && <td style={{ padding: "2px 4px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
+                        {activeColOrder.map((key) => { const col = COL_DEFS[key]; return <td key={key} style={{ padding: "2px 3px", minWidth: col.minW ? col.minW * 0.65 : undefined, maxWidth: col.maxW ? col.maxW * 0.7 : undefined }}>{col.render(c)}</td>; })}
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
                 </table>
               </div>
-              )}
             </div>
           </div>}
 
