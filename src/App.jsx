@@ -931,30 +931,45 @@ function CRMApp({ currentUser, onLogout }) {
 
               {/* EMPLOYEE FILTER PANEL */}
               {toolbarTab === "employee" && (
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>กรองตามผู้คน</div>
-                  <div style={{ position: "relative", marginBottom: 12 }}>
-                    <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                    <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "10px 12px 10px 36px", borderRadius: 10, border: "1px solid #d1d5db", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 320, zIndex: 100, animation: "fadeIn .15s" }}>
+                    <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>กรองตามผู้คน</span>
+                        <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
+                      </div>
+                      <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 14 }}>🔍</span>
+                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                      </div>
+                    </div>
+                    <div style={{ maxHeight: 320, overflowY: "auto", padding: "4px 0" }}>
+                      <div onClick={() => setEmpFilter([])}
+                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.length === 0 ? "#eff6ff" : "transparent" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "transparent")}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
+                        <span style={{ fontSize: 13, color: "#374151" }}>บันทึกไม่มีคน</span>
+                      </div>
+                      {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase()) || (em.nickname || "").toLowerCase().includes(empSearch.toLowerCase())).map((em, ei) => {
+                        const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
+                        const isSelected = empFilter.includes(em.name);
+                        return <div key={em.id} onClick={() => setEmpFilter(isSelected ? empFilter.filter((n) => n !== em.name) : [...empFilter, em.name])}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: isSelected ? "#eff6ff" : "transparent" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "#f8fafc")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "transparent")}>
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
+                          <span style={{ flex: 1, fontSize: 13, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
+                          {isSelected && <span style={{ color: "#3b82f6", fontSize: 16 }}>✓✓</span>}
+                        </div>;
+                      })}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
+                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 300, overflowY: "auto" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                      <input type="checkbox" checked={empFilter.length === 0} onChange={() => setEmpFilter([])} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
-                      <span style={{ fontSize: 14, color: "#374151" }}>บันทึกไม่มีคน (ยังไม่มอบหมาย)</span>
-                    </label>
-                    {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase())).map((em) => (
-                      <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", cursor: "pointer", borderRadius: 8 }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                        <input type="checkbox" checked={empFilter.includes(em.name)} onChange={(e) => setEmpFilter(e.target.checked ? [...empFilter, em.name] : empFilter.filter((n) => n !== em.name))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
-                        <span style={{ fontSize: 14, color: "#374151" }}>{em.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTop: "1px solid #e5e7eb" }}>
-                    <button onClick={() => setEmpFilter([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
-                  </div>
+                  <div style={{ height: 8 }}></div>
                 </div>
               )}
 
