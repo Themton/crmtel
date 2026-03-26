@@ -129,7 +129,7 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
 function SubjectDropdown({ value, subjects, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const cur = subjects.find((s) => s.label === value);
+  const cur = subjects.find((s) => s.label === value) || subjects.find((s) => s.label.toLowerCase().trim() === (value || "").toLowerCase().trim());
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
@@ -528,7 +528,9 @@ function CRMApp({ currentUser, onLogout }) {
         if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
         if (cleanPhone) existingPhones.add(cleanPhone);
         const orderDate = odi >= 0 ? v[odi] || "" : "";
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: csi >= 0 ? v[csi] || "" : "", order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, status: "not_called" });
+        const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
+        const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, status: "not_called" });
       }
       if (allRows.length) {
         const BATCH = 50;
