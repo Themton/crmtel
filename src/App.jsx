@@ -620,7 +620,7 @@ function CRMApp({ currentUser, onLogout }) {
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Table headers: customer fields + call fields
-  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
+  const TH = [...(currentUser?.role === "admin" ? [""] : []),"ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า","มอบหมาย"];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -958,6 +958,7 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
                         <td style={{ padding: "6px 4px" }}><OfferDropdown value={c.offer} onChange={(v) => upd(c.id, "offer", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /></td>
+                        <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 1} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
