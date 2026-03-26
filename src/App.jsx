@@ -258,7 +258,7 @@ function LoginScreen({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", marginBottom: 16 }} />
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM THE MT</h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>เพราะคุณคือ สุดยอดนำขายมือทอง</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>เพราะคุณคือ สุดยอดนักขายมือทอง</p>
         </div>
 
         {/* Login Card */}
