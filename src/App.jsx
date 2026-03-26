@@ -401,6 +401,12 @@ function CRMApp({ currentUser, onLogout }) {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Auto-refresh data every 30 seconds (real-time dashboard)
+  useEffect(() => {
+    const interval = setInterval(() => { fetchAll(); }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAll]);
+
   // Real-time notification polling every 10 seconds
   useEffect(() => {
     if (!currentUser?.name) return;
@@ -811,7 +817,13 @@ function CRMApp({ currentUser, onLogout }) {
             const dailyKeys = Object.keys(dailyCalls).sort((a, b) => b.localeCompare(a)).slice(0, 14);
             const maxDaily = Math.max(...dailyKeys.map((k) => dailyCalls[k].total), 1);
             return <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>แดชบอร์ด</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 11, color: "#9ca3af" }}>อัปเดตอัตโนมัติทุก 30 วินาที</span>
+                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
+              </div>
+            </div>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
               {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
