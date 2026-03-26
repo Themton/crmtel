@@ -481,6 +481,7 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- SUPERVISOR ASSIGN ----
   const [assignEmployees, setAssignEmployees] = useState([]);
+  const [promoFilter, setPromoFilter] = useState("");
   const handleAssign = async () => {
     if (!assignSelected.length || !assignEmployees.length) return;
     const total = assignSelected.length;
@@ -800,7 +801,13 @@ function CRMApp({ currentUser, onLogout }) {
           </div>}
 
           {/* SUPERVISOR */}
-          {tab === "supervisor" && <div>
+          {tab === "supervisor" && (() => {
+            // Extract promo prices from previous_promo
+            const extractPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
+            const allPrices = [...new Set(customers.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
+            const promoFilteredSvC = selectedSupervisor ? svC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter) : [];
+            const promoFilteredUnC = unC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter);
+            return <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#1e3a5f" }}>หัวหน้า / มอบหมาย</h2>
             <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
               {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
@@ -812,13 +819,25 @@ function CRMApp({ currentUser, onLogout }) {
             {selectedSupervisor ? (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
                 <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" }}>
-                    <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 12, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
-                    <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...svC, ...unC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 12, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
+                      <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...promoFilteredSvC, ...promoFilteredUnC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
+                    </div>
+                    {/* Promo filter */}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280" }}>กรองโปร:</span>
+                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #2563eb" : "1px solid #e5e7eb", background: !promoFilter ? "#eff6ff" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
+                      {allPrices.map((p) => {
+                        const count = [...(selectedSupervisor ? svC : []), ...unC].filter((c) => extractPrice(c.previous_promo) === p).length;
+                        return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 12px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                      })}
+                    </div>
                   </div>
                   <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                    {svC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({svC.length})</div>{svC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#dbeafe", color: "#1e40af", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
-                    {unC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({unC.length})</div>{unC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone}</div></div></label>))}</>}
+                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#dbeafe", color: "#1e40af", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
+                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#2563eb", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
+                    {promoFilteredSvC.length === 0 && promoFilteredUnC.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
                   </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -848,7 +867,7 @@ function CRMApp({ currentUser, onLogout }) {
                 </div>
               </div>
             ) : <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center" }}><div style={{ fontSize: 48, opacity: 0.3 }}>👆</div><div style={{ color: "#6b7280" }}>เลือกหัวหน้าด้านบน</div></div>}
-          </div>}
+          </div>; })()}
 
           {/* EMPLOYEES */}
           {tab === "employees" && <div>
