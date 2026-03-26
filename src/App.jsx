@@ -354,6 +354,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
+  const [trashSearch, setTrashSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null); // { current, total, label }
   const [importResult, setImportResult] = useState(null); // { success: [], dupes: [] }
@@ -978,12 +979,19 @@ function CRMApp({ currentUser, onLogout }) {
           {/* TRASH */}
           {tab === "trash" && (() => {
             const myTrash = currentUser?.role === "admin" ? trash : trash.filter((t) => t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name);
+            const filteredTrash = trashSearch ? myTrash.filter((t) => t.phone?.includes(trashSearch) || t.name?.toLowerCase().includes(trashSearch.toLowerCase())) : myTrash;
             return <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({myTrash.length})</h2>
-              {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <h2 style={{ fontSize: 22, fontWeight: 700, color: "#1e3a5f", margin: 0 }}>ข้อมูลที่ลบแล้ว ({filteredTrash.length})</h2>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
+                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 13, outline: "none", width: 220 }} />
+                </div>
+                {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
+              </div>
             </div>
-            {myTrash.length === 0 ? (
+            {filteredTrash.length === 0 ? (
               <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 12 }}>🗑️</div>
                 <div style={{ color: "#9ca3af", fontSize: 16 }}>ไม่มีข้อมูลที่ลบ</div>
@@ -996,7 +1004,7 @@ function CRMApp({ currentUser, onLogout }) {
                       {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
                     <tbody>
-                      {myTrash.map((t) => {
+                      {filteredTrash.map((t) => {
                         const st = statuses.find((s) => s.key === t.status);
                         return (
                           <tr key={t.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
