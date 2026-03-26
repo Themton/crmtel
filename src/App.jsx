@@ -529,16 +529,25 @@ function CRMApp({ currentUser, onLogout }) {
         const cleanPhone = phone.replace(/\D/g, "");
         if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
         if (cleanPhone) existingPhones.add(cleanPhone);
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: csi >= 0 ? v[csi] || "" : "", order_date: odi >= 0 ? v[odi] || "" : "", received_product: rpi >= 0 ? (v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1" : false, status: "not_called" });
+        const orderDate = odi >= 0 ? v[odi] || "" : "";
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: csi >= 0 ? v[csi] || "" : "", order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, status: "not_called" });
       }
       if (allRows.length) {
-        const BATCH = 100;
+        const BATCH = 50;
         const totalBatches = Math.ceil(allRows.length / BATCH);
         setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
         for (let b = 0; b < totalBatches; b++) {
           const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
-          await supabase.from("crm_customers").insert(batch);
-          batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+          const res = await supabase.from("crm_customers").insert(batch);
+          if (res.error) {
+            // Fallback: insert one by one
+            for (const row of batch) {
+              const r2 = await supabase.from("crm_customers").insert(row);
+              if (!r2.error) successList.push({ name: row.name, phone: row.phone });
+            }
+          } else {
+            batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+          }
           setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
         }
         await fetchAll();
