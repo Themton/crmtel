@@ -384,26 +384,37 @@ function CRMApp({ currentUser, onLogout }) {
     setLoading(false);
   }, []);
 
-  // Load column order ONCE on mount
+  // Load column order on mount + poll for employee (supervisor's changes)
   useEffect(() => {
-    if (colOrderLoaded) return;
-    (async () => {
+    const loadColOrder = async () => {
       try {
         const res = await supabase.from("crm_settings").select();
         const settings = res.data || [];
         if (settings.length > 0) {
           let orderKey = "col_order_" + (currentUser?.name || "default");
           let setting = settings.find((s) => s.key === orderKey);
-          if (!setting && currentUser?.role === "employee") {
+          // Employee uses supervisor's order
+          if (!setting && (currentUser?.role === "employee" || !setting)) {
             const empRes = await supabase.from("crm_customers").select();
-            const mySupervisor = (empRes.data || []).find((cx) => cx.assigned_to === currentUser.name)?.supervisor;
+            const mySupervisor = (empRes.data || []).find((cx) => cx.assigned_to === currentUser?.name)?.supervisor;
             if (mySupervisor) setting = settings.find((s) => s.key === "col_order_" + mySupervisor);
           }
-          if (setting) { try { setColOrder(JSON.parse(setting.value)); } catch {} }
+          if (setting) {
+            try {
+              const newOrder = JSON.parse(setting.value);
+              setColOrder((prev) => JSON.stringify(prev) !== JSON.stringify(newOrder) ? newOrder : prev);
+            } catch {}
+          }
         }
       } catch {}
       setColOrderLoaded(true);
-    })();
+    };
+    loadColOrder();
+    // Employee polls for supervisor's column changes every 10 seconds
+    if (currentUser?.role === "employee") {
+      const interval = setInterval(loadColOrder, 10000);
+      return () => clearInterval(interval);
+    }
   }, [currentUser?.name]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
