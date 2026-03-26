@@ -994,8 +994,8 @@ function CRMApp({ currentUser, onLogout }) {
                   <tbody>
                     {pagedFc.map((c) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onClick={(e) => {
-                          if (e.shiftKey && lastChecked !== null) {
+                        <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => {
+                          if (e.nativeEvent.shiftKey && lastChecked !== null) {
                             const curIdx = pagedFc.findIndex((x) => x.id === c.id);
                             const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked);
                             if (curIdx >= 0 && lastIdx >= 0) {
@@ -1003,11 +1003,13 @@ function CRMApp({ currentUser, onLogout }) {
                               const end = Math.max(curIdx, lastIdx);
                               const rangeIds = pagedFc.slice(start, end + 1).map((x) => x.id);
                               setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]);
-                              e.preventDefault(); return;
+                              setLastChecked(c.id);
+                              return;
                             }
                           }
                           setLastChecked(c.id);
-                        }} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
+                          setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id));
+                        }} style={{ accentColor: "#d4a017" }} /></td>
                         {currentUser?.role === "admin" && <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td>}
                         <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#3d2a0a" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
