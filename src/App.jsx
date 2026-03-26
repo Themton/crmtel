@@ -566,8 +566,8 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleExport = () => {
-    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","สถานะ","มอบหมาย","หัวหน้า","วันที่โทร","หัวข้อโทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","เสนอขาย","ราคา"];
-    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.status,c.assigned_to,c.supervisor,c.call_date,c.call_subject,c.call_note,c.customer_relation,c.next_follow,c.offer,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
+    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.offer,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
@@ -617,7 +617,7 @@ function CRMApp({ currentUser, onLogout }) {
   const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Table headers: customer fields + call fields
-  const TH = ["","ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","วันที่สร้าง","วันที่โทร","หัวข้อโทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย2...","ราคาสินค้า(…"];
+  const TH = ["","ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์ลูกค้า","ครั้งถัดไป","เสนอขาย","โปรสินค้า"];
 
   return (
     <div style={{ fontFamily: "'Sarabun','Noto Sans Thai',sans-serif", background: "#f0f2f5", minHeight: "100vh", color: "#1a1a2e" }}>
@@ -843,7 +843,6 @@ function CRMApp({ currentUser, onLogout }) {
                       <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
                         <td style={{ padding: "6px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#2563eb" }} /></td>
                         {currentUser?.role === "admin" ? <td style={{ padding: "4px 6px" }}><button onClick={() => handleDelete("crm_customers", c.id)} style={bi(true)}><I.Trash /></button></td> : <td></td>}
-                        {/* Customer columns */}
                         <td style={{ padding: "4px 4px", minWidth: 140 }}><EditableCell value={c.name} onSave={(v) => upd(c.id, "name", v)} style={{ fontWeight: 600, color: "#1e3a5f" }} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.phone} onSave={(v) => upd(c.id, "phone", v)} /></td>
                         <td style={{ padding: "4px 4px", maxWidth: 180 }}><EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" /></td>
@@ -851,11 +850,8 @@ function CRMApp({ currentUser, onLogout }) {
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /></td>
                         <td style={{ padding: "6px 8px" }}>{c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span>}</td>
                         <td style={{ padding: "6px 4px", minWidth: 120 }}><InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => upd(c.id, "status", v)} /></td>
-                        <td style={{ padding: "6px 8px", fontSize: 11, color: c.assigned_to ? "#4b5563" : "#d97706", fontWeight: 500 }}>{c.assigned_to || "ยังไม่มอบหมาย"}</td>
-                        <td style={{ padding: "6px 8px", color: "#9ca3af", fontSize: 11 }}>{c.created_at}</td>
-                        {/* Call columns — separated with blue border */}
-                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
                         <td style={{ padding: "6px 4px" }}><SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /></td>
+                        <td style={{ padding: "4px 4px" }}><EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /></td>
                         <td style={{ padding: "4px 4px", minWidth: 300 }}><EditableCell value={c.call_note} onSave={(v) => upd(c.id, "call_note", v)} type="textarea" /></td>
                         <td style={{ padding: "6px 6px" }}><RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /></td>
                         <td style={{ padding: "4px 4px" }}><EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /></td>
