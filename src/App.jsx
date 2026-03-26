@@ -903,7 +903,17 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length === pagedFc.length && pagedFc.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} /></th>
+                    <th style={{ padding: "10px 12px", width: 60 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#2563eb" }} />
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#2563eb", fontSize: 11, cursor: "pointer", padding: 0, width: 16 }}>
+                          <option value="">▾</option>
+                          <option value="page">หน้าปัจจุบัน ({pagedFc.length})</option>
+                          <option value="all">ทุกหน้า ({fc.length})</option>
+                          <option value="none">ยกเลิกทั้งหมด</option>
+                        </select>
+                      </div>
+                    </th>
                     {TH.map((h, i) => <th key={i} style={{ padding: "10px 12px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 60, position: "relative", userSelect: "none" }}>
                       {h}
                       <div
