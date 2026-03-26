@@ -359,6 +359,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [colOrder, setColOrder] = useState([]);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
+  const [viewMode, setViewMode] = useState("table"); // "table" or "list"
   const PAGE_SIZE = pageSize;
   const [lastChecked, setLastChecked] = useState(null);
 
@@ -1030,6 +1031,10 @@ function CRMApp({ currentUser, onLogout }) {
                   <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
                 </select>
                 <span style={{ fontSize: 13, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
+                <div style={{ display: "flex", gap: 2, marginLeft: 8 }}>
+                  <button onClick={() => setViewMode("table")} style={{ padding: "4px 8px", borderRadius: "6px 0 0 6px", border: "1px solid #d1d5db", background: viewMode === "table" ? "#d4a017" : "#fff", color: viewMode === "table" ? "#fff" : "#6b7280", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>☰ ตาราง</button>
+                  <button onClick={() => setViewMode("list")} style={{ padding: "4px 8px", borderRadius: "0 6px 6px 0", border: "1px solid #d1d5db", background: viewMode === "list" ? "#d4a017" : "#fff", color: viewMode === "list" ? "#fff" : "#6b7280", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>☷ รายชื่อ</button>
+                </div>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
@@ -1043,6 +1048,39 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              {viewMode === "list" ? (
+                <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
+                      <th style={{ padding: "10px 12px", width: 36 }}><input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017" }} /></th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151", width: 50 }}>#</th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>ชื่อ</th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>เบอร์โทร</th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>โปร</th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>สถานะ</th>
+                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>มอบหมาย</th>
+                      <th style={{ padding: "10px 14px", width: 40 }}></th>
+                    </tr></thead>
+                    <tbody>
+                      {pagedFc.map((c, idx) => (
+                        <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fffbeb")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                          <td style={{ padding: "10px 12px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id))} style={{ accentColor: "#d4a017" }} /></td>
+                          <td style={{ padding: "10px 14px", color: "#9ca3af", fontSize: 12 }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                          <td style={{ padding: "10px 14px", fontWeight: 600, color: "#3d2a0a" }}>{c.name}</td>
+                          <td style={{ padding: "10px 14px", color: "#6b7280", fontSize: 12 }}>{c.phone}</td>
+                          <td style={{ padding: "10px 14px" }}>{c.previous_promo && <span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11 }}>{(() => { const m = String(c.previous_promo).match(/\((\d+)\)/); return m ? m[1] : c.previous_promo; })()}</span>}</td>
+                          <td style={{ padding: "10px 14px" }}>{(() => { const st = statuses.find((s) => s.key === c.status); return st ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : c.status; })()}</td>
+                          <td style={{ padding: "10px 14px", fontSize: 12, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600 }}>{c.assigned_to || "—"}</td>
+                          <td style={{ padding: "10px 14px" }}><button onClick={() => setModal({ type: "customer", mode: "edit", data: { ...c } })} style={{ background: "none", border: "1px solid #e5e7eb", borderRadius: "50%", width: 28, height: 28, cursor: "pointer", color: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⊕</button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {fc.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
+                </div>
+              ) : (
               <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", maxHeight: "calc(100vh - 320px)" }}>
                 <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
@@ -1106,6 +1144,7 @@ function CRMApp({ currentUser, onLogout }) {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
           </div>}
 
