@@ -490,6 +490,9 @@ function CRMApp({ currentUser, onLogout }) {
       const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
       const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
       const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
+      const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
+      const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
+      const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
       if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
       const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
       const successList = []; const dupeList = [];
@@ -501,7 +504,7 @@ function CRMApp({ currentUser, onLogout }) {
         const cleanPhone = phone.replace(/\D/g, "");
         if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
         if (cleanPhone) existingPhones.add(cleanPhone);
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", status: "not_called" });
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: csi >= 0 ? v[csi] || "" : "", order_date: odi >= 0 ? v[odi] || "" : "", received_product: rpi >= 0 ? (v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1" : false, status: "not_called" });
       }
       if (allRows.length) {
         setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
