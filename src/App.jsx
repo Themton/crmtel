@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
 const USE_DEMO = false;
-const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }) }) }; } };
+const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); if (o.mf) u += `?${o.mf}`; try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; return { select: () => ({ order: () => ({ then: (r, j) => req("GET").then(r).catch(j) }), then: (r, j) => req("GET").then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("DELETE", { mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }) }; } };
 
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
@@ -417,16 +417,24 @@ function CRMApp({ currentUser, onLogout }) {
   const handleBulkDelete = async () => {
     if (!selectedRows.length || !confirm("ลบ " + selectedRows.length + " รายการ?")) return;
     const total = selectedRows.length;
+    const BATCH = 100;
     setProgress({ current: 0, total, label: "กำลังลบข้อมูล..." });
-    for (let i = 0; i < total; i++) {
-      const rid = selectedRows[i];
+    // Batch insert to trash
+    const trashRows = selectedRows.map((rid) => {
       const item = customers.find((c) => c.id === rid);
-      if (item) {
-        const { id: oid, ...rest } = item;
-        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
-      }
-      await supabase.from("crm_customers").delete().eq("id", rid);
-      setProgress({ current: i + 1, total, label: "กำลังลบข้อมูล..." });
+      if (!item) return null;
+      const { id: oid, ...rest } = item;
+      return { ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+    }).filter(Boolean);
+    for (let b = 0; b < Math.ceil(trashRows.length / BATCH); b++) {
+      await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
+      setProgress({ current: Math.min((b + 1) * BATCH, total) * 0.5, total, label: "กำลังย้ายไปถังขยะ..." });
+    }
+    // Batch delete from customers
+    for (let b = 0; b < Math.ceil(selectedRows.length / BATCH); b++) {
+      const batch = selectedRows.slice(b * BATCH, (b + 1) * BATCH);
+      await supabase.from("crm_customers").delete().in("id", batch);
+      setProgress({ current: Math.round(total * 0.5 + Math.min((b + 1) * BATCH, total) * 0.5), total, label: "กำลังลบข้อมูล..." });
     }
     setProgress(null);
     setSelectedRows([]);
@@ -462,10 +470,12 @@ function CRMApp({ currentUser, onLogout }) {
   const handleEmptyTrash = async () => {
     if (!confirm("ลบถาวรทั้งหมด " + trash.length + " รายการ?")) return;
     const total = trash.length;
+    const BATCH = 100;
+    const ids = trash.map((t) => t.id);
     setProgress({ current: 0, total, label: "กำลังล้างถังขยะ..." });
-    for (let i = 0; i < total; i++) {
-      await supabase.from("crm_trash").delete().eq("id", trash[i].id);
-      setProgress({ current: i + 1, total, label: "กำลังล้างถังขยะ..." });
+    for (let b = 0; b < Math.ceil(ids.length / BATCH); b++) {
+      await supabase.from("crm_trash").delete().in("id", ids.slice(b * BATCH, (b + 1) * BATCH));
+      setProgress({ current: Math.min((b + 1) * BATCH, total), total, label: "กำลังล้างถังขยะ..." });
     }
     setProgress(null);
     await fetchAll();
@@ -507,11 +517,14 @@ function CRMApp({ currentUser, onLogout }) {
         allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: csi >= 0 ? v[csi] || "" : "", order_date: odi >= 0 ? v[odi] || "" : "", received_product: rpi >= 0 ? (v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1" : false, status: "not_called" });
       }
       if (allRows.length) {
+        const BATCH = 100;
+        const totalBatches = Math.ceil(allRows.length / BATCH);
         setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-        for (let i = 0; i < allRows.length; i++) {
-          await supabase.from("crm_customers").insert(allRows[i]);
-          successList.push({ name: allRows[i].name, phone: allRows[i].phone });
-          setProgress({ current: i + 1, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+        for (let b = 0; b < totalBatches; b++) {
+          const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
+          await supabase.from("crm_customers").insert(batch);
+          batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+          setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
         }
         await fetchAll();
         setProgress(null);
@@ -532,9 +545,11 @@ function CRMApp({ currentUser, onLogout }) {
     assignSelected.forEach((rid, idx) => chunks[idx % assignEmployees.length].push(rid));
     let done = 0;
     for (let i = 0; i < assignEmployees.length; i++) {
-      for (const rid of chunks[i]) {
-        await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], supervisor: selectedSupervisor?.name || "" }).eq("id", rid);
-        done++;
+      const BATCH = 100;
+      for (let b = 0; b < Math.ceil(chunks[i].length / BATCH); b++) {
+        const batch = chunks[i].slice(b * BATCH, (b + 1) * BATCH);
+        await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], supervisor: selectedSupervisor?.name || "" }).in("id", batch);
+        done += batch.length;
         setProgress({ current: done, total, label: "กำลังมอบหมาย..." });
       }
     }
@@ -546,9 +561,14 @@ function CRMApp({ currentUser, onLogout }) {
   };
   const handleRevoke = async () => {
     if (!assignSelected.length || !confirm("ถอนสิทธิ์?")) return;
-    for (const rid of assignSelected) {
-      await supabase.from("crm_customers").update({ assigned_to: "", supervisor: "" }).eq("id", rid);
+    const BATCH = 100;
+    setProgress({ current: 0, total: assignSelected.length, label: "กำลังถอนสิทธิ์..." });
+    for (let b = 0; b < Math.ceil(assignSelected.length / BATCH); b++) {
+      const batch = assignSelected.slice(b * BATCH, (b + 1) * BATCH);
+      await supabase.from("crm_customers").update({ assigned_to: "", supervisor: "" }).in("id", batch);
+      setProgress({ current: Math.min((b + 1) * BATCH, assignSelected.length), total: assignSelected.length, label: "กำลังถอนสิทธิ์..." });
     }
+    setProgress(null);
     await fetchAll();
     showToast("ถอนสิทธิ์แล้ว", "warning");
     setAssignSelected([]);
@@ -1277,9 +1297,7 @@ function CRMApp({ currentUser, onLogout }) {
                 const assignMode = quickUpdate.fieldValues.assign_mode || "equal";
                 const promoMap = quickUpdate.fieldValues.promo_map || {};
                 if (quickUpdate.fields.includes("assigned_to") && assignMode === "promo" && Object.keys(promoMap).length > 0) {
-                  // Assign by promo - each promo can have multiple employees
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
-                  // Group selected customers by promo
                   const promoGroups = {};
                   selectedRows.forEach((rid) => {
                     const c = customers.find((cx) => cx.id === rid);
@@ -1288,30 +1306,53 @@ function CRMApp({ currentUser, onLogout }) {
                     if (!promoGroups[pk]) promoGroups[pk] = [];
                     promoGroups[pk].push(rid);
                   });
-                  let done = 0;
+                  // Group by employee for batch
+                  const empBatch = {};
                   for (const pk of Object.keys(promoGroups)) {
                     const empList = promoMap[pk] || [];
-                    const rids = promoGroups[pk];
-                    for (let j = 0; j < rids.length; j++) {
+                    promoGroups[pk].forEach((rid, j) => {
                       const emp = empList.length > 0 ? empList[j % empList.length] : (assignList[0] || "");
-                      if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", rids[j]);
-                      else await supabase.from("crm_customers").update(u2).eq("id", rids[j]);
-                      done++;
+                      if (!empBatch[emp]) empBatch[emp] = [];
+                      empBatch[emp].push(rid);
+                    });
+                  }
+                  let done = 0;
+                  for (const [emp, ids] of Object.entries(empBatch)) {
+                    const BATCH = 100;
+                    for (let b = 0; b < Math.ceil(ids.length / BATCH); b++) {
+                      const batch = ids.slice(b * BATCH, (b + 1) * BATCH);
+                      if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).in("id", batch);
+                      else await supabase.from("crm_customers").update(u2).in("id", batch);
+                      done += batch.length;
                       setProgress({ current: done, total, label: "กำลังอัปเดตข้อมูล..." });
                     }
                   }
                 } else if (quickUpdate.fields.includes("assigned_to") && assignList.length > 1) {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { if (f !== "assigned_to") { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : (v || ""); } });
+                  // Group by employee
+                  const empBatch = {};
                   for (let i = 0; i < total; i++) {
                     const emp = assignList[i % assignList.length];
-                    await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).eq("id", selectedRows[i]);
-                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
+                    if (!empBatch[emp]) empBatch[emp] = [];
+                    empBatch[emp].push(selectedRows[i]);
+                  }
+                  let done = 0;
+                  for (const [emp, ids] of Object.entries(empBatch)) {
+                    const BATCH = 100;
+                    for (let b = 0; b < Math.ceil(ids.length / BATCH); b++) {
+                      const batch = ids.slice(b * BATCH, (b + 1) * BATCH);
+                      await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).in("id", batch);
+                      done += batch.length;
+                      setProgress({ current: done, total, label: "กำลังอัปเดตข้อมูล..." });
+                    }
                   }
                 } else {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
-                  for (let i = 0; i < total; i++) {
-                    await supabase.from("crm_customers").update(u2).eq("id", selectedRows[i]);
-                    setProgress({ current: i + 1, total, label: "กำลังอัปเดตข้อมูล..." });
+                  const BATCH = 100;
+                  for (let b = 0; b < Math.ceil(total / BATCH); b++) {
+                    const batch = selectedRows.slice(b * BATCH, (b + 1) * BATCH);
+                    await supabase.from("crm_customers").update(u2).in("id", batch);
+                    setProgress({ current: Math.min((b + 1) * BATCH, total), total, label: "กำลังอัปเดตข้อมูล..." });
                   }
                 }
                 setProgress(null);
