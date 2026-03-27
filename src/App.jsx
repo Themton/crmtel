@@ -614,6 +614,7 @@ function CRMApp({ currentUser, onLogout }) {
       const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
       const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
       const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
+      const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
       if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
       const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
       const successList = []; const dupeList = [];
@@ -628,7 +629,7 @@ function CRMApp({ currentUser, onLogout }) {
         const orderDate = odi >= 0 ? v[odi] || "" : "";
         const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
         const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, status: "not_called" });
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", status: "not_called" });
       }
       if (allRows.length) {
         const BATCH = 50;
@@ -704,8 +705,8 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleExport = () => {
-    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า"];
-    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น"];
+    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
@@ -718,7 +719,7 @@ function CRMApp({ currentUser, onLogout }) {
       // Promo filter
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
-      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
+      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter
       if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
       // Advanced filters
@@ -730,12 +731,7 @@ function CRMApp({ currentUser, onLogout }) {
           continue;
         }
         let cv;
-        if (af.field === "nickname") {
-          const emp = employees.find((em) => em.name === c.assigned_to);
-          cv = String(emp?.nickname || "").toLowerCase();
-        } else {
-          cv = String(c[af.field] || "").toLowerCase();
-        }
+        cv = String(c[af.field] || "").toLowerCase();
         const fv = af.value.toLowerCase();
         if (af.op === "contains" && !cv.includes(fv)) return false;
         if (af.op === "eq" && cv !== fv) return false;
@@ -785,7 +781,7 @@ function CRMApp({ currentUser, onLogout }) {
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
     assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 9, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
-    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 9, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <EditableCell value={c.nickname} onSave={(v) => upd(c.id, "nickname", v)} /> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
@@ -1045,9 +1041,7 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                           ) : (
                             (() => {
-                              const vals = af.field === "nickname"
-                                ? [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort()
-                                : [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
