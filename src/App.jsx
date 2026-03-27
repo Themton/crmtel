@@ -325,13 +325,13 @@ export default function AppWrapper() {
 // ---- CRM APP ----
 function CRMApp({ currentUser, onLogout }) {
   // ---- ALL STATE ----
-  const [tab, setTab] = useState(currentUser?.role === "admin" ? "customers" : "dashboard");
+  const [tab, setTab] = useState(() => sessionStorage.getItem("crm_tab") || (currentUser?.role === "admin" ? "customers" : "dashboard"));
   const [customers, setCustomers] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [callSubjects, setCallSubjects] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => sessionStorage.getItem("crm_search") || "");
   const [modal, setModal] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [settingsSubTab, setSettingsSubTab] = useState("statuses");
@@ -351,13 +351,13 @@ function CRMApp({ currentUser, onLogout }) {
   const [progress, setProgress] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const [toolbarTab, setToolbarTab] = useState(null);
-  const [advFilters, setAdvFilters] = useState([]);
-  const [empFilter, setEmpFilter] = useState([]);
+  const [advFilters, setAdvFilters] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_advFilters")) || []; } catch { return []; } });
+  const [empFilter, setEmpFilter] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_empFilter")) || []; } catch { return []; } });
   const [empSearch, setEmpSearch] = useState("");
   const [sortCol, setSortCol] = useState("");
   const [sortDir, setSortDir] = useState("asc");
   const [assignEmployees, setAssignEmployees] = useState([]);
-  const [promoFilter, setPromoFilter] = useState("");
+  const [promoFilter, setPromoFilter] = useState(() => sessionStorage.getItem("crm_promoFilter") || "");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
@@ -370,6 +370,13 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- EFFECTS ----
   useEffect(() => { setPage(1); }, [search, promoFilter]);
+
+  // Persist filters to sessionStorage
+  useEffect(() => { sessionStorage.setItem("crm_search", search); }, [search]);
+  useEffect(() => { sessionStorage.setItem("crm_tab", tab); }, [tab]);
+  useEffect(() => { sessionStorage.setItem("crm_advFilters", JSON.stringify(advFilters)); }, [advFilters]);
+  useEffect(() => { sessionStorage.setItem("crm_empFilter", JSON.stringify(empFilter)); }, [empFilter]);
+  useEffect(() => { sessionStorage.setItem("crm_promoFilter", promoFilter); }, [promoFilter]);
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
   const fetchAll = useCallback(async () => {
