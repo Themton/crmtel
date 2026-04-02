@@ -439,10 +439,16 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr] = await Promise.all([
-        safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
+      const [c, rawAccounts, s, cs, sv, tr] = await Promise.all([
+        safeFetch("crm_customers"), safeFetch("accounts"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
       ]);
+      // Map accounts to employees format
+      const e = (rawAccounts || []).filter((a) => a.active !== false).map((a) => ({
+        id: a.id, name: a.display_name || a.email, nickname: a.display_name || "", username: a.email,
+        email: a.email, role: a.role === "admin" ? "admin" : a.role === "supervisor" ? "supervisor" : "employee",
+        password: a.password, department: a.role || "employee"
+      }));
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
@@ -530,7 +536,7 @@ function CRMApp({ currentUser, onLogout }) {
   }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
-  const tableMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
+  const tableMap = { crm_customers: setCustomers, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
 
   // ---- SAVE (ADD / EDIT) ----
   const handleSave = async (table, data, mode) => {
@@ -1365,15 +1371,17 @@ function CRMApp({ currentUser, onLogout }) {
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <button onClick={() => setMultiAddEmp([{ name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+              <span style={{ fontSize: 12, color: "#9ca3af" }}>จัดการบัญชีที่ระบบ crm-themt2</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-              {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
-                <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
-                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
-                <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
-              </div>))}
+              {employees.map((e2) => {
+                const custCount = customers.filter((c2) => c2.assigned_to === e2.name).length;
+                return <div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative", borderLeft: custCount > 0 ? "4px solid #d4a017" : "4px solid #e5e7eb" }}>
+                  <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
+                  <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
+                  <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: custCount > 0 ? "#fef3c7" : "#f3f4f6", color: custCount > 0 ? "#92400e" : "#9ca3af" }}>{custCount} ลูกค้า</span>
+                </div>;
+              })}
             </div>
           </div>}
 
@@ -1813,7 +1821,7 @@ function CRMApp({ currentUser, onLogout }) {
 function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, callSubjects, iS, lS }) {
   const [form, setForm] = useState(modal.data || {});
   const u = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-  const table = { customer: "crm_customers", employee: "crm_employees", status: "crm_statuses", supervisor: "crm_supervisors", call_subject: "crm_call_subjects" }[modal.type];
+  const table = { customer: "crm_customers", employee: "accounts", status: "crm_statuses", supervisor: "crm_supervisors", call_subject: "crm_call_subjects" }[modal.type];
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
