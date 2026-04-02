@@ -355,17 +355,15 @@ function CRMApp({ currentUser, onLogout }) {
   const [advFilters, setAdvFilters] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_advFilters")) || []; } catch { return []; } });
   const [empFilter, setEmpFilter] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_empFilter")) || []; } catch { return []; } });
   const [empSearch, setEmpSearch] = useState("");
-  const [sortCol, setSortCol] = useState("");
-  const [sortDir, setSortDir] = useState("asc");
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState(() => sessionStorage.getItem("crm_promoFilter") || "");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
   const [colOrderLoaded, setColOrderLoaded] = useState(false);
+  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
-  const [viewMode, setViewMode] = useState("table"); // "table" or "list"
   const PAGE_SIZE = pageSize;
   const [lastChecked, setLastChecked] = useState(null);
 
@@ -433,7 +431,6 @@ function CRMApp({ currentUser, onLogout }) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   // Auto-refresh: check for changes every 2 seconds (lightweight)
-  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
   useEffect(() => {
     const checkForChanges = async () => {
       try {
@@ -757,14 +754,6 @@ function CRMApp({ currentUser, onLogout }) {
       }
       return true;
     });
-    // Sort
-    if (sortCol) {
-      result = [...result].sort((a, b) => {
-        const av = a[sortCol] ?? ""; const bv = b[sortCol] ?? "";
-        const cmp = typeof av === "number" ? av - bv : String(av).localeCompare(String(bv));
-        return sortDir === "desc" ? -cmp : cmp;
-      });
-    }
     return result;
   })();
 
