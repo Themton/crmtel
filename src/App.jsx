@@ -780,7 +780,12 @@ function CRMApp({ currentUser, onLogout }) {
           continue;
         }
         let cv;
-        cv = String(c[af.field] || "").toLowerCase();
+        if (af.field === "nickname") {
+          const emp = employees.find((em) => em.name === c.assigned_to);
+          cv = String(emp?.nickname || "").toLowerCase();
+        } else {
+          cv = String(c[af.field] || "").toLowerCase();
+        }
         const fv = af.value.toLowerCase();
         if (af.op === "contains" && !cv.includes(fv)) return false;
         if (af.op === "eq" && cv !== fv) return false;
@@ -822,7 +827,7 @@ function CRMApp({ currentUser, onLogout }) {
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
     assigned_to: { label: "มอบหมาย", render: (c) => <InlineAssignDropdown value={c.assigned_to} employees={employees} onSave={(v) => upd(c.id, "assigned_to", v)} /> },
-    nickname: { label: "ชื่อเล่น", render: (c) => <EditableCell value={c.nickname} onSave={(v) => upd(c.id, "nickname", v)} /> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 10, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
@@ -1082,7 +1087,9 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                           ) : (
                             (() => {
-                              const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              const vals = af.field === "nickname"
+                                ? [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort()
+                                : [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
