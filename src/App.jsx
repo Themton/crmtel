@@ -270,10 +270,16 @@ function LoginScreen({ onLogin }) {
   const [allUsers, setAllUsers] = useState([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }]);
 
   useEffect(() => {
-    supabase.from("crm_employees").select().then((res) => {
+    // Load accounts from shared 'accounts' table (crm-themt2)
+    supabase.from("accounts").select().then((res) => {
       if (res.data) {
-        const empUsers = res.data.map((e) => ({ username: e.username || e.name, password: e.password || "1234", name: e.name, role: e.role || "employee" }));
-        setAllUsers([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }, ...empUsers]);
+        const accUsers = res.data.filter((a) => a.active !== false).map((a) => ({
+          username: a.email,
+          password: String(a.password),
+          name: a.display_name || a.email,
+          role: a.role === "admin" ? "admin" : a.role === "supervisor" ? "supervisor" : "employee"
+        }));
+        setAllUsers(accUsers.length > 0 ? accUsers : [{ username: "admin", password: "admin123", name: "Admin", role: "admin" }]);
       }
     });
   }, []);
@@ -303,12 +309,12 @@ function LoginScreen({ onLogin }) {
           {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>ชื่อผู้ใช้</label>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Email</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="email@example.com"
                 style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
                 onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }} />
             </div>
