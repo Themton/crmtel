@@ -355,7 +355,25 @@ function LoginScreen({ onLogin }) {
 // ---- MAIN WRAPPER ----
 export default function AppWrapper() {
   const [user, setUser] = useState(() => {
-    try { const s = sessionStorage.getItem("crm_user"); return s ? JSON.parse(s) : null; } catch { return null; }
+    try {
+      // Check crmtel session first
+      const s = sessionStorage.getItem("crm_user");
+      if (s) return JSON.parse(s);
+      // Check crm-themt2 login (shared localStorage on same origin)
+      const ps = localStorage.getItem("ps_user");
+      if (ps) {
+        const psUser = JSON.parse(ps);
+        const mapped = {
+          username: psUser.username,
+          password: psUser.password,
+          name: psUser.displayName || psUser.username,
+          role: psUser.role === "admin" ? "admin" : psUser.role === "supervisor" ? "supervisor" : "employee"
+        };
+        sessionStorage.setItem("crm_user", JSON.stringify(mapped));
+        return mapped;
+      }
+      return null;
+    } catch { return null; }
   });
   const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); };
   const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); };
