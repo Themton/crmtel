@@ -1719,7 +1719,7 @@ function CRMApp({ currentUser, onLogout }) {
                 setProgress({ current: 0, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 let ok = 0;
                 for (const emp of valid) {
-                  const res = await supabase.from("crm_employees").insert({ name: emp.name, nickname: emp.nickname || "", username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
+                  const res = await supabase.from("accounts").insert({ display_name: emp.name, email: emp.email || emp.username, password: emp.password || "1234", role: emp.role || "employee", active: true });
                   if (!res.error) ok++;
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
