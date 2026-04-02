@@ -992,9 +992,9 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>ลูกค้า ({fc.length})</h2>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {selectedRows.length > 0 && currentUser?.role === "admin" && <>
+                {selectedRows.length > 0 && <>
                   <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #d4a017", background: "#fffbeb", color: "#d4a017" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
-                  <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
+                  {currentUser?.role === "admin" && <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>}
                 </>}
                 <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
@@ -1225,19 +1225,26 @@ function CRMApp({ currentUser, onLogout }) {
                 <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
               </div>
             </div>}
+            {selectedRows.length > 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 20px", background: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
+              <span style={{ fontSize: 12, color: "#92400e", fontWeight: 600 }}>✓ เลือกแล้ว {selectedRows.length} รายการ {selectedRows.length > pagedFc.length ? "(ข้ามหน้า)" : ""}</span>
+              <div style={{ display: "flex", gap: 8 }}>
+                {selectedRows.length < fc.length && <button onClick={() => setSelectedRows(fc.map((c) => c.id))} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>เลือกทั้งหมด {fc.length}</button>}
+                <button onClick={() => setSelectedRows([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ยกเลิก</button>
+              </div>
+            </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", height: "calc(100vh - 260px)" }}>
                 <table style={{ borderCollapse: "collapse", fontSize: 10, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "4px 6px", width: 30, fontSize: 10, fontWeight: 700, color: "#9ca3af" }}>#</th>
-                    <th style={{ padding: "4px 6px", width: 40 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 13, height: 13 }} />
-                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#d4a017", fontSize: 9, cursor: "pointer", padding: 0, width: 12 }}>
+                    <th style={{ padding: "4px 6px", width: 55 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <input type="checkbox" checked={selectedRows.length > 0 && selectedRows.length === fc.length} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "1px solid #e5e7eb", borderRadius: 4, background: "#fff", color: "#d4a017", fontSize: 10, cursor: "pointer", padding: "1px 2px", fontWeight: 700 }}>
                           <option value="">▾</option>
-                          <option value="page">หน้าปัจจุบัน ({pagedFc.length})</option>
-                          <option value="all">ทุกหน้า ({fc.length})</option>
-                          <option value="none">ยกเลิกทั้งหมด</option>
+                          <option value="page">📄 หน้านี้ ({pagedFc.length})</option>
+                          <option value="all">📋 ทุกหน้า ({fc.length})</option>
+                          <option value="none">✕ ยกเลิก</option>
                         </select>
                       </div>
                     </th>
