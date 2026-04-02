@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import * as XLSX from "xlsx";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
@@ -584,78 +585,95 @@ function CRMApp({ currentUser, onLogout }) {
     broadcastChange();
   };
 
-  // ---- IMPORT CSV ----
+  // ---- IMPORT CSV/XLSX ----
+  const processImportRows = async (headers, dataRows, fileInput) => {
+    const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
+    const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
+    const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
+    const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
+    const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
+    const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
+    const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
+    const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
+    if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
+    const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
+    const successList = []; const dupeList = [];
+    const allRows = [];
+    for (const v of dataRows) {
+      const name = ni >= 0 ? String(v[ni] || "") : ""; const phone = pi >= 0 ? String(v[pi] || "") : "";
+      if (!name && !phone) continue;
+      const cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
+      if (cleanPhone) existingPhones.add(cleanPhone);
+      const orderDate = odi >= 0 ? String(v[odi] || "") : "";
+      const rawSubject = csi >= 0 ? String(v[csi] || "").trim() : "";
+      const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
+      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? (String(v[rpi] || "").includes("ได้รับ") || String(v[rpi]) === "true" || String(v[rpi]) === "1") : false, nickname: nni >= 0 ? String(v[nni] || "") : "", status: "not_called" });
+    }
+    if (allRows.length) {
+      const BATCH = 50;
+      const totalBatches = Math.ceil(allRows.length / BATCH);
+      setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+      for (let b = 0; b < totalBatches; b++) {
+        const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
+        const res = await supabase.from("crm_customers").insert(batch);
+        if (res.error) {
+          for (const row of batch) {
+            const r2 = await supabase.from("crm_customers").insert(row);
+            if (!r2.error) successList.push({ name: row.name, phone: row.phone });
+          }
+        } else {
+          batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+        }
+        setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+      }
+      await fetchAll(); broadcastChange();
+      setProgress(null);
+    }
+    setImportResult({ success: successList, dupes: dupeList });
+    if (fileInput) fileInput.value = "";
+  };
+
   const handleImport = (e) => {
     const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      let text = ev.target.result;
-      // Strip BOM
-      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      const lines = text.split(/\r?\n/).filter((l) => l.trim());
-      if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-      // Parse CSV properly (handle commas inside quotes)
-      const parseCSVLine = (line) => {
-        const result = []; let cur = ""; let inQuote = false;
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i];
-          if (ch === '"') { inQuote = !inQuote; }
-          else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
-          else { cur += ch; }
-        }
-        result.push(cur.trim());
-        return result;
+    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+    
+    if (isExcel) {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const wb = XLSX.read(ev.target.result, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
+        const headers = data[0].map((h) => String(h || "").toLowerCase());
+        const dataRows = data.slice(1);
+        await processImportRows(headers, dataRows, e.target);
       };
-      const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
-      const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
-      const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
-      const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
-      const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
-      const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
-      const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
-      const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
-      const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
-      if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
-      const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
-      const successList = []; const dupeList = [];
-      const allRows = [];
-      for (let i = 1; i < lines.length; i++) {
-        const v = parseCSVLine(lines[i]).map((x) => x.replace(/^"|"$/g, ""));
-        const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
-        if (!name && !phone) continue;
-        const cleanPhone = phone.replace(/\D/g, "");
-        if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
-        if (cleanPhone) existingPhones.add(cleanPhone);
-        const orderDate = odi >= 0 ? v[odi] || "" : "";
-        const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
-        const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", status: "not_called" });
-      }
-      if (allRows.length) {
-        const BATCH = 50;
-        const totalBatches = Math.ceil(allRows.length / BATCH);
-        setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-        for (let b = 0; b < totalBatches; b++) {
-          const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
-          const res = await supabase.from("crm_customers").insert(batch);
-          if (res.error) {
-            // Fallback: insert one by one
-            for (const row of batch) {
-              const r2 = await supabase.from("crm_customers").insert(row);
-              if (!r2.error) successList.push({ name: row.name, phone: row.phone });
-            }
-          } else {
-            batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        let text = ev.target.result;
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
+        const parseCSVLine = (line) => {
+          const result = []; let cur = ""; let inQuote = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') { inQuote = !inQuote; }
+            else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
+            else { cur += ch; }
           }
-          setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-        }
-        await fetchAll(); broadcastChange();
-        setProgress(null);
-      }
-      setImportResult({ success: successList, dupes: dupeList });
-      e.target.value = "";
-    };
-    reader.readAsText(file);
+          result.push(cur.trim());
+          return result;
+        };
+        const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
+        const dataRows = lines.slice(1).map((line) => parseCSVLine(line).map((x) => x.replace(/^"|"$/g, "")));
+        await processImportRows(headers, dataRows, e.target);
+      };
+      reader.readAsText(file);
+    }
   };
 
   // ---- SUPERVISOR ASSIGN ----
@@ -950,7 +968,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #d4a017", background: "#fffbeb", color: "#d4a017" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
                   <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
                 </>}
-                <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
+                <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
                 <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
