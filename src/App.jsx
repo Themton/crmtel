@@ -227,6 +227,40 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   );
 }
 
+function InlineAssignDropdown({ value, employees, onSave }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <div onClick={() => setOpen(!open)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", fontSize: 10, fontWeight: 600, color: value ? "#92400e" : "#d97706", whiteSpace: "nowrap" }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
+        {value || "ยังไม่มอบหมาย"}
+      </div>
+      {open && <div style={{ position: "absolute", top: "100%", left: 0, background: "#fff", borderRadius: 10, boxShadow: "0 6px 20px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 200, zIndex: 200, animation: "fadeIn .1s" }}>
+        <div onClick={() => { onSave(""); setOpen(false); }} style={{ padding: "6px 12px", cursor: "pointer", fontSize: 11, color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+          ยังไม่มอบหมาย
+        </div>
+        <div style={{ maxHeight: 200, overflowY: "auto" }}>
+          {employees.map((em, i) => (
+            <div key={em.id} onClick={() => { onSave(em.name); setOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", background: value === em.name ? "#eff6ff" : "transparent" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "#f8fafc")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "transparent")}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", background: colors[i % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1)}</div>
+              <span style={{ fontSize: 11, fontWeight: value === em.name ? 700 : 400 }}>{em.nickname || em.name}</span>
+              {value === em.name && <span style={{ marginLeft: "auto", color: "#3b82f6", fontSize: 12 }}>✓</span>}
+            </div>
+          ))}
+        </div>
+      </div>}
+    </div>
+  );
+}
+
 // ---- LOGIN ----
 function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState("");
@@ -787,7 +821,7 @@ function CRMApp({ currentUser, onLogout }) {
     customer_relation: { label: "ความสัมพันธ์ลูกค้า", render: (c) => <RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /> },
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
-    assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 9, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
+    assigned_to: { label: "มอบหมาย", render: (c) => <InlineAssignDropdown value={c.assigned_to} employees={employees} onSave={(v) => upd(c.id, "assigned_to", v)} /> },
     nickname: { label: "ชื่อเล่น", render: (c) => <EditableCell value={c.nickname} onSave={(v) => upd(c.id, "nickname", v)} /> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
