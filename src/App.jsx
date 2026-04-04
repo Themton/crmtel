@@ -649,23 +649,24 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- IMPORT CSV/XLSX ----
   const processImportRows = async (headers, dataRows, fileInput) => {
-    const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
-    const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
-    const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
-    const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
-    const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
-    const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
-    const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
-    const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
+    const ni = headers.findIndex((h) => h === "ชื่อ" || h === "name");
+    const pi = headers.findIndex((h) => h === "เบอร์โทร" || h.includes("phone"));
+    const noi = headers.findIndex((h) => h === "ที่อยู่" || h === "note" || h === "address");
+    const pri = headers.findIndex((h) => h === "โปรก่อนหน้า" || h.includes("promo"));
+    const csi = headers.findIndex((h) => h === "หัวข้อโทร" || h === "call_subject" || h === "subject");
+    const odi = headers.findIndex((h) => h === "วันที่สั่งซื้อ" || h === "order_date");
+    const rpi = headers.findIndex((h) => h === "ได้รับสินค้า" || h.includes("received"));
+    const nni = headers.findIndex((h) => h === "ชื่อเล่น" || h === "nickname");
     const sti = headers.findIndex((h) => h === "สถานะ" || h === "status");
-    const ati = headers.findIndex((h) => h.includes("มอบหมาย") || h.includes("assigned") || h.includes("assign"));
-    const cdi = headers.findIndex((h) => h.includes("วันที่โทร") || h.includes("call_date"));
-    const cni = headers.findIndex((h) => h.includes("หมายเหตุ") || h.includes("call_note"));
-    const cri = headers.findIndex((h) => h.includes("ความสัมพันธ์") || h.includes("customer_relation") || h.includes("relation"));
-    const nfi = headers.findIndex((h) => h.includes("ครั้งถัดไป") || h.includes("next_follow") || h.includes("follow"));
-    const ppi = headers.findIndex((h) => h.includes("โปรสินค้า") || h.includes("product_price") || h.includes("price"));
-    const svi = headers.findIndex((h) => h.includes("หัวหน้า") || h.includes("supervisor"));
+    const ati = headers.findIndex((h) => h === "มอบหมาย" || h.includes("assigned") || h === "assign");
+    const cdi = headers.findIndex((h) => h === "วันที่โทร" || h === "call_date");
+    const cni = headers.findIndex((h) => h === "หมายเหตุ" || h === "call_note");
+    const cri = headers.findIndex((h) => h.includes("ความสัมพันธ์") || h === "customer_relation" || h === "relation");
+    const nfi = headers.findIndex((h) => h === "ครั้งถัดไป" || h === "next_follow" || h === "follow");
+    const ppi = headers.findIndex((h) => h === "โปรสินค้า" || h === "product_price");
+    const svi = headers.findIndex((h) => h === "หัวหน้า" || h === "supervisor");
     if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
+    console.log("Import columns matched:", { ชื่อ: ni, เบอร์โทร: pi, ที่อยู่: noi, โปรก่อนหน้า: pri, หัวข้อโทร: csi, วันที่สั่งซื้อ: odi, ได้รับสินค้า: rpi, ชื่อเล่น: nni, สถานะ: sti, มอบหมาย: ati, วันที่โทร: cdi, หมายเหตุ: cni, ความสัมพันธ์: cri, ครั้งถัดไป: nfi, โปรสินค้า: ppi, หัวหน้า: svi });
     const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
     const successList = []; const dupeList = [];
     const allRows = [];
@@ -713,9 +714,9 @@ function CRMApp({ currentUser, onLogout }) {
     if (isExcel) {
       const reader = new FileReader();
       reader.onload = async (ev) => {
-        const wb = XLSX.read(ev.target.result, { type: "array" });
+        const wb = XLSX.read(ev.target.result, { type: "array", cellDates: true, dateNF: "yyyy-mm-dd" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: "yyyy-mm-dd" });
         if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
         const headers = data[0].map((h) => String(h || "").toLowerCase());
         const dataRows = data.slice(1);
