@@ -704,9 +704,29 @@ function CRMApp({ currentUser, onLogout }) {
       const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
       const rawStatus = sti >= 0 ? String(v[sti] || "").trim() : "";
       const matchedStatus = statuses.find((s) => s.label === rawStatus) || statuses.find((s) => s.label.toLowerCase() === rawStatus.toLowerCase()) || statuses.find((s) => s.key === rawStatus);
-      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? (String(v[rpi] || "").includes("ได้รับ") || String(v[rpi]) === "true" || String(v[rpi]) === "1") : false, nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? String(v[cdi] || "") : "", call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (Number(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? String(v[nfi] || "") : "", product_price: ppi >= 0 ? (Number(v[ppi]) || 0) : 0, supervisor: svi >= 0 ? String(v[svi] || "") : "" });
+      // Parse date helper: "19:00 30/04/2026" or "30/04/2026" or "2026-04-30" → ISO or null
+      const parseDate = (str) => {
+        if (!str) return null;
+        const s = String(str).trim();
+        if (!s) return null;
+        // Try "HH:MM DD/MM/YYYY"
+        const m1 = s.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m1) return m1[5] + "-" + m1[4].padStart(2,"0") + "-" + m1[3].padStart(2,"0") + "T" + m1[1].padStart(2,"0") + ":" + m1[2] + ":00";
+        // Try "DD/MM/YYYY"
+        const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m2) return m2[3] + "-" + m2[2].padStart(2,"0") + "-" + m2[1].padStart(2,"0");
+        // Try ISO or other parseable format
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) return d.toISOString();
+        return s; // return as-is if can't parse
+      };
+      const rpVal = rpi >= 0 ? String(v[rpi] || "") : "";
+      const ppVal = ppi >= 0 ? String(v[ppi] || "") : "";
+      const ppNum = /^\d+\.?\d*$/.test(ppVal.trim()) ? Number(ppVal) : 0;
+      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: parseDate(orderDate), received_product: rpVal.includes("ได้รับ") || rpVal === "true" || rpVal === "1", nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? parseDate(String(v[cdi] || "")) : null, call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (parseInt(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? parseDate(String(v[nfi] || "")) : null, product_price: ppNum, supervisor: svi >= 0 ? String(v[svi] || "") : "" });
     }
     console.log("Import result:", { allRows: allRows.length, dupes: dupeList.length, existingPhones: existingPhones.size });
+    if (allRows.length > 0) console.log("First row to insert:", allRows[0]);
     if (allRows.length) {
       const BATCH = 50;
       const totalBatches = Math.ceil(allRows.length / BATCH);
@@ -715,9 +735,11 @@ function CRMApp({ currentUser, onLogout }) {
         const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
         const res = await supabase.from("crm_customers").insert(batch);
         if (res.error) {
+          console.error("Batch insert error:", res.error.message, res.error);
           for (const row of batch) {
             const r2 = await supabase.from("crm_customers").insert(row);
             if (!r2.error) successList.push({ name: row.name, phone: row.phone });
+            else console.error("Row insert error:", row.name, r2.error.message);
           }
         } else {
           batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
