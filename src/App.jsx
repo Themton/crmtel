@@ -688,7 +688,7 @@ function CRMApp({ currentUser, onLogout }) {
     if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
     console.log("Import columns matched:", { ชื่อ: ni, เบอร์โทร: pi, ที่อยู่: noi, โปรก่อนหน้า: pri, หัวข้อโทร: csi, วันที่สั่งซื้อ: odi, ได้รับสินค้า: rpi, ชื่อเล่น: nni, สถานะ: sti, มอบหมาย: ati, วันที่โทร: cdi, หมายเหตุ: cni, ความสัมพันธ์: cri, ครั้งถัดไป: nfi, โปรสินค้า: ppi, หัวหน้า: svi });
     const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
-    const successList = []; const dupeList = [];
+    const successList = []; const dupeList = []; const failList = [];
     const allRows = [];
     for (const v of dataRows) {
       const name = ni >= 0 ? String(v[ni] ?? "").trim() : "";
@@ -704,21 +704,24 @@ function CRMApp({ currentUser, onLogout }) {
       const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
       const rawStatus = sti >= 0 ? String(v[sti] || "").trim() : "";
       const matchedStatus = statuses.find((s) => s.label === rawStatus) || statuses.find((s) => s.label.toLowerCase() === rawStatus.toLowerCase()) || statuses.find((s) => s.key === rawStatus);
-      // Parse date helper: "19:00 30/04/2026" or "30/04/2026" or "2026-04-30" → ISO or null
+      // Parse date helper: handles many formats → ISO or null
       const parseDate = (str) => {
         if (!str) return null;
         const s = String(str).trim();
         if (!s) return null;
-        // Try "HH:MM DD/MM/YYYY"
-        const m1 = s.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (m1) return m1[5] + "-" + m1[4].padStart(2,"0") + "-" + m1[3].padStart(2,"0") + "T" + m1[1].padStart(2,"0") + ":" + m1[2] + ":00";
-        // Try "DD/MM/YYYY"
-        const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-        if (m2) return m2[3] + "-" + m2[2].padStart(2,"0") + "-" + m2[1].padStart(2,"0");
-        // Try ISO or other parseable format
+        const fixYear = (yy) => { let y = parseInt(yy); if (y > 2400) y -= 543; if (y >= 43 && y < 100) y += 1957; else if (y < 100) y += 2000; return y; };
+        // "HH:MM DD/MM/YYYY"
+        const m1 = s.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+        if (m1) { const y = fixYear(m1[5]); return y + "-" + m1[4].padStart(2,"0") + "-" + m1[3].padStart(2,"0") + "T" + m1[1].padStart(2,"0") + ":" + m1[2] + ":00"; }
+        // "DD/MM/YYYY" or "DD/MM/YY" or "DD/M/YY"
+        const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+        if (m2) { const y = fixYear(m2[3]); return y + "-" + m2[2].padStart(2,"0") + "-" + m2[1].padStart(2,"0"); }
+        // ISO format already
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+        // Try native parse
         const d = new Date(s);
-        if (!isNaN(d.getTime())) return d.toISOString();
-        return s; // return as-is if can't parse
+        if (!isNaN(d.getTime()) && d.getFullYear() > 1900) return d.toISOString().slice(0, 10);
+        return null;
       };
       const rpVal = rpi >= 0 ? String(v[rpi] || "") : "";
       const ppVal = ppi >= 0 ? String(v[ppi] || "") : "";
@@ -739,7 +742,7 @@ function CRMApp({ currentUser, onLogout }) {
           for (const row of batch) {
             const r2 = await supabase.from("crm_customers").insert(row);
             if (!r2.error) successList.push({ name: row.name, phone: row.phone });
-            else console.error("Row insert error:", row.name, r2.error.message);
+            else { failList.push({ name: row.name, phone: row.phone, error: r2.error.message }); console.error("Row insert error:", row.name, r2.error.message); }
           }
         } else {
           batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
@@ -749,7 +752,7 @@ function CRMApp({ currentUser, onLogout }) {
       await fetchAll(); broadcastChange();
       setProgress(null);
     }
-    setImportResult({ success: successList, dupes: dupeList });
+    setImportResult({ success: successList, dupes: dupeList, fails: failList });
     if (successList.length === 0 && dupeList.length === 0 && allRows.length === 0) {
       showToast("ไม่พบข้อมูลที่ import ได้ (ตรวจสอบหัวคอลัมน์)", "warning");
     }
