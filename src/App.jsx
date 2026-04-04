@@ -688,7 +688,10 @@ function CRMApp({ currentUser, onLogout }) {
     const successList = []; const dupeList = [];
     const allRows = [];
     for (const v of dataRows) {
-      const name = ni >= 0 ? String(v[ni] || "") : ""; const phone = pi >= 0 ? String(v[pi] || "") : "";
+      const name = ni >= 0 ? String(v[ni] ?? "").trim() : "";
+      let phone = pi >= 0 ? String(v[pi] ?? "").trim() : "";
+      // Fix phone: XLSX might strip leading zero from numbers
+      if (phone && /^\d{9}$/.test(phone)) phone = "0" + phone;
       if (!name && !phone) continue;
       const cleanPhone = phone.replace(/\D/g, "");
       if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
@@ -703,7 +706,7 @@ function CRMApp({ currentUser, onLogout }) {
     if (allRows.length) {
       const BATCH = 50;
       const totalBatches = Math.ceil(allRows.length / BATCH);
-      setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+      setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล " + allRows.length + " รายการ..." });
       for (let b = 0; b < totalBatches; b++) {
         const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
         const res = await supabase.from("crm_customers").insert(batch);
@@ -721,6 +724,9 @@ function CRMApp({ currentUser, onLogout }) {
       setProgress(null);
     }
     setImportResult({ success: successList, dupes: dupeList });
+    if (successList.length === 0 && dupeList.length === 0 && allRows.length === 0) {
+      showToast("ไม่พบข้อมูลที่ import ได้ (ตรวจสอบหัวคอลัมน์)", "warning");
+    }
     if (fileInput) fileInput.value = "";
   };
 
@@ -731,9 +737,9 @@ function CRMApp({ currentUser, onLogout }) {
     if (isExcel) {
       const reader = new FileReader();
       reader.onload = async (ev) => {
-        const wb = XLSX.read(ev.target.result, { type: "array", cellDates: true, dateNF: "yyyy-mm-dd" });
+        const wb = XLSX.read(ev.target.result, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: "yyyy-mm-dd" });
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
         if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
         const headers = data[0].map((h) => String(h || "").toLowerCase());
         const dataRows = data.slice(1);
