@@ -656,6 +656,7 @@ function CRMApp({ currentUser, onLogout }) {
     const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
     const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
     const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
+    const sti = headers.findIndex((h) => h === "สถานะ" || h === "status");
     if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
     const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
     const successList = []; const dupeList = [];
@@ -669,7 +670,9 @@ function CRMApp({ currentUser, onLogout }) {
       const orderDate = odi >= 0 ? String(v[odi] || "") : "";
       const rawSubject = csi >= 0 ? String(v[csi] || "").trim() : "";
       const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? (String(v[rpi] || "").includes("ได้รับ") || String(v[rpi]) === "true" || String(v[rpi]) === "1") : false, nickname: nni >= 0 ? String(v[nni] || "") : "", status: "not_called" });
+      const rawStatus = sti >= 0 ? String(v[sti] || "").trim() : "";
+      const matchedStatus = statuses.find((s) => s.label === rawStatus) || statuses.find((s) => s.label.toLowerCase() === rawStatus.toLowerCase()) || statuses.find((s) => s.key === rawStatus);
+      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? (String(v[rpi] || "").includes("ได้รับ") || String(v[rpi]) === "true" || String(v[rpi]) === "1") : false, nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called" });
     }
     if (allRows.length) {
       const BATCH = 50;
@@ -785,7 +788,7 @@ function CRMApp({ currentUser, onLogout }) {
 
   const handleExport = () => {
     const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น"];
-    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
+    const rows = customers.map((c) => { const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status; return [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,stLabel,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","); });
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
