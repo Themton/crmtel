@@ -562,8 +562,17 @@ function CRMApp({ currentUser, onLogout }) {
       const item = customers.find((c) => c.id === id);
       if (item) {
         const trashRow = { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
-        const res = await supabase.from("crm_trash").insert(trashRow);
-        if (res.error) console.error("Trash insert error:", res.error);
+        let res = await supabase.from("crm_trash").insert(trashRow);
+        if (res.error) {
+          console.error("Trash insert error:", res.error);
+          // Fallback: try with minimal columns
+          const minRow = { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", status: item.status || "", assigned_to: item.assigned_to || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+          res = await supabase.from("crm_trash").insert(minRow);
+          if (res.error) {
+            showToast("❌ ย้ายถังขยะไม่ได้: " + res.error.message, "warning");
+            return;
+          }
+        }
       }
     }
     setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
@@ -586,8 +595,16 @@ function CRMApp({ currentUser, onLogout }) {
       return { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
     }).filter(Boolean);
     for (let b = 0; b < Math.ceil(trashRows.length / BATCH); b++) {
-      const res = await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
-      if (res.error) console.error("Trash insert error:", res.error);
+      const batch = trashRows.slice(b * BATCH, (b + 1) * BATCH);
+      let res = await supabase.from("crm_trash").insert(batch);
+      if (res.error) {
+        console.error("Trash batch error:", res.error);
+        // Fallback: insert one by one with minimal columns
+        for (const row of batch) {
+          const minRow = { name: row.name || "", phone: row.phone || "", note: row.note || "", previous_promo: row.previous_promo || "", status: row.status || "", assigned_to: row.assigned_to || "", original_id: row.original_id, deleted_at: row.deleted_at, deleted_by: row.deleted_by };
+          await supabase.from("crm_trash").insert(minRow);
+        }
+      }
       setProgress({ current: Math.min((b + 1) * BATCH, total) * 0.5, total, label: "กำลังย้ายไปถังขยะ..." });
     }
     // Batch delete from customers
