@@ -666,6 +666,9 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- IMPORT CSV/XLSX ----
   const processImportRows = async (headers, dataRows, fileInput) => {
+    console.log("processImportRows called:", { headerCount: headers.length, rowCount: dataRows.length });
+    console.log("Headers:", headers);
+    if (dataRows.length > 0) console.log("First data row:", dataRows[0]);
     const ni = headers.findIndex((h) => h === "ชื่อ" || h === "name");
     const pi = headers.findIndex((h) => h === "เบอร์โทร" || h.includes("phone"));
     const noi = headers.findIndex((h) => h === "ที่อยู่" || h === "note" || h === "address");
@@ -703,6 +706,7 @@ function CRMApp({ currentUser, onLogout }) {
       const matchedStatus = statuses.find((s) => s.label === rawStatus) || statuses.find((s) => s.label.toLowerCase() === rawStatus.toLowerCase()) || statuses.find((s) => s.key === rawStatus);
       allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? (String(v[rpi] || "").includes("ได้รับ") || String(v[rpi]) === "true" || String(v[rpi]) === "1") : false, nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? String(v[cdi] || "") : "", call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (Number(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? String(v[nfi] || "") : "", product_price: ppi >= 0 ? (Number(v[ppi]) || 0) : 0, supervisor: svi >= 0 ? String(v[svi] || "") : "" });
     }
+    console.log("Import result:", { allRows: allRows.length, dupes: dupeList.length, existingPhones: existingPhones.size });
     if (allRows.length) {
       const BATCH = 50;
       const totalBatches = Math.ceil(allRows.length / BATCH);
@@ -737,13 +741,19 @@ function CRMApp({ currentUser, onLogout }) {
     if (isExcel) {
       const reader = new FileReader();
       reader.onload = async (ev) => {
-        const wb = XLSX.read(ev.target.result, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-        const headers = data[0].map((h) => String(h || "").toLowerCase());
-        const dataRows = data.slice(1);
-        await processImportRows(headers, dataRows, e.target);
+        try {
+          const wb = XLSX.read(new Uint8Array(ev.target.result), { type: "array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+          if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
+          const headers = data[0].map((h) => String(h || "").toLowerCase());
+          const dataRows = data.slice(1);
+          console.log("XLSX Import:", data.length + " rows, headers:", headers);
+          await processImportRows(headers, dataRows, e.target);
+        } catch (err) {
+          console.error("XLSX Import error:", err);
+          showToast("❌ อ่านไฟล์ XLSX ไม่ได้: " + err.message, "warning");
+        }
       };
       reader.readAsArrayBuffer(file);
     } else {
