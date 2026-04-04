@@ -561,8 +561,9 @@ function CRMApp({ currentUser, onLogout }) {
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
       if (item) {
-        const { id: oid, ...rest } = item;
-        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
+        const trashRow = { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+        const res = await supabase.from("crm_trash").insert(trashRow);
+        if (res.error) console.error("Trash insert error:", res.error);
       }
     }
     setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
@@ -582,11 +583,11 @@ function CRMApp({ currentUser, onLogout }) {
     const trashRows = selectedRows.map((rid) => {
       const item = customers.find((c) => c.id === rid);
       if (!item) return null;
-      const { id: oid, ...rest } = item;
-      return { ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+      return { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
     }).filter(Boolean);
     for (let b = 0; b < Math.ceil(trashRows.length / BATCH); b++) {
-      await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
+      const res = await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
+      if (res.error) console.error("Trash insert error:", res.error);
       setProgress({ current: Math.min((b + 1) * BATCH, total) * 0.5, total, label: "กำลังย้ายไปถังขยะ..." });
     }
     // Batch delete from customers
