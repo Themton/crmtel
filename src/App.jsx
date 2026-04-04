@@ -811,7 +811,10 @@ function CRMApp({ currentUser, onLogout }) {
       // Search
       if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter
-      if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
+      if (empFilter.length > 0) {
+        if (empFilter.includes("__none__")) { if (c.assigned_to) return false; }
+        else if (!empFilter.includes(c.assigned_to)) return false;
+      }
       // Advanced filters
       for (const af of advFilters) {
         if (!af.field || !af.value) continue;
@@ -1064,11 +1067,11 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
-                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
+                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: empFilter.length > 0 ? "👤 " + (empFilter[0] === "__none__" ? "ยังไม่มอบหมาย" : empFilter[0]) : "พนักงาน", icon: empFilter.length > 0 ? "✓" : "👤" }] : []),
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
-                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : (t.key === "employee" && empFilter.length > 0 ? "#fef3c7" : "transparent"), color: toolbarTab === t.key ? "#fff" : (t.key === "employee" && empFilter.length > 0 ? "#92400e" : "#6b7280"), fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 8, display: "flex", alignItems: "center", gap: 6 }}>
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -1170,17 +1173,26 @@ function CRMApp({ currentUser, onLogout }) {
                       </div>
                     </div>
                     <div style={{ maxHeight: 320, overflowY: "auto", padding: "4px 0" }}>
-                      <div onClick={() => setEmpFilter([])}
+                      <div onClick={() => { setEmpFilter([]); setToolbarTab(null); }}
                         style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.length === 0 ? "#eff6ff" : "transparent" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "transparent")}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff" }}>✦</div>
+                        <span style={{ fontSize: 13, color: "#374151", fontWeight: empFilter.length === 0 ? 700 : 400 }}>ทั้งหมด</span>
+                        {empFilter.length === 0 && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
+                      </div>
+                      <div onClick={() => { setEmpFilter(["__none__"]); setToolbarTab(null); }}
+                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.includes("__none__") ? "#eff6ff" : "transparent" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "transparent")}>
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
-                        <span style={{ fontSize: 13, color: "#374151" }}>บันทึกไม่มีคน</span>
+                        <span style={{ fontSize: 13, color: "#374151", fontWeight: empFilter.includes("__none__") ? 700 : 400 }}>ยังไม่มอบหมาย</span>
+                        {empFilter.includes("__none__") && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
                       </div>
                       {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase()) || (em.nickname || "").toLowerCase().includes(empSearch.toLowerCase())).map((em, ei) => {
                         const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
                         const isSelected = empFilter.includes(em.name);
-                        return <div key={em.id} onClick={() => setEmpFilter(isSelected ? empFilter.filter((n) => n !== em.name) : [...empFilter, em.name])}
+                        return <div key={em.id} onClick={() => { setEmpFilter(isSelected ? [] : [em.name]); if (!isSelected) setToolbarTab(null); }}
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: isSelected ? "#eff6ff" : "transparent" }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "#f8fafc")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "transparent")}>
