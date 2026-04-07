@@ -1214,7 +1214,7 @@ function CRMApp({ currentUser, onLogout }) {
                             else if (af.field === "assigned_to") opts = [{ v: "__unassigned__", l: "ยังไม่มอบหมาย" }, ...employees.map((em) => ({ v: em.name, l: em.name }))];
                             else if (af.field === "nickname") opts = [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort().map((n) => ({ v: n, l: n }));
                             else if (isDateField) opts = [...new Set(customers.map((c2) => { const raw = c2[af.field]; if (!raw) return ""; try { return new Date(raw).toISOString().slice(0, 10); } catch { return ""; } }).filter(Boolean))].sort().reverse().map((d) => ({ v: d, l: (() => { try { return new Date(d).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })() }));
-                            else opts = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort().map((v) => ({ v, l: v.length > 35 ? v.slice(0, 35) + "..." : v }));
+                            else opts = [...new Set(customers.map((c2) => String(c2[af.field] ?? "")).filter((x) => x !== ""))].sort().map((v) => ({ v, l: v.length > 35 ? v.slice(0, 35) + "..." : v }));
                             
                             const selected = (af.value || "").split("|||").filter(Boolean);
                             const toggle = (val) => { const nf = [...advFilters]; const cur = (nf[idx].value || "").split("|||").filter(Boolean); nf[idx].value = cur.includes(val) ? cur.filter((x) => x !== val).join("|||") : [...cur, val].join("|||"); setAdvFilters(nf); };
@@ -1223,7 +1223,7 @@ function CRMApp({ currentUser, onLogout }) {
                               <div style={{ position: "relative", flex: 1 }}>
                                 <div onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === "none" ? "block" : "none"; }} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, cursor: "pointer", background: "#fff", minHeight: 30, display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
                                   {selected.length === 0 && <span style={{ color: "#9ca3af" }}>เลือก ({opts.length})</span>}
-                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 10, fontWeight: 600 }}>{o?.l || sv}</span>; })}
+                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 700 }}>{o?.l || sv}</span>; })}
                                   {selected.length > 3 && <span style={{ fontSize: 10, color: "#9ca3af" }}>+{selected.length - 3}</span>}
                                 </div>
                                 <div style={{ display: "none", position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", zIndex: 200, maxHeight: 200, overflowY: "auto", marginTop: 4 }}>
