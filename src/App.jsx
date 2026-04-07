@@ -884,9 +884,13 @@ function CRMApp({ currentUser, onLogout }) {
           continue;
         }
         let cv;
+        const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
         if (af.field === "nickname") {
           const emp = employees.find((em) => em.name === c.assigned_to);
           cv = String(emp?.nickname || "").toLowerCase();
+        } else if (dateFields.includes(af.field)) {
+          const raw = c[af.field];
+          try { cv = raw ? new Date(raw).toISOString().slice(0, 10) : ""; } catch { cv = String(raw || "").slice(0, 10); }
         } else {
           cv = String(c[af.field] || "").toLowerCase();
         }
@@ -1192,13 +1196,27 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                           ) : (
                             (() => {
-                              const vals = af.field === "nickname"
-                                ? [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort()
-                                : [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
+                              const isDateField = dateFields.includes(af.field);
+                              let vals;
+                              if (af.field === "nickname") {
+                                vals = [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort();
+                              } else if (isDateField) {
+                                vals = [...new Set(customers.map((c2) => {
+                                  const raw = c2[af.field];
+                                  if (!raw) return "";
+                                  try { return new Date(raw).toISOString().slice(0, 10); } catch { return String(raw).slice(0, 10); }
+                                }).filter(Boolean))].sort().reverse();
+                              } else {
+                                vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              }
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
-                                  {vals.map((v) => <option key={v} value={v}>{v.length > 40 ? v.slice(0, 40) + "..." : v}</option>)}
+                                  {vals.map((v) => {
+                                    const display = isDateField ? (() => { try { return new Date(v).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return v; } })() : (v.length > 40 ? v.slice(0, 40) + "..." : v);
+                                    return <option key={v} value={v}>{display}</option>;
+                                  })}
                                 </select>
                               ) : (
                                 <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
