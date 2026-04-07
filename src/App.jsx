@@ -1416,7 +1416,7 @@ function CRMApp({ currentUser, onLogout }) {
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
-                  <tfoot style={{ position: "sticky", bottom: 0, zIndex: 10 }}><tr style={{ background: "#f8f8f6", borderTop: "2px solid #e5e7eb", boxShadow: "0 -2px 8px rgba(0,0,0,0.06)" }}>
+                  <tfoot style={{ position: "sticky", bottom: 0, zIndex: 10 }}><tr style={{ background: "#f8f8f6", borderTop: "2px solid #e5e7eb", boxShadow: "0 -2px 8px rgba(0,0,0,0.06)", height: 32 }}>
                     <td colSpan={2} style={{ padding: "3px 4px" }}></td>
                     {activeColOrder.map((key) => {
                       const values = fc.map((c) => String(c[key] ?? ""));
@@ -1445,7 +1445,7 @@ function CRMApp({ currentUser, onLogout }) {
                           {mode === "histogram" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                               <span style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
-                              <div style={{ display: "flex", flex: 1, height: 10, borderRadius: 3, overflow: "hidden", background: "#f3f4f6" }}>
+                              <div style={{ display: "flex", flex: 1, height: 20, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
                                 {(() => { const counts = {}; values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 2 }} />); })()}
                               </div>
                             </div>
