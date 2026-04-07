@@ -1438,10 +1438,9 @@ function CRMApp({ currentUser, onLogout }) {
                       else if (mode === "uniqueRate") val = (total ? Math.round(unique / total * 100) : 0) + "%";
                       
                       return <td key={key} style={{ padding: "2px 2px" }}>
-                        <div onClick={(e) => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: rect.left, y: rect.top - 340, key, label: COL_DEFS[key]?.label || key }); }}
-                          style={{ cursor: "pointer", borderRadius: 4, padding: "1px 2px" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fef3c7")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                        <div onMouseEnter={(e) => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); e.currentTarget.style.background = "#fef3c7"; const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: rect.left, y: rect.top - 340, key, label: COL_DEFS[key]?.label || key }); }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}
+                          style={{ cursor: "pointer", borderRadius: 4, padding: "1px 2px" }}>
                           {mode === "histogram" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                               <span style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
@@ -1964,10 +1963,11 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
-      {/* Column Stats Menu - Pancake style */}
+      {/* Column Stats Menu - hover popup */}
       {colStats && <>
-        <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />
-        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}>
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}
+          onMouseEnter={() => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); }}
+          onMouseLeave={() => { window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}>
           {/* Left: unique values with ratio */}
           {(() => {
             const key = colStats.key;
