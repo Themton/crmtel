@@ -93,14 +93,14 @@ function PillDropdown({ label, value, options, onChange, color = "#2563eb" }) {
   const sel = options.find((o) => o.value === value);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
         {open ? <I.ChevUp /> : <I.ChevDown />}
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", padding: 8, zIndex: 200, minWidth: 200, maxHeight: 360, overflowY: "auto", animation: "fadeIn .15s" }}>
-        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
+        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 11, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
-          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
+          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
           {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -115,11 +115,11 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
         {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.key && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -134,11 +134,11 @@ function SubjectDropdown({ value, subjects, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
         {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.label && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -157,16 +157,16 @@ function OfferDropdown({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
-        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
+        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 11, color: "#6b7280" }}
           onMouseEnter={(e) => { if (value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value) e.currentTarget.style.background = "transparent"; }}>
           — ว่าง —
         </button>
         {OFFER_OPTIONS.map((o) => (
           <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
             onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
+            <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
             {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
         ))}
@@ -181,14 +181,14 @@ function RatingSelector({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
         {value !== null && value !== undefined ? value : "—"} <I.ChevDown />
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
         {[0,1,2,3,4,5].map((n) => (
-          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 12 }}
+          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 11 }}
             onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 12, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
             <span style={{ color: "#374151" }}>{{ 0: "ยังไม่ประเมิน", 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
             {value === n && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
@@ -222,7 +222,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
     <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", minHeight: 18, ...sx }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
-      <span style={{ fontSize: 12, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
+      <span style={{ fontSize: 11, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
     </div>
   );
 }
@@ -234,13 +234,13 @@ function InlineAssignDropdown({ value, employees, onSave }) {
   const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <div onClick={() => setOpen(!open)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", fontSize: 12, fontWeight: 600, color: value ? "#92400e" : "#d97706", whiteSpace: "nowrap" }}
+      <div onClick={() => setOpen(!open)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", fontSize: 11, fontWeight: 600, color: value ? "#92400e" : "#d97706", whiteSpace: "nowrap" }}
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
         {value || "ยังไม่มอบหมาย"}
       </div>
       {open && <div style={{ position: "absolute", top: "100%", left: 0, background: "#fff", borderRadius: 10, boxShadow: "0 6px 20px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 200, zIndex: 200, animation: "fadeIn .1s" }}>
-        <div onClick={() => { onSave(""); setOpen(false); }} style={{ padding: "6px 12px", cursor: "pointer", fontSize: 12, color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}
+        <div onClick={() => { onSave(""); setOpen(false); }} style={{ padding: "6px 12px", cursor: "pointer", fontSize: 11, color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
           ยังไม่มอบหมาย
         </div>
@@ -251,8 +251,8 @@ function InlineAssignDropdown({ value, employees, onSave }) {
               onMouseEnter={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "#f8fafc")}
               onMouseLeave={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "transparent")}>
               <div style={{ width: 22, height: 22, borderRadius: "50%", background: colors[i % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1)}</div>
-              <span style={{ fontSize: 12, fontWeight: value === em.name ? 700 : 400 }}>{em.nickname || em.name}</span>
-              {value === em.name && <span style={{ marginLeft: "auto", color: "#3b82f6", fontSize: 12 }}>✓</span>}
+              <span style={{ fontSize: 11, fontWeight: value === em.name ? 700 : 400 }}>{em.nickname || em.name}</span>
+              {value === em.name && <span style={{ marginLeft: "auto", color: "#3b82f6", fontSize: 11 }}>✓</span>}
             </div>
           ))}
         </div>
@@ -299,35 +299,35 @@ function LoginScreen({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", marginBottom: 16 }} />
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM THE MT</h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 8 }}>เพราะคุณคือ สุดยอดนักขายมือทอง</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 8 }}>เพราะคุณคือ สุดยอดนักขายมือทอง</p>
         </div>
 
         {/* Login Card */}
         <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", marginBottom: 28, textAlign: "center" }}>เข้าสู่ระบบ</h2>
 
-          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 12, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
+          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 11, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Email</label>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Email</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
               <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="email@example.com"
-                style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 12, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
                 onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }} />
             </div>
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8 }}>รหัสผ่าน</label>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 8 }}>รหัสผ่าน</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               </span>
               <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="password"
-                style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 12, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
                 onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(e); }} />
               <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
@@ -942,12 +942,12 @@ function CRMApp({ currentUser, onLogout }) {
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
-  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 12, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
-  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 11, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
+  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 11, cursor: "pointer" };
   const bi = (d) => ({ padding: "6px 8px", borderRadius: 8, border: "1px solid " + (d ? "#fee2e2" : "#e5e7eb"), background: "#fff", cursor: "pointer", color: d ? "#ef4444" : "#6b7280", display: "flex", alignItems: "center" });
-  const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 12, cursor: "pointer" };
-  const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 12, outline: "none", boxSizing: "border-box" };
-  const lS = { display: "block", fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6 };
+  const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 11, cursor: "pointer" };
+  const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box" };
+  const lS = { display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Column definitions - key, label, render function
   const COL_DEFS = {
@@ -956,7 +956,7 @@ function CRMApp({ currentUser, onLogout }) {
     note: { label: "ที่อยู่", render: (c) => <EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" />, maxW: 180 },
     previous_promo: { label: "โปรก่อนหน้า", render: (c) => <EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /> },
     order_date: { label: "วันที่สั่งซื้อ", render: (c) => <EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /> },
-    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 12 }} onClick={() => upd(c.id, "received_product", false)}>✓ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 12 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
+    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
     status: { label: "สถานะ", render: (c) => <InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => { upd(c.id, "status", v); if (c.status === "not_called" && v !== "not_called") upd(c.id, "call_date", new Date().toISOString().slice(0, 10)); }} />, minW: 120 },
     call_subject: { label: "หัวข้อโทร", render: (c) => <SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /> },
     call_date: { label: "วันที่โทร", render: (c) => <EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /> },
@@ -965,8 +965,8 @@ function CRMApp({ currentUser, onLogout }) {
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
     assigned_to: { label: "มอบหมาย", render: (c) => <InlineAssignDropdown value={c.assigned_to} employees={employees} onSave={(v) => upd(c.id, "assigned_to", v)} /> },
-    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
-    created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { return new Date(c.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return c.created_at; } })() : "—"}</span> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
+    created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { return new Date(c.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return c.created_at; } })() : "—"}</span> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname","created_at"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
@@ -979,35 +979,35 @@ function CRMApp({ currentUser, onLogout }) {
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}><I.Menu /></button>
         <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ height: 36, objectFit: "contain" }} />
         <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM THE MT</span>
-        {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 12, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
+        {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }} className={notifications.length > 0 ? "bell-shake" : ""}>
               🔔
-              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 12, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
+              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
             </button>
             {showNotif && <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 340, zIndex: 200, animation: "fadeIn .15s" }}>
               <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
-                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>อ่านทั้งหมด</button>}
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
+                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>อ่านทั้งหมด</button>}
               </div>
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 {notifications.length === 0 ? (
-                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 12 }}>ไม่มีแจ้งเตือน</div>
+                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 11 }}>ไม่มีแจ้งเตือน</div>
                 ) : notifications.map((n) => (
                   <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", background: "#fffbeb" }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 12, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
-                      <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
+                      <span style={{ fontSize: 11, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
+                      <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>}
           </div>
-          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
+          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
@@ -1015,7 +1015,7 @@ function CRMApp({ currentUser, onLogout }) {
           {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "ประวัติการใช้งาน", icon: <I.Chart />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => currentUser?.role === "supervisor" ? (t.supervisor === currentUser?.name || t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name) : (t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name)).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); setPage(1); }}
               title={item.label}
-              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 12, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 11, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
             </button>))}
         </nav>
@@ -1047,13 +1047,13 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
-                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
+                <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
+                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>🔄 รีเฟรช</button>
               </div>
             </div>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
-              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
+              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
@@ -1067,7 +1067,7 @@ function CRMApp({ currentUser, onLogout }) {
                       <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</span>
                         <div style={{ width: "100%", maxWidth: 50, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
-                        <span style={{ fontSize: 12, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
+                        <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
                       </div>
                     );
                   })}
@@ -1086,10 +1086,10 @@ function CRMApp({ currentUser, onLogout }) {
                       const dateStr = (() => { try { const dt = new Date(d + "T00:00:00"); return dt.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }); } catch { return d; } })();
                       return (
                         <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "#d4a017" }}>{dailyCalls[d].total}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#d4a017" }}>{dailyCalls[d].total}</span>
                           <div style={{ width: "100%", maxWidth: 40, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, #2563eb, #38bdf8)", height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8, cursor: "pointer", position: "relative" }}
                             title={Object.entries(dailyCalls[d]).filter(([k]) => k !== "total").map(([k, v]) => k + ": " + v).join(", ")} />
-                          <span style={{ fontSize: 12, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
+                          <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
                         </div>
                       );
                     })}
@@ -1102,7 +1102,7 @@ function CRMApp({ currentUser, onLogout }) {
             {dailyKeys.length > 0 && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 16 }}>สรุปรายวัน</h3>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017" }}>โทรแล้ว</th>
@@ -1113,10 +1113,10 @@ function CRMApp({ currentUser, onLogout }) {
                     {[...dailyKeys].reverse().map((d, idx) => {
                       const dateStr = (() => { try { return new Date(d + "T00:00:00").toLocaleDateString("th-TH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })();
                       return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#fffbeb" : "transparent" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 12, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
+                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
                         <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017", fontSize: 16 }}>{dailyCalls[d].total}</td>
-                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
-                        <td style={{ padding: "10px 14px", fontSize: 12 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 12, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
+                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
+                        <td style={{ padding: "10px 14px", fontSize: 11 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
                       </tr>;
                     })}
                   </tbody>
@@ -1137,7 +1137,7 @@ function CRMApp({ currentUser, onLogout }) {
                 </>}
                 <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
-                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 12, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
+                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 11, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
               </div>
@@ -1151,11 +1151,11 @@ function CRMApp({ currentUser, onLogout }) {
                 const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
                 if (allPrices.length === 0) return null;
                 return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
-                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
+                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
                   {allPrices.map((p) => {
                     const count = myC.filter((c) => extractPrice(c.previous_promo) === p).length;
-                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 12 }}>({count})</span></button>;
+                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
                   })}
                 </div>;
               })()}
@@ -1166,7 +1166,7 @@ function CRMApp({ currentUser, onLogout }) {
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
-                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : (t.key === "employee" && empFilter.length > 0 ? "#fef3c7" : "transparent"), color: toolbarTab === t.key ? "#fff" : (t.key === "employee" && empFilter.length > 0 ? "#92400e" : "#6b7280"), fontWeight: 600, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : (t.key === "employee" && empFilter.length > 0 ? "#fef3c7" : "transparent"), color: toolbarTab === t.key ? "#fff" : (t.key === "employee" && empFilter.length > 0 ? "#92400e" : "#6b7280"), fontWeight: 600, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 8, display: "flex", alignItems: "center", gap: 6 }}>
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -1187,8 +1187,8 @@ function CRMApp({ currentUser, onLogout }) {
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>กรอง</span>
-                          <span style={{ fontSize: 12, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>กรอง</span>
+                          <span style={{ fontSize: 11, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
                         </div>
                         <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
                       </div>
@@ -1197,12 +1197,12 @@ function CRMApp({ currentUser, onLogout }) {
                       {advFilters.map((af, idx) => (
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
                           <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
                             {activeColOrder.map((k) => <option key={k} value={k}>{COL_DEFS[k].label}</option>)}
                           </select>
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
                           </select>
                           {(() => {
@@ -1223,14 +1223,14 @@ function CRMApp({ currentUser, onLogout }) {
                             
                             return opts.length > 0 ? (
                               <div style={{ position: "relative", flex: 1 }}>
-                                <div onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === "none" ? "block" : "none"; }} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, cursor: "pointer", background: "#fff", minHeight: 30, display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                                <div onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === "none" ? "block" : "none"; }} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, cursor: "pointer", background: "#fff", minHeight: 30, display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
                                   {selected.length === 0 && <span style={{ color: "#9ca3af" }}>เลือก ({opts.length})</span>}
-                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 12, fontWeight: 700 }}>{o?.l || sv}</span>; })}
-                                  {selected.length > 3 && <span style={{ fontSize: 12, color: "#9ca3af" }}>+{selected.length - 3}</span>}
+                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 700 }}>{o?.l || sv}</span>; })}
+                                  {selected.length > 3 && <span style={{ fontSize: 11, color: "#9ca3af" }}>+{selected.length - 3}</span>}
                                 </div>
                                 <div style={{ display: "none", position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", zIndex: 200, maxHeight: 200, overflowY: "auto", marginTop: 4 }}>
                                   {opts.map((o) => (
-                                    <label key={o.v} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", fontSize: 12, background: selected.includes(o.v) ? "#fffbeb" : "transparent" }}
+                                    <label key={o.v} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", fontSize: 11, background: selected.includes(o.v) ? "#fffbeb" : "transparent" }}
                                       onMouseEnter={(e2) => { if (!selected.includes(o.v)) e2.currentTarget.style.background = "#f8fafc"; }}
                                       onMouseLeave={(e2) => { e2.currentTarget.style.background = selected.includes(o.v) ? "#fffbeb" : "transparent"; }}>
                                       <input type="checkbox" checked={selected.includes(o.v)} onChange={() => toggle(o.v)} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
@@ -1240,17 +1240,17 @@ function CRMApp({ currentUser, onLogout }) {
                                 </div>
                               </div>
                             ) : (
-                              <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                              <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, flex: 1, outline: "none" }} />
                             );
                           })()}
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
                       ))}
-                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 12, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
+                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 11, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <span style={{ fontSize: 12, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
+                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <span style={{ fontSize: 11, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
@@ -1264,12 +1264,12 @@ function CRMApp({ currentUser, onLogout }) {
                   <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 320, zIndex: 100, animation: "fadeIn .15s" }}>
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>กรองตามผู้คน</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>กรองตามผู้คน</span>
                         <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
                       </div>
                       <div style={{ position: "relative" }}>
-                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 12 }}>🔍</span>
-                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, outline: "none", boxSizing: "border-box" }} />
+                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 11 }}>🔍</span>
+                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box" }} />
                       </div>
                     </div>
                     <div style={{ maxHeight: 320, overflowY: "auto", padding: "4px 0" }}>
@@ -1278,7 +1278,7 @@ function CRMApp({ currentUser, onLogout }) {
                         onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "transparent")}>
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff" }}>✦</div>
-                        <span style={{ fontSize: 12, color: "#374151", fontWeight: empFilter.length === 0 ? 700 : 400 }}>ทั้งหมด</span>
+                        <span style={{ fontSize: 11, color: "#374151", fontWeight: empFilter.length === 0 ? 700 : 400 }}>ทั้งหมด</span>
                         {empFilter.length === 0 && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
                       </div>
                       <div onClick={() => { setEmpFilter(["__none__"]); setToolbarTab(null); }}
@@ -1286,7 +1286,7 @@ function CRMApp({ currentUser, onLogout }) {
                         onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "transparent")}>
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>👤</div>
-                        <span style={{ fontSize: 12, color: "#374151", fontWeight: empFilter.includes("__none__") ? 700 : 400 }}>ยังไม่มอบหมาย</span>
+                        <span style={{ fontSize: 11, color: "#374151", fontWeight: empFilter.includes("__none__") ? 700 : 400 }}>ยังไม่มอบหมาย</span>
                         {empFilter.includes("__none__") && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
                       </div>
                       {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase()) || (em.nickname || "").toLowerCase().includes(empSearch.toLowerCase())).map((em, ei) => {
@@ -1297,14 +1297,14 @@ function CRMApp({ currentUser, onLogout }) {
                           onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "#f8fafc")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "transparent")}>
                           <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
-                          <span style={{ flex: 1, fontSize: 12, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
+                          <span style={{ flex: 1, fontSize: 11, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
                           {isSelected && <span style={{ color: "#3b82f6", fontSize: 16 }}>✓✓</span>}
                         </div>;
                       })}
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
+                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
@@ -1314,11 +1314,11 @@ function CRMApp({ currentUser, onLogout }) {
               {/* COLUMN REORDER PANEL */}
               {toolbarTab === "columns" && (
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศร)</span></div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศร)</span></div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {activeColOrder.map((key, idx) => (
                       <div key={key}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 12, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 11, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
                         draggable
                         onDragStart={(e) => { setDragCol(idx); e.dataTransfer.effectAllowed = "move"; }}
                         onDragEnd={() => setDragCol(null)}
@@ -1339,21 +1339,21 @@ function CRMApp({ currentUser, onLogout }) {
                         }}
                         onMouseEnter={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; } }}
                         onMouseLeave={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}>
-                        <span style={{ cursor: "grab", fontSize: 12, opacity: 0.5 }}>☰</span>
+                        <span style={{ cursor: "grab", fontSize: 11, opacity: 0.5 }}>☰</span>
                         <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); setDragCol(idx - 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>◀</button>
-                        <span style={{ fontSize: 12 }}>{COL_DEFS[key].label}</span>
+                        <span style={{ fontSize: 11 }}>{COL_DEFS[key].label}</span>
                         <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); setDragCol(idx + 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>▶</button>
                       </div>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
+                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
                     <button onClick={async () => {
                       const settingKey = "col_order_" + (currentUser?.name || "default");
                       await supabase.from("crm_settings").delete().eq("key", settingKey);
                       await supabase.from("crm_settings").insert({ key: settingKey, value: JSON.stringify(activeColOrder) });
                       showToast("บันทึกลำดับคอลัมน์สำเร็จ ✓ (พนักงานในทีมจะเห็นเหมือนกัน)");
-                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
+                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
                   </div>
                 </div>
               )}
@@ -1361,39 +1361,39 @@ function CRMApp({ currentUser, onLogout }) {
             {/* PAGINATION TOP */}
             {<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 12, color: "#6b7280" }}>แสดง</span>
-                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 12, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
+                <span style={{ fontSize: 11, color: "#6b7280" }}>แสดง</span>
+                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
                   <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
                 </select>
-                <span style={{ fontSize: 12, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
+                <span style={{ fontSize: 11, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
-                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
+                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
+                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
-                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
-                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 12, cursor: "pointer" }}>{p}</button></span>
+                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 11 }}>...</span>}
+                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 11, cursor: "pointer" }}>{p}</button></span>
                 ))}
-                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
-                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
+                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
+                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
               </div>
             </div>}
             {selectedRows.length > 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 20px", background: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
-              <span style={{ fontSize: 12, color: "#92400e", fontWeight: 600 }}>✓ เลือกแล้ว {selectedRows.length} รายการ {selectedRows.length > pagedFc.length ? "(ข้ามหน้า)" : ""}</span>
+              <span style={{ fontSize: 11, color: "#92400e", fontWeight: 600 }}>✓ เลือกแล้ว {selectedRows.length} รายการ {selectedRows.length > pagedFc.length ? "(ข้ามหน้า)" : ""}</span>
               <div style={{ display: "flex", gap: 8 }}>
-                {selectedRows.length < fc.length && <button onClick={() => setSelectedRows(fc.map((c) => c.id))} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>เลือกทั้งหมด {fc.length}</button>}
-                <button onClick={() => setSelectedRows([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>ยกเลิก</button>
+                {selectedRows.length < fc.length && <button onClick={() => setSelectedRows(fc.map((c) => c.id))} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>เลือกทั้งหมด {fc.length}</button>}
+                <button onClick={() => setSelectedRows([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ยกเลิก</button>
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", height: "calc(100vh - 260px)" }}>
-                <table style={{ borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
+                <table style={{ borderCollapse: "collapse", fontSize: 11, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "4px 6px", width: 30, fontSize: 12, fontWeight: 700, color: "#9ca3af" }}>#</th>
+                    <th style={{ padding: "4px 6px", width: 30, fontSize: 11, fontWeight: 700, color: "#9ca3af" }}>#</th>
                     <th style={{ padding: "4px 6px", width: 55 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
                         <input type="checkbox" checked={selectedRows.length > 0 && selectedRows.length === fc.length} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
-                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "1px solid #e5e7eb", borderRadius: 4, background: "#fff", color: "#d4a017", fontSize: 12, cursor: "pointer", padding: "1px 2px", fontWeight: 700 }}>
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "1px solid #e5e7eb", borderRadius: 4, background: "#fff", color: "#d4a017", fontSize: 11, cursor: "pointer", padding: "1px 2px", fontWeight: 700 }}>
                           <option value="">▾</option>
                           <option value="page">📄 หน้านี้ ({pagedFc.length})</option>
                           <option value="all">📋 ทุกหน้า ({fc.length})</option>
@@ -1409,7 +1409,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <tbody>
                     {pagedFc.map((c, idx) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 22 }} onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fafafa")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                        <td style={{ padding: "1px 6px", color: "#b0b0b0", fontSize: 12, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                        <td style={{ padding: "1px 6px", color: "#b0b0b0", fontSize: 11, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                         <td style={{ padding: "1px 6px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => { if (e.nativeEvent.shiftKey && lastChecked !== null) { const curIdx = pagedFc.findIndex((x) => x.id === c.id); const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked); if (curIdx >= 0 && lastIdx >= 0) { const start = Math.min(curIdx, lastIdx); const end2 = Math.max(curIdx, lastIdx); const rangeIds = pagedFc.slice(start, end2 + 1).map((x) => x.id); setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]); setLastChecked(c.id); return; } } setLastChecked(c.id); setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id)); }} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></td>
                         {activeColOrder.map((key) => { const col = COL_DEFS[key]; return <td key={key} style={{ padding: "1px 2px", minWidth: col.minW ? col.minW * 0.55 : undefined, maxWidth: col.maxW ? col.maxW * 0.6 : undefined }}>{col.render(c)}</td>; })}
                       </tr>
@@ -1444,15 +1444,15 @@ function CRMApp({ currentUser, onLogout }) {
                           style={{ cursor: "pointer", borderRadius: 4, padding: "1px 2px" }}>
                           {mode === "histogram" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              <span style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
+                              <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
                               <div style={{ display: "flex", flex: 1, height: 20, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
                                 {(() => { const counts = {}; values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 2 }} />); })()}
                               </div>
                             </div>
                           ) : (
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              <span style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>{statLabels[mode] || "นับ"} ▼</span>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: "#3b82f6" }}>{val}</span>
+                              <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{statLabels[mode] || "นับ"} ▼</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6" }}>{val}</span>
                             </div>
                           )}
                         </div>
@@ -1477,11 +1477,11 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ marginBottom: 28 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>📋 ประวัติการใช้งาน ({activityLog.length})</h2>
-                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).range(0, 199); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
+                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).range(0, 199); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
               </div>
               <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
                 <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                   <thead><tr style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 1 }}>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>เวลา</th>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>ผู้ใช้</th>
@@ -1496,9 +1496,9 @@ function CRMApp({ currentUser, onLogout }) {
                       const color = actionColors[log.action] || "#6b7280";
                       const timeStr = (() => { try { const d = new Date(log.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); } catch { return log.created_at; } })();
                       return <tr key={log.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 12 }}>{timeStr}</td>
+                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 11 }}>{timeStr}</td>
                         <td style={{ padding: "8px 14px", fontWeight: 600 }}>{log.user_name}</td>
-                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 12, color: "#fff", background: color }}>{log.action}</span></td>
+                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 11, color: "#fff", background: color }}>{log.action}</span></td>
                         <td style={{ padding: "8px 14px", color: "#4b5563", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{log.detail}</td>
                         <td style={{ padding: "8px 14px", textAlign: "center", fontWeight: 600, color: log.count > 1 ? "#d97706" : "#9ca3af" }}>{log.count > 1 ? log.count : ""}</td>
                       </tr>;
@@ -1515,15 +1515,15 @@ function CRMApp({ currentUser, onLogout }) {
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <span style={{ fontSize: 12, color: "#9ca3af" }}>จัดการบัญชีที่ระบบ crm-themt2</span>
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>จัดการบัญชีที่ระบบ crm-themt2</span>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
               {employees.map((e2) => {
                 const custCount = customers.filter((c2) => c2.assigned_to === e2.name).length;
                 return <div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative", borderLeft: custCount > 0 ? "4px solid #d4a017" : "4px solid #e5e7eb" }}>
                   <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
-                  <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                  <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: custCount > 0 ? "#fef3c7" : "#f3f4f6", color: custCount > 0 ? "#92400e" : "#9ca3af" }}>{custCount} ลูกค้า</span>
+                  <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
+                  <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: custCount > 0 ? "#fef3c7" : "#f3f4f6", color: custCount > 0 ? "#92400e" : "#9ca3af" }}>{custCount} ลูกค้า</span>
                 </div>;
               })}
             </div>
@@ -1534,7 +1534,7 @@ function CRMApp({ currentUser, onLogout }) {
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>ตั้งค่าระบบ</h2>
             <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#fff", borderRadius: 12, padding: 4, width: "fit-content", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {[{ key: "statuses", label: "สถานะ" }, { key: "call_subjects", label: "หัวข้อโทร" }].map((st) => (
-                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #d4a017, #b8860b)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>{st.label}</button>))}
+                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #d4a017, #b8860b)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>{st.label}</button>))}
             </div>
             {settingsSubTab === "statuses" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>สถานะ</h3><button onClick={() => setModal({ type: "status", mode: "add", data: { key: "", label: "", color: "#d4a017" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
@@ -1548,7 +1548,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวหน้า</h3><button onClick={() => setModal({ type: "supervisor", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่ม</button></div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{supervisors.map((sv) => (<div key={sv.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, position: "relative" }}>
                 <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "supervisor", mode: "edit", data: { ...sv } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_supervisors", sv.id)} style={bi(true)}><I.Trash /></button></div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 11, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
               </div>))}</div>
             </div>}
           </div>}
@@ -1563,7 +1563,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 12, outline: "none", width: 220 }} />
+                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", width: 220 }} />
                 </div>
                 {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
               </div>
@@ -1576,7 +1576,7 @@ function CRMApp({ currentUser, onLogout }) {
             ) : (
               <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
                     <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
                       {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
@@ -1588,14 +1588,14 @@ function CRMApp({ currentUser, onLogout }) {
                             <td style={{ padding: "12px 14px", fontWeight: 600, color: "#3d2a0a" }}>{t.name}</td>
                             <td style={{ padding: "12px 14px" }}>{t.phone}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
-                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
+                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280" }}>{t.assigned_to || "—"}</td>
                             <td style={{ padding: "12px 14px", color: "#4b5563", fontWeight: 500 }}>{t.deleted_by || "—"}</td>
-                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 12 }}>{t.deleted_at}</td>
+                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 11 }}>{t.deleted_at}</td>
                             <td style={{ padding: "12px 14px" }}>
                               <div style={{ display: "flex", gap: 8 }}>
-                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
-                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
+                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 11, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
+                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 11, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
                               </div>
                             </td>
                           </tr>
@@ -1631,21 +1631,21 @@ function CRMApp({ currentUser, onLogout }) {
             <button onClick={() => setQuickUpdate(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
           </div>
           <div style={{ padding: 28 }}>
-            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 12, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
-            <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 12, fontWeight: 700 }}>เลือกฟิลด์</label>
+            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 11, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
+            <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 11, fontWeight: 700 }}>เลือกฟิลด์</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
-                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 12 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
-                <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 12, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 11, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
                   <option value="">+ เพิ่มฟิลด์...</option>
                   {[{ v: "assigned_to", l: "มอบหมาย" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }, { v: "call_subject", l: "หัวข้อโทร" }, { v: "call_date", l: "วันที่โทร" }, { v: "call_note", l: "หมายเหตุ" }, { v: "customer_relation", l: "ความสัมพันธ์ลูกค้า" }, { v: "next_follow", l: "ครั้งถัดไป" }, { v: "product_price", l: "โปรสินค้า" }, { v: "order_date", l: "วันที่สั่งซื้อ" }, { v: "note", l: "ที่อยู่" }, { v: "name", l: "ชื่อ" }, { v: "phone", l: "เบอร์โทร" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
               </div>
             </div>
-            {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 12, fontWeight: 700 }}>การตั้งค่า</label>
+            {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 11, fontWeight: 700 }}>การตั้งค่า</label>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
                 {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                  <span style={{ fontSize: 12, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
+                  <span style={{ fontSize: 11, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
                     {f === "assigned_to" && (() => {
@@ -1659,7 +1659,7 @@ function CRMApp({ currentUser, onLogout }) {
                       const promoKeys = Object.keys(promoGroups).sort((a, b) => Number(a) - Number(b));
                       return <div>
                         {/* Employee selection */}
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
                         <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto", marginBottom: 12 }}>
                           {employees.map((em) => (
                             <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
@@ -1667,36 +1667,36 @@ function CRMApp({ currentUser, onLogout }) {
                                 const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
                                 setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
                               }} style={{ accentColor: "#d4a017" }} />
-                              <span style={{ fontSize: 12 }}>{em.name}</span>
+                              <span style={{ fontSize: 11 }}>{em.name}</span>
                             </label>
                           ))}
                         </div>
 
                         {/* Mode selection */}
                         {sel.length > 0 && <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>กระจายเท่ากัน</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
                           </div>
                         </div>}
 
                         {/* Equal mode summary */}
-                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#fffbeb", borderRadius: 6, padding: "6px 10px", fontSize: 12, color: "#92400e" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
+                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#fffbeb", borderRadius: 6, padding: "6px 10px", fontSize: 11, color: "#92400e" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
 
                         {/* Promo mode mapping */}
                         {sel.length > 0 && assignMode === "promo" && <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
+                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
                             {promoKeys.map((pk) => {
                               const pkSel = promoMap[pk] || [];
                               return <div key={pk} style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", padding: "10px 12px", alignItems: "start", borderBottom: "1px solid #f3f4f6" }}>
-                                <span style={{ fontSize: 12, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 12 }}>({promoGroups[pk]} คน)</span></span>
+                                <span style={{ fontSize: 11, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 11 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
                                 <span style={{ textAlign: "center", color: "#9ca3af", paddingTop: 6 }}>→</span>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {sel.map((name) => (
-                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 12 }}
+                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 11 }}
                                       onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                                       <input type="checkbox" checked={pkSel.includes(name)} onChange={(e2) => {
                                         const nv = e2.target.checked ? [...pkSel, name] : pkSel.filter((n) => n !== name);
@@ -1705,12 +1705,12 @@ function CRMApp({ currentUser, onLogout }) {
                                       <span>{name}</span>
                                     </label>
                                   ))}
-                                  {pkSel.length > 1 && <div style={{ fontSize: 12, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
+                                  {pkSel.length > 1 && <div style={{ fontSize: 11, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
                                 </div>
                               </div>;
                             })}
                           </div>
-                          {Object.values(promoMap).some((v) => v?.length > 0) && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 12, color: "#92400e" }}>
+                          {Object.values(promoMap).some((v) => v?.length > 0) && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 11, color: "#92400e" }}>
                             สรุป: {sel.map((name) => {
                               let count = 0;
                               selCustomers.forEach((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; const pkList = promoMap[p] || []; if (pkList.includes(name)) count += Math.ceil(promoGroups[p] / pkList.length); });
@@ -1733,9 +1733,9 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 10 }}>{selectedRows.length}</span></div>
+              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 10 }}>{selectedRows.length}</span></div>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, maxHeight: 180, overflowY: "auto" }}>
-                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 12 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
+                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 11 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -1830,33 +1830,33 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
           <div style={{ padding: 24 }}>
             {/* Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 11, fontWeight: 700, color: "#6b7280" }}>
               <span>ชื่อ</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
             </div>
             {/* Rows */}
             {multiAddEmp.map((emp, idx) => (
               <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }} />
-                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }} />
-                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }} />
-                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }} />
-                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }} />
-                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
+                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
+                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
+                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
+                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }}>
                   <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option>
                 </select>
                 <button onClick={() => { if (multiAddEmp.length > 1) setMultiAddEmp(multiAddEmp.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
               </div>
             ))}
             {/* Add row button */}
-            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
               + เพิ่มอีกคน
             </button>
           </div>
           {/* Footer */}
           <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
+            <span style={{ fontSize: 11, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+              <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
               <button onClick={async () => {
                 const valid = multiAddEmp.filter((e) => e.name.trim());
                 if (!valid.length) { showToast("กรุณากรอกชื่ออย่างน้อย 1 คน", "warning"); return; }
@@ -1871,7 +1871,7 @@ function CRMApp({ currentUser, onLogout }) {
                 await fetchAll(); broadcastChange();
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
-              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
+              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
             </div>
           </div>
         </div>
@@ -1884,14 +1884,14 @@ function CRMApp({ currentUser, onLogout }) {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 8 }}>อัพเดทสำเร็จ! {successModal.count} CRM THE MT</div>
-          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 12, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 11, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
             {successModal.detail}
           </div>
-          <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
+          <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
         </div>
       </div>}
 
-      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
+      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 11, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
 
       {/* PROGRESS BAR */}
       {progress && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
@@ -1899,10 +1899,10 @@ function CRMApp({ currentUser, onLogout }) {
           <div style={{ fontSize: 16, fontWeight: 700, color: "#3d2a0a", marginBottom: 20 }}>{progress.label}</div>
           <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
             <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #d4a017, #f59e0b)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
+              <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
             </div>
           </div>
-          <div style={{ fontSize: 12, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
+          <div style={{ fontSize: 11, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
         </div>
       </div>}
 
@@ -1918,20 +1918,20 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, background: "#d1fae5", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#059669" }}>{importResult.success.length}</div>
-                <div style={{ fontSize: 12, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+                <div style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
               </div>
               <div style={{ flex: 1, background: "#fef3c7", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#d97706" }}>{importResult.dupes.length}</div>
-                <div style={{ fontSize: 12, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
+                <div style={{ fontSize: 11, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
               </div>
             </div>
 
             {/* Success list */}
             {importResult.success.length > 0 && <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
               <div style={{ border: "1px solid #d1fae5", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.success.map((s, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 11, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#059669" }}>✓ {s.name}</span><span style={{ color: "#9ca3af" }}>{s.phone}</span>
                   </div>
                 ))}
@@ -1941,17 +1941,17 @@ function CRMApp({ currentUser, onLogout }) {
             {/* Dupe list */}
             {importResult.dupes.length > 0 && <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#d97706" }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</span>
                 <button onClick={() => {
                   const h = "ชื่อ,เบอร์โทร,ที่อยู่,โปรก่อนหน้า,วันที่สั่งซื้อ,สถานะ,มอบหมาย,หัวข้อโทร\n";
                   const rows = importResult.dupes.map((d) => [d.name, d.phone, d.note, d.previous_promo, d.order_date, d.status, d.assigned_to, d.call_subject].map((v) => '"' + String(v || "").replace(/"/g, '""') + '"').join(",")).join("\n");
                   const blob = new Blob(["\uFEFF" + h + rows], { type: "text/csv;charset=utf-8;" });
                   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "เบอร์ซ้ำ_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
-                }} style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #d97706", background: "#fffbeb", color: "#d97706", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>⬇ ดาวน์โหลดเบอร์ซ้ำ</button>
+                }} style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #d97706", background: "#fffbeb", color: "#d97706", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>⬇ ดาวน์โหลดเบอร์ซ้ำ</button>
               </div>
               <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.dupes.map((d, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 11, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#92400e" }}>✗ {d.name}</span><span style={{ color: "#d97706" }}>{d.phone}</span>
                   </div>
                 ))}
@@ -1991,12 +1991,12 @@ function CRMApp({ currentUser, onLogout }) {
             const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
             const colors = ["#3b82f6","#9ca3af","#10b981","#ef4444","#6b7280","#f59e0b","#8b5cf6","#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6","#e11d48","#84cc16","#0ea5e9"];
             return <div style={{ width: 220, maxHeight: 380, overflowY: "auto", borderRight: "1px solid #f3f4f6" }}>
-              <div style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #f3f4f6" }}>อัตราส่วน</div>
+              <div style={{ padding: "10px 14px", fontSize: 11, fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #f3f4f6" }}>อัตราส่วน</div>
               {sorted.map(([label, cnt], i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", fontSize: 12 }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", fontSize: 11 }}>
                   <div style={{ width: 14, height: 14, borderRadius: 3, background: colors[i % colors.length], flexShrink: 0 }} />
                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</span>
-                  <span style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap" }}>({cnt}/{total})</span>
+                  <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>({cnt}/{total})</span>
                 </div>
               ))}
             </div>;
@@ -2019,7 +2019,7 @@ function CRMApp({ currentUser, onLogout }) {
                 else { setFooterStats((p) => ({ ...p, [colStats.key]: item.key })); }
                 window._colStatsLocked = false; setColStats(null);
               }}
-                style={{ padding: "8px 14px", cursor: "pointer", fontSize: 12, color: item.highlight ? "#3b82f6" : "#374151", background: footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent", fontWeight: footerStats[colStats.key] === item.key ? 700 : 400 }}
+                style={{ padding: "8px 14px", cursor: "pointer", fontSize: 11, color: item.highlight ? "#3b82f6" : "#374151", background: footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent", fontWeight: footerStats[colStats.key] === item.key ? 700 : 400 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = item.highlight ? "#eff6ff" : "#f8fafc")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent")}>
                 {item.label}
@@ -2029,7 +2029,7 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
-      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px;width:10px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-scroll{scrollbar-gutter:stable} .crm-table td{line-height:1.3} .crm-table tr{height:26px} @keyframes bellShake{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(10deg)}} .bell-shake{animation:bellShake .5s ease 3}`}</style>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px;width:10px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-scroll{scrollbar-gutter:stable} .crm-table td{line-height:1.3} .crm-table tr{height:24px} @keyframes bellShake{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(10deg)}} .bell-shake{animation:bellShake .5s ease 3}`}</style>
     </div>
   );
 }
@@ -2062,12 +2062,12 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         {modal.type === "status" && <>
           <div><label style={lS}>Key</label><input style={iS} value={form.key || ""} onChange={(e) => u("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} /></div>
           <div><label style={lS}>Label</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 12, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 11, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "6px 16px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "call_subject" && <>
           <div><label style={lS}>ชื่อหัวข้อ</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 12, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 11, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "supervisor" && <>
@@ -2078,8 +2078,8 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         </>}
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
-        <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
-        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
+        <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
       </div>
     </div>
   );
