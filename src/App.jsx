@@ -1423,6 +1423,43 @@ function CRMApp({ currentUser, onLogout }) {
             const promoFilteredSvC = selectedSupervisor ? svC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter) : [];
             const promoFilteredUnC = unC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter);
             return <div>
+
+            {/* ACTIVITY LOG — แสดงเลย */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>📋 ประวัติการใช้งาน ({activityLog.length})</h2>
+                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).limit(200); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
+              </div>
+              <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead><tr style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 1 }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>เวลา</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>ผู้ใช้</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>การกระทำ</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>รายละเอียด</th>
+                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>จำนวน</th>
+                  </tr></thead>
+                  <tbody>
+                    {activityLog.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีประวัติ (รัน SQL สร้างตาราง crm_activity_log ก่อน)</td></tr>}
+                    {activityLog.map((log) => {
+                      const actionColors = { "แก้ไข": "#3b82f6", "เพิ่มลูกค้า": "#059669", "ลบลูกค้า": "#dc2626", "ลบหลายรายการ": "#dc2626", "ลบถาวร": "#7f1d1d", "นำเข้าข้อมูล": "#7c3aed", "มอบหมาย": "#d97706", "กู้คืน": "#0891b2", "แก้ไขลูกค้า": "#2563eb" };
+                      const color = actionColors[log.action] || "#6b7280";
+                      const timeStr = (() => { try { const d = new Date(log.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); } catch { return log.created_at; } })();
+                      return <tr key={log.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 11 }}>{timeStr}</td>
+                        <td style={{ padding: "8px 14px", fontWeight: 600 }}>{log.user_name}</td>
+                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 11, color: "#fff", background: color }}>{log.action}</span></td>
+                        <td style={{ padding: "8px 14px", color: "#4b5563", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{log.detail}</td>
+                        <td style={{ padding: "8px 14px", textAlign: "center", fontWeight: 600, color: log.count > 1 ? "#d97706" : "#9ca3af" }}>{log.count > 1 ? log.count : ""}</td>
+                      </tr>;
+                    })}
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>หัวหน้า / มอบหมาย</h2>
             <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
               {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
@@ -1482,40 +1519,6 @@ function CRMApp({ currentUser, onLogout }) {
                 </div>
               </div>
             ) : <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center" }}><div style={{ fontSize: 48, opacity: 0.3 }}>👆</div><div style={{ color: "#6b7280" }}>เลือกหัวหน้าด้านบน</div></div>}
-
-            {/* ACTIVITY LOG */}
-            <div style={{ marginTop: 28 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>📋 ประวัติการใช้งาน ({activityLog.length})</h3>
-                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).limit(200); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
-              </div>
-              <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                  <thead><tr style={{ background: "#f8fafc" }}>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>เวลา</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>ผู้ใช้</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>การกระทำ</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>รายละเอียด</th>
-                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>จำนวน</th>
-                  </tr></thead>
-                  <tbody>
-                    {activityLog.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีประวัติ</td></tr>}
-                    {activityLog.map((log) => {
-                      const actionColors = { "แก้ไข": "#3b82f6", "เพิ่มลูกค้า": "#059669", "ลบลูกค้า": "#dc2626", "ลบหลายรายการ": "#dc2626", "ลบถาวร": "#7f1d1d", "นำเข้าข้อมูล": "#7c3aed", "มอบหมาย": "#d97706", "กู้คืน": "#0891b2", "แก้ไขลูกค้า": "#2563eb" };
-                      const color = actionColors[log.action] || "#6b7280";
-                      const timeStr = (() => { try { const d = new Date(log.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); } catch { return log.created_at; } })();
-                      return <tr key={log.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 11 }}>{timeStr}</td>
-                        <td style={{ padding: "8px 14px", fontWeight: 600 }}>{log.user_name}</td>
-                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 11, color: "#fff", background: color }}>{log.action}</span></td>
-                        <td style={{ padding: "8px 14px", color: "#4b5563", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{log.detail}</td>
-                        <td style={{ padding: "8px 14px", textAlign: "center", fontWeight: 600, color: log.count > 1 ? "#d97706" : "#9ca3af" }}>{log.count > 1 ? log.count : ""}</td>
-                      </tr>;
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </div>; })()}
 
           {/* EMPLOYEES */}
