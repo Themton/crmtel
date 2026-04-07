@@ -1150,8 +1150,9 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
 
               {/* FILTER PANEL */}
-              {toolbarTab === "filter" && (
-                <div style={{ position: "relative" }}>
+              {toolbarTab === "filter" && (<>
+                <div onClick={() => setToolbarTab(null)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
+                <div style={{ position: "relative", zIndex: 100 }}>
                   <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 560, zIndex: 100, animation: "fadeIn .15s" }}>
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1235,11 +1236,12 @@ function CRMApp({ currentUser, onLogout }) {
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
-              )}
+              </>)}
 
               {/* EMPLOYEE FILTER PANEL */}
-              {toolbarTab === "employee" && (
-                <div style={{ position: "relative" }}>
+              {toolbarTab === "employee" && (<>
+                <div onClick={() => setToolbarTab(null)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
+                <div style={{ position: "relative", zIndex: 100 }}>
                   <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 320, zIndex: 100, animation: "fadeIn .15s" }}>
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -1288,7 +1290,7 @@ function CRMApp({ currentUser, onLogout }) {
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
-              )}
+              </>)}
 
               {/* COLUMN REORDER PANEL */}
               {toolbarTab === "columns" && (
