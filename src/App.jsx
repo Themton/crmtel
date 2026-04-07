@@ -1418,7 +1418,7 @@ function CRMApp({ currentUser, onLogout }) {
                   </tbody>
                   <tfoot><tr style={{ background: "#fafaf8", borderTop: "2px solid #e5e7eb" }}>
                     <td colSpan={2} style={{ padding: "3px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
-                    {activeColOrder.map((key) => {
+                    {activeColOrder.map((key, ci) => {
                       const values = fc.map((c) => String(c[key] ?? ""));
                       const total = values.length;
                       const filled = values.filter((v) => v && v !== "0" && v !== "false").length;
@@ -1426,18 +1426,7 @@ function CRMApp({ currentUser, onLogout }) {
                       const unique = new Set(values.filter(Boolean)).size;
                       const mode = footerStats[key] || "histogram";
                       
-                      if (mode === "histogram") {
-                        const counts = {};
-                        values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
-                        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-                        const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6"];
-                        return <td key={key} style={{ padding: "3px 2px" }}>
-                          <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
-                            {top.map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 1 }} />)}
-                          </div>
-                        </td>;
-                      }
-                      
+                      const statLabels = { histogram: "Histogram", total: "นับทั้งหมด", empty: "นับที่ว่าง", filled: "นับที่เต็ม", unique: "นับเฉพาะ", emptyRate: "อัตราว่าง", fillRate: "อัตราเต็ม", uniqueRate: "อัตราส่วนเฉพาะ" };
                       let val = "";
                       if (mode === "total") val = total;
                       else if (mode === "empty") val = empty;
@@ -1447,7 +1436,20 @@ function CRMApp({ currentUser, onLogout }) {
                       else if (mode === "fillRate") val = (total ? Math.round(filled / total * 100) : 0) + "%";
                       else if (mode === "uniqueRate") val = (total ? Math.round(unique / total * 100) : 0) + "%";
                       
-                      return <td key={key} style={{ padding: "3px 6px", fontSize: 11, fontWeight: 700, color: "#3b82f6", textAlign: "center" }}>{val}</td>;
+                      return <td key={key} style={{ padding: "2px 2px", position: "relative" }}>
+                        <div onClick={(e) => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: rect.left, y: rect.top - 320, key, label: COL_DEFS[key]?.label || key }); }}
+                          style={{ cursor: "pointer", borderRadius: 4, padding: "2px 4px" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#fef3c7")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+                          {mode === "histogram" ? (
+                            <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
+                              {(() => { const counts = {}; values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; }); const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5); const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6"]; return top.map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 1 }} />); })()}
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 10, fontWeight: 700, color: "#3b82f6", textAlign: "center", whiteSpace: "nowrap" }}>{val} <span style={{ fontSize: 8, color: "#9ca3af" }}>▲</span></div>
+                          )}
+                        </div>
+                      </td>;
                     })}
                   </tr></tfoot>
                 </table>
