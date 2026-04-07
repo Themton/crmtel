@@ -420,6 +420,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [dragCol, setDragCol] = useState(null);
   const [colOrderLoaded, setColOrderLoaded] = useState(false);
   const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
+  const [activityLog, setActivityLog] = useState([]);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
   const PAGE_SIZE = pageSize;
@@ -450,6 +451,8 @@ function CRMApp({ currentUser, onLogout }) {
         password: a.password, department: a.role || "employee"
       }));
       setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // Fetch activity log
+      try { const logRes = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).limit(200); if (logRes.data) setActivityLog(logRes.data); } catch {}
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
@@ -553,6 +556,7 @@ function CRMApp({ currentUser, onLogout }) {
     }
     setModal(null);
     await fetchAll(); broadcastChange();
+    if (table === "crm_customers") logActivity(mode === "add" ? "เพิ่มลูกค้า" : "แก้ไขลูกค้า", data.name || "");
   };
 
   // ---- DELETE → MOVE TO TRASH ----
@@ -581,6 +585,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
+    if (table === "crm_customers") logActivity("ลบลูกค้า", item?.name || "id:" + id);
     showToast("ลบสำเร็จ ✓");
   };
 
@@ -617,6 +622,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress(null);
     setSelectedRows([]);
     await fetchAll(); broadcastChange();
+    logActivity("ลบหลายรายการ", total + " ลูกค้า", total);
     showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -632,7 +638,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
-    showToast("กู้คืนสำเร็จ ✓");
+    logActivity("กู้คืน", item?.name || ""); showToast("กู้คืนสำเร็จ ✓");
   };
 
   const handlePermanentDelete = async (id) => {
@@ -642,7 +648,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
-    showToast("ลบถาวรสำเร็จ ✓");
+    logActivity("ลบถาวร", "id:" + id); showToast("ลบถาวรสำเร็จ ✓");
   };
 
   const handleEmptyTrash = async () => {
@@ -659,9 +665,14 @@ function CRMApp({ currentUser, onLogout }) {
   const broadcastChange = async () => {
     try { await supabase.from("crm_settings").delete().eq("key", "last_updated"); await supabase.from("crm_settings").insert({ key: "last_updated", value: Date.now().toString() }); } catch {}
   };
+  const logActivity = async (action, detail, count = 1) => {
+    try { await supabase.from("crm_activity_log").insert({ user_name: currentUser?.name || "unknown", action, detail, count, created_at: new Date().toISOString() }); } catch {}
+  };
   const upd = async (id, f, v) => {
+    const item = customers.find((c) => c.id === id);
     setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
     await supabase.from("crm_customers").update({ [f]: v }).eq("id", id);
+    logActivity("แก้ไข", (item?.name || "") + " → " + (COL_DEFS[f]?.label || f) + ": " + String(v).slice(0, 50));
     broadcastChange();
   };
 
@@ -754,6 +765,7 @@ function CRMApp({ currentUser, onLogout }) {
       setProgress(null);
     }
     setImportResult({ success: successList, dupes: dupeList, fails: failList });
+    if (successList.length > 0) logActivity("นำเข้าข้อมูล", successList.length + " รายการ (ซ้ำ " + dupeList.length + ")", successList.length);
     if (successList.length === 0 && dupeList.length === 0 && allRows.length === 0) {
       showToast("ไม่พบข้อมูลที่ import ได้ (ตรวจสอบหัวคอลัมน์)", "warning");
     }
@@ -836,6 +848,7 @@ function CRMApp({ currentUser, onLogout }) {
       }
     }
     showToast("กระจาย " + total + " ลูกค้าสำเร็จ ✓ → " + summary);
+    logActivity("มอบหมาย", summary, total);
     setSuccessModal({ count: total, detail: summary });
     setAssignSelected([]); setAssignEmployees([]);
   };
@@ -1469,6 +1482,40 @@ function CRMApp({ currentUser, onLogout }) {
                 </div>
               </div>
             ) : <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center" }}><div style={{ fontSize: 48, opacity: 0.3 }}>👆</div><div style={{ color: "#6b7280" }}>เลือกหัวหน้าด้านบน</div></div>}
+
+            {/* ACTIVITY LOG */}
+            <div style={{ marginTop: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>📋 ประวัติการใช้งาน ({activityLog.length})</h3>
+                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).limit(200); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
+              </div>
+              <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead><tr style={{ background: "#f8fafc" }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>เวลา</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>ผู้ใช้</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>การกระทำ</th>
+                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>รายละเอียด</th>
+                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>จำนวน</th>
+                  </tr></thead>
+                  <tbody>
+                    {activityLog.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีประวัติ</td></tr>}
+                    {activityLog.map((log) => {
+                      const actionColors = { "แก้ไข": "#3b82f6", "เพิ่มลูกค้า": "#059669", "ลบลูกค้า": "#dc2626", "ลบหลายรายการ": "#dc2626", "ลบถาวร": "#7f1d1d", "นำเข้าข้อมูล": "#7c3aed", "มอบหมาย": "#d97706", "กู้คืน": "#0891b2", "แก้ไขลูกค้า": "#2563eb" };
+                      const color = actionColors[log.action] || "#6b7280";
+                      const timeStr = (() => { try { const d = new Date(log.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); } catch { return log.created_at; } })();
+                      return <tr key={log.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 11 }}>{timeStr}</td>
+                        <td style={{ padding: "8px 14px", fontWeight: 600 }}>{log.user_name}</td>
+                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 11, color: "#fff", background: color }}>{log.action}</span></td>
+                        <td style={{ padding: "8px 14px", color: "#4b5563", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{log.detail}</td>
+                        <td style={{ padding: "8px 14px", textAlign: "center", fontWeight: 600, color: log.count > 1 ? "#d97706" : "#9ca3af" }}>{log.count > 1 ? log.count : ""}</td>
+                      </tr>;
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>; })()}
 
           {/* EMPLOYEES */}
