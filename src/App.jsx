@@ -542,6 +542,7 @@ function CRMApp({ currentUser, onLogout }) {
   const handleSave = async (table, data, mode) => {
     if (mode === "add") {
       const { id, ...rest } = data;
+      if (table === "crm_customers" && !rest.created_at) rest.created_at = new Date().toISOString();
       const res = await supabase.from(table).insert(rest);
       if (res.data) showToast("เพิ่มสำเร็จ");
       else showToast("เกิดข้อผิดพลาด", "warning");
@@ -726,7 +727,7 @@ function CRMApp({ currentUser, onLogout }) {
       const rpVal = rpi >= 0 ? String(v[rpi] || "") : "";
       const ppVal = ppi >= 0 ? String(v[ppi] || "") : "";
       const ppNum = /^\d+\.?\d*$/.test(ppVal.trim()) ? Number(ppVal) : 0;
-      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: parseDate(orderDate), received_product: rpVal.includes("ได้รับ") || rpVal === "true" || rpVal === "1", nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? parseDate(String(v[cdi] || "")) : null, call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (parseInt(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? parseDate(String(v[nfi] || "")) : null, product_price: ppNum, supervisor: svi >= 0 ? String(v[svi] || "") : "" });
+      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: parseDate(orderDate), received_product: rpVal.includes("ได้รับ") || rpVal === "true" || rpVal === "1", nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? parseDate(String(v[cdi] || "")) : null, call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (parseInt(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? parseDate(String(v[nfi] || "")) : null, product_price: ppNum, supervisor: svi >= 0 ? String(v[svi] || "") : "", created_at: new Date().toISOString() });
     }
     console.log("Import result:", { allRows: allRows.length, dupes: dupeList.length, existingPhones: existingPhones.size });
     if (allRows.length > 0) console.log("First row to insert:", allRows[0]);
@@ -854,8 +855,8 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleExport = () => {
-    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น"];
-    const rows = customers.map((c) => { const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status; return [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,stLabel,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","); });
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น","วันที่สร้าง"];
+    const rows = customers.map((c) => { const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status; return [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,stLabel,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname,c.created_at].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","); });
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
@@ -931,8 +932,9 @@ function CRMApp({ currentUser, onLogout }) {
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
     assigned_to: { label: "มอบหมาย", render: (c) => <InlineAssignDropdown value={c.assigned_to} employees={employees} onSave={(v) => upd(c.id, "assigned_to", v)} /> },
     nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 10, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
+    created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { return new Date(c.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return c.created_at; } })() : "—"}</span> },
   };
-  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
+  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname","created_at"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
   const TH = activeColOrder.map((k) => COL_DEFS[k].label);
 
