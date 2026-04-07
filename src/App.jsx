@@ -1416,7 +1416,7 @@ function CRMApp({ currentUser, onLogout }) {
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
-                  <tfoot><tr style={{ background: "#fafaf8", borderTop: "2px solid #e5e7eb" }}>
+                  <tfoot style={{ position: "sticky", bottom: 0, zIndex: 10 }}><tr style={{ background: "#f8f8f6", borderTop: "2px solid #e5e7eb", boxShadow: "0 -2px 8px rgba(0,0,0,0.06)" }}>
                     <td colSpan={2} style={{ padding: "3px 4px" }}></td>
                     {activeColOrder.map((key) => {
                       const values = fc.map((c) => String(c[key] ?? ""));
