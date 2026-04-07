@@ -1438,8 +1438,9 @@ function CRMApp({ currentUser, onLogout }) {
                       else if (mode === "uniqueRate") val = (total ? Math.round(unique / total * 100) : 0) + "%";
                       
                       return <td key={key} style={{ padding: "2px 2px" }}>
-                        <div onMouseEnter={(e) => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); e.currentTarget.style.background = "#fef3c7"; const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: rect.left, y: rect.top - 340, key, label: COL_DEFS[key]?.label || key }); }}
+                        <div onMouseEnter={(e) => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); e.currentTarget.style.background = "#fef3c7"; const rect = e.currentTarget.getBoundingClientRect(); setColStats((prev) => ({ x: rect.left, y: rect.top - 340, key, label: COL_DEFS[key]?.label || key, showMenu: prev?.key === key ? prev.showMenu : false })); }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}
+                          onClick={(e) => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: rect.left, y: rect.top - 340, key, label: COL_DEFS[key]?.label || key, showMenu: true }); }}
                           style={{ cursor: "pointer", borderRadius: 4, padding: "1px 2px" }}>
                           {mode === "histogram" ? (
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -1963,11 +1964,12 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
-      {/* Column Stats Menu - hover popup */}
+      {/* Column Stats - hover=values, click=menu */}
       {colStats && <>
-        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}
+        {colStats.showMenu && <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />}
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - (colStats.showMenu ? 420 : 240)), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}
           onMouseEnter={() => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); }}
-          onMouseLeave={() => { window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}>
+          onMouseLeave={() => { if (!colStats.showMenu) window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}>
           {/* Left: unique values with ratio */}
           {(() => {
             const key = colStats.key;
@@ -1999,8 +2001,8 @@ function CRMApp({ currentUser, onLogout }) {
               ))}
             </div>;
           })()}
-          {/* Right: menu */}
-          <div style={{ width: 160 }}>
+          {/* Right: menu - only on click */}
+          {colStats.showMenu && <div style={{ width: 160, borderLeft: "1px solid #f3f4f6" }}>
             {[
               { key: "hide", label: "ซ่อน" },
               { key: "histogram", label: "Histogram", highlight: true },
@@ -2023,7 +2025,7 @@ function CRMApp({ currentUser, onLogout }) {
                 {item.label}
               </div>
             ))}
-          </div>
+          </div>}
         </div>
       </>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
