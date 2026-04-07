@@ -697,7 +697,7 @@ function CRMApp({ currentUser, onLogout }) {
       if (phone && /^\d{9}$/.test(phone)) phone = "0" + phone;
       if (!name && !phone) continue;
       const cleanPhone = phone.replace(/\D/g, "");
-      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
+      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: csi >= 0 ? String(v[csi] || "") : "", order_date: odi >= 0 ? String(v[odi] || "") : "", assigned_to: ati >= 0 ? String(v[ati] || "") : "", status: sti >= 0 ? String(v[sti] || "") : "" }); continue; }
       if (cleanPhone) existingPhones.add(cleanPhone);
       const orderDate = odi >= 0 ? String(v[odi] || "") : "";
       const rawSubject = csi >= 0 ? String(v[csi] || "").trim() : "";
@@ -1878,7 +1878,15 @@ function CRMApp({ currentUser, onLogout }) {
 
             {/* Dupe list */}
             {importResult.dupes.length > 0 && <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#d97706" }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</span>
+                <button onClick={() => {
+                  const h = "ชื่อ,เบอร์โทร,ที่อยู่,โปรก่อนหน้า,วันที่สั่งซื้อ,สถานะ,มอบหมาย,หัวข้อโทร\n";
+                  const rows = importResult.dupes.map((d) => [d.name, d.phone, d.note, d.previous_promo, d.order_date, d.status, d.assigned_to, d.call_subject].map((v) => '"' + String(v || "").replace(/"/g, '""') + '"').join(",")).join("\n");
+                  const blob = new Blob(["\uFEFF" + h + rows], { type: "text/csv;charset=utf-8;" });
+                  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "เบอร์ซ้ำ_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+                }} style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #d97706", background: "#fffbeb", color: "#d97706", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>⬇ ดาวน์โหลดเบอร์ซ้ำ</button>
+              </div>
               <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.dupes.map((d, i) => (
                   <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
