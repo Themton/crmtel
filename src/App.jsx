@@ -912,7 +912,7 @@ function CRMApp({ currentUser, onLogout }) {
           const raw = c[af.field];
           try { cv = raw ? new Date(raw).toISOString().slice(0, 10) : ""; } catch { cv = String(raw || "").slice(0, 10); }
         } else {
-          cv = String(c[af.field] || "").toLowerCase();
+          cv = String(c[af.field] ?? "").toLowerCase();
         }
         const fv = af.value.toLowerCase();
         const multiVals = af.value.split("|||").filter(Boolean);
