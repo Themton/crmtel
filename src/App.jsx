@@ -1970,7 +1970,19 @@ function CRMApp({ currentUser, onLogout }) {
         <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}>
           {/* Left: unique values with ratio */}
           {(() => {
-            const values = fc.map((c) => String(c[colStats.key] ?? ""));
+            const key = colStats.key;
+            const values = fc.map((c) => {
+              const raw = c[key];
+              // Map to display value
+              if (key === "status") { const s = statuses.find((st) => st.key === raw); return s ? s.label : String(raw ?? ""); }
+              if (key === "received_product") return raw ? "ได้รับแล้ว" : "รอส่ง";
+              if (key === "customer_relation") return String(raw ?? 0);
+              if (key === "created_at" || key === "order_date" || key === "call_date" || key === "next_follow") {
+                if (!raw) return "(ว่าง)";
+                try { return new Date(raw).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(raw); }
+              }
+              return String(raw ?? "");
+            });
             const total = values.length;
             const counts = {};
             values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; });
