@@ -915,9 +915,17 @@ function CRMApp({ currentUser, onLogout }) {
           cv = String(c[af.field] || "").toLowerCase();
         }
         const fv = af.value.toLowerCase();
-        if (af.op === "contains" && !cv.includes(fv)) return false;
-        if (af.op === "eq" && cv !== fv) return false;
-        if (af.op === "neq" && cv === fv) return false;
+        const multiVals = af.value.split("|||").filter(Boolean);
+        if (multiVals.length > 1) {
+          // Multi-select: match any
+          if (af.op === "eq" && !multiVals.some((mv) => cv === mv.toLowerCase())) return false;
+          if (af.op === "neq" && multiVals.some((mv) => cv === mv.toLowerCase())) return false;
+          if (af.op === "contains" && !multiVals.some((mv) => cv.includes(mv.toLowerCase()))) return false;
+        } else {
+          if (af.op === "contains" && !cv.includes(fv)) return false;
+          if (af.op === "eq" && cv !== fv) return false;
+          if (af.op === "neq" && cv === fv) return false;
+        }
       }
       return true;
     });
@@ -1195,55 +1203,44 @@ function CRMApp({ currentUser, onLogout }) {
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
                           </select>
-                          {af.field === "status" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                              <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
-                            </select>
-                          ) : af.field === "call_subject" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                              <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
-                            </select>
-                          ) : af.field === "received_product" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                              <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
-                            </select>
-                          ) : af.field === "customer_relation" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                              <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
-                            </select>
-                          ) : af.field === "assigned_to" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                              <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
-                            </select>
-                          ) : (
-                            (() => {
-                              const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
-                              const isDateField = dateFields.includes(af.field);
-                              let vals;
-                              if (af.field === "nickname") {
-                                vals = [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort();
-                              } else if (isDateField) {
-                                vals = [...new Set(customers.map((c2) => {
-                                  const raw = c2[af.field];
-                                  if (!raw) return "";
-                                  try { return new Date(raw).toISOString().slice(0, 10); } catch { return String(raw).slice(0, 10); }
-                                }).filter(Boolean))].sort().reverse();
-                              } else {
-                                vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
-                              }
-                              return vals.length > 0 && vals.length <= 500 ? (
-                                <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
-                                  <option value="">เลือก ({vals.length})</option>
-                                  {vals.map((v) => {
-                                    const display = isDateField ? (() => { try { return new Date(v).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return v; } })() : (v.length > 40 ? v.slice(0, 40) + "..." : v);
-                                    return <option key={v} value={v}>{display}</option>;
-                                  })}
-                                </select>
-                              ) : (
-                                <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
-                              );
-                            })()
-                          )}
+                          {(() => {
+                            const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
+                            const isDateField = dateFields.includes(af.field);
+                            let opts = [];
+                            if (af.field === "status") opts = statuses.map((s) => ({ v: s.key, l: s.label }));
+                            else if (af.field === "call_subject") opts = callSubjects.map((s) => ({ v: s.label, l: s.label }));
+                            else if (af.field === "received_product") opts = [{ v: "true", l: "ได้รับแล้ว" }, { v: "false", l: "รอส่ง" }];
+                            else if (af.field === "customer_relation") opts = [0,1,2,3,4,5].map((n) => ({ v: String(n), l: String(n) }));
+                            else if (af.field === "assigned_to") opts = [{ v: "__unassigned__", l: "ยังไม่มอบหมาย" }, ...employees.map((em) => ({ v: em.name, l: em.name }))];
+                            else if (af.field === "nickname") opts = [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort().map((n) => ({ v: n, l: n }));
+                            else if (isDateField) opts = [...new Set(customers.map((c2) => { const raw = c2[af.field]; if (!raw) return ""; try { return new Date(raw).toISOString().slice(0, 10); } catch { return ""; } }).filter(Boolean))].sort().reverse().map((d) => ({ v: d, l: (() => { try { return new Date(d).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })() }));
+                            else opts = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort().map((v) => ({ v, l: v.length > 35 ? v.slice(0, 35) + "..." : v }));
+                            
+                            const selected = (af.value || "").split("|||").filter(Boolean);
+                            const toggle = (val) => { const nf = [...advFilters]; const cur = (nf[idx].value || "").split("|||").filter(Boolean); nf[idx].value = cur.includes(val) ? cur.filter((x) => x !== val).join("|||") : [...cur, val].join("|||"); setAdvFilters(nf); };
+                            
+                            return opts.length > 0 ? (
+                              <div style={{ position: "relative", flex: 1 }}>
+                                <div onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === "none" ? "block" : "none"; }} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, cursor: "pointer", background: "#fff", minHeight: 30, display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                                  {selected.length === 0 && <span style={{ color: "#9ca3af" }}>เลือก ({opts.length})</span>}
+                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 10, fontWeight: 600 }}>{o?.l || sv}</span>; })}
+                                  {selected.length > 3 && <span style={{ fontSize: 10, color: "#9ca3af" }}>+{selected.length - 3}</span>}
+                                </div>
+                                <div style={{ display: "none", position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", zIndex: 200, maxHeight: 200, overflowY: "auto", marginTop: 4 }}>
+                                  {opts.map((o) => (
+                                    <label key={o.v} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", fontSize: 12, background: selected.includes(o.v) ? "#fffbeb" : "transparent" }}
+                                      onMouseEnter={(e2) => { if (!selected.includes(o.v)) e2.currentTarget.style.background = "#f8fafc"; }}
+                                      onMouseLeave={(e2) => { e2.currentTarget.style.background = selected.includes(o.v) ? "#fffbeb" : "transparent"; }}>
+                                      <input type="checkbox" checked={selected.includes(o.v)} onChange={() => toggle(o.v)} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
+                                      <span>{o.l}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                            );
+                          })()}
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
                       ))}
