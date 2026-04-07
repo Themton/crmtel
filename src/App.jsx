@@ -406,6 +406,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
   const [colStats, setColStats] = useState(null);
+  const [footerStats, setFooterStats] = useState({});
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null);
@@ -1415,20 +1416,38 @@ function CRMApp({ currentUser, onLogout }) {
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
-                  <tfoot><tr style={{ background: "#fafaf8" }}>
-                    <td colSpan={2} style={{ padding: "2px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
+                  <tfoot><tr style={{ background: "#fafaf8", borderTop: "2px solid #e5e7eb" }}>
+                    <td colSpan={2} style={{ padding: "3px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
                     {activeColOrder.map((key) => {
                       const values = fc.map((c) => String(c[key] ?? ""));
-                      const counts = {};
-                      values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
-                      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-                      const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#9ca3af"];
-                      const total = values.length || 1;
-                      return <td key={key} style={{ padding: "2px 1px" }}>
-                        <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "#f3f4f6" }}>
-                          {top.map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / total * 100) + "%", background: colors[ti % colors.length], minWidth: 1 }} />)}
-                        </div>
-                      </td>;
+                      const total = values.length;
+                      const filled = values.filter((v) => v && v !== "0" && v !== "false").length;
+                      const empty = total - filled;
+                      const unique = new Set(values.filter(Boolean)).size;
+                      const mode = footerStats[key] || "histogram";
+                      
+                      if (mode === "histogram") {
+                        const counts = {};
+                        values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
+                        const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                        const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6"];
+                        return <td key={key} style={{ padding: "3px 2px" }}>
+                          <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
+                            {top.map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 1 }} />)}
+                          </div>
+                        </td>;
+                      }
+                      
+                      let val = "";
+                      if (mode === "total") val = total;
+                      else if (mode === "empty") val = empty;
+                      else if (mode === "filled") val = filled;
+                      else if (mode === "unique") val = unique;
+                      else if (mode === "emptyRate") val = (total ? Math.round(empty / total * 100) : 0) + "%";
+                      else if (mode === "fillRate") val = (total ? Math.round(filled / total * 100) : 0) + "%";
+                      else if (mode === "uniqueRate") val = (total ? Math.round(unique / total * 100) : 0) + "%";
+                      
+                      return <td key={key} style={{ padding: "3px 6px", fontSize: 11, fontWeight: 700, color: "#3b82f6", textAlign: "center" }}>{val}</td>;
                     })}
                   </tr></tfoot>
                 </table>
@@ -1936,39 +1955,32 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
-      {/* Column Stats Popup */}
+      {/* Column Stats Menu - Pancake style */}
       {colStats && <>
         <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />
-        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 280), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 260, zIndex: 3000, animation: "fadeIn .1s" }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#3d2a0a" }}>{colStats.label}</div>
-          </div>
-          <div style={{ padding: "8px 0" }}>
-            <div onClick={() => { const newOrder = activeColOrder.filter((k) => k !== colStats.key); setColOrder(newOrder); setColStats(null); }} style={{ padding: "8px 16px", cursor: "pointer", fontSize: 13 }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>🙈 ซ่อน</div>
-            <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
-            <div style={{ padding: "6px 16px", fontSize: 12, color: "#6b7280" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📊 นับทั้งหมด</span><span style={{ fontWeight: 700, color: "#374151" }}>{colStats.total}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📭 นับที่ว่าง</span><span style={{ fontWeight: 700, color: "#d97706" }}>{colStats.empty}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📬 นับที่เต็ม</span><span style={{ fontWeight: 700, color: "#059669" }}>{colStats.filled}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>🔢 นับเฉพาะ</span><span style={{ fontWeight: 700, color: "#3b82f6" }}>{colStats.unique}</span></div>
-              <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราว่าง</span><span style={{ fontWeight: 700 }}>{colStats.emptyRate}%</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราเต็ม</span><span style={{ fontWeight: 700 }}>{colStats.fillRate}%</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราส่วนเฉพาะ</span><span style={{ fontWeight: 700 }}>{colStats.uniqueRate}%</span></div>
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 200), top: Math.min(colStats.y, window.innerHeight - 350), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", width: 180, zIndex: 3000, animation: "fadeIn .1s" }}>
+          {[
+            { key: "hide", label: "ซ่อน" },
+            { key: "histogram", label: "Histogram", highlight: true },
+            { key: "total", label: "นับทั้งหมด" },
+            { key: "empty", label: "นับที่ว่าง" },
+            { key: "filled", label: "นับที่เต็ม" },
+            { key: "unique", label: "นับเฉพาะ" },
+            { key: "emptyRate", label: "อัตราว่าง" },
+            { key: "fillRate", label: "อัตราเต็ม" },
+            { key: "uniqueRate", label: "อัตราส่วนเฉพาะ" },
+          ].map((item) => (
+            <div key={item.key} onClick={() => {
+              if (item.key === "hide") { setColOrder(activeColOrder.filter((k) => k !== colStats.key)); }
+              else { setFooterStats((p) => ({ ...p, [colStats.key]: item.key })); }
+              setColStats(null);
+            }}
+              style={{ padding: "10px 16px", cursor: "pointer", fontSize: 14, color: item.highlight ? "#3b82f6" : "#374151", background: footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent", fontWeight: footerStats[colStats.key] === item.key ? 700 : 400 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = item.highlight ? "#eff6ff" : "#f8fafc")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent")}>
+              {item.label}
             </div>
-            <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
-            <div style={{ padding: "6px 16px", fontSize: 11, color: "#6b7280" }}>
-              <div style={{ fontWeight: 600, marginBottom: 6 }}>Histogram</div>
-              {colStats.top5.map(([label, cnt], ti) => {
-                const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#ec4899", "#0891b2", "#6b7280"];
-                return <div key={ti} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                  <div style={{ width: 80, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</div>
-                  <div style={{ flex: 1, height: 10, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}><div style={{ width: (cnt / colStats.total * 100) + "%", height: "100%", background: colors[ti % colors.length], borderRadius: 5 }} /></div>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", minWidth: 20, textAlign: "right" }}>{cnt}</span>
-                </div>;
-              })}
-            </div>
-          </div>
+          ))}
         </div>
       </>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
