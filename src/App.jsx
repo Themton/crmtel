@@ -666,7 +666,14 @@ function CRMApp({ currentUser, onLogout }) {
     try { await supabase.from("crm_settings").delete().eq("key", "last_updated"); await supabase.from("crm_settings").insert({ key: "last_updated", value: Date.now().toString() }); } catch {}
   };
   const logActivity = async (action, detail, count = 1) => {
-    try { await supabase.from("crm_activity_log").insert({ user_name: currentUser?.name || "unknown", action, detail, count, created_at: new Date().toISOString() }); } catch {}
+    try {
+      const res = await supabase.from("crm_activity_log").insert({ user_name: currentUser?.name || "unknown", action, detail, count, created_at: new Date().toISOString() });
+      if (res.error) console.error("logActivity error:", res.error.message);
+      // Refresh log
+      const logRes = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).limit(200);
+      if (logRes.data) setActivityLog(logRes.data);
+      if (logRes.error) console.error("fetchLog error:", logRes.error.message);
+    } catch (e) { console.error("logActivity catch:", e); }
   };
   const upd = async (id, f, v) => {
     const item = customers.find((c) => c.id === id);
