@@ -405,6 +405,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
+  const [colStats, setColStats] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null);
@@ -1399,7 +1400,7 @@ function CRMApp({ currentUser, onLogout }) {
                         </select>
                       </div>
                     </th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10 }}>
+                    {TH.map((h, i) => <th key={i} onContextMenu={(e) => { e.preventDefault(); const key = activeColOrder[i]; const values = fc.map((c) => String(c[key] ?? "")); const total = values.length; const filled = values.filter((v) => v && v !== "0" && v !== "false").length; const empty = total - filled; const unique = new Set(values.filter(Boolean)).size; const counts = {}; values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; }); const top5 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8); setColStats({ x: e.clientX, y: e.clientY, label: h, key, total, filled, empty, unique, fillRate: total ? Math.round(filled / total * 100) : 0, emptyRate: total ? Math.round(empty / total * 100) : 0, uniqueRate: total ? Math.round(unique / total * 100) : 0, top5 }); }} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10, cursor: "context-menu" }}>
                       {h}
                       <div onMouseDown={(e) => { e.preventDefault(); const startX = e.clientX; const th = e.target.parentElement; const startW = th.offsetWidth; const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(40, startW + diff) })); }; const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }; document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); }} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 4, cursor: "col-resize", background: "transparent" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#d4a01740")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")} />
                     </th>)}
@@ -1414,6 +1415,22 @@ function CRMApp({ currentUser, onLogout }) {
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
+                  <tfoot><tr style={{ background: "#fafaf8" }}>
+                    <td colSpan={2} style={{ padding: "2px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
+                    {activeColOrder.map((key) => {
+                      const values = fc.map((c) => String(c[key] ?? ""));
+                      const counts = {};
+                      values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
+                      const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                      const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#9ca3af"];
+                      const total = values.length || 1;
+                      return <td key={key} style={{ padding: "2px 1px" }}>
+                        <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "#f3f4f6" }}>
+                          {top.map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / total * 100) + "%", background: colors[ti % colors.length], minWidth: 1 }} />)}
+                        </div>
+                      </td>;
+                    })}
+                  </tr></tfoot>
                 </table>
               </div>
             </div>
@@ -1919,6 +1936,41 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
+      {/* Column Stats Popup */}
+      {colStats && <>
+        <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 280), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 260, zIndex: 3000, animation: "fadeIn .1s" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6" }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#3d2a0a" }}>{colStats.label}</div>
+          </div>
+          <div style={{ padding: "8px 0" }}>
+            <div onClick={() => { const newOrder = activeColOrder.filter((k) => k !== colStats.key); setColOrder(newOrder); setColStats(null); }} style={{ padding: "8px 16px", cursor: "pointer", fontSize: 13 }} onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>🙈 ซ่อน</div>
+            <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
+            <div style={{ padding: "6px 16px", fontSize: 12, color: "#6b7280" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📊 นับทั้งหมด</span><span style={{ fontWeight: 700, color: "#374151" }}>{colStats.total}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📭 นับที่ว่าง</span><span style={{ fontWeight: 700, color: "#d97706" }}>{colStats.empty}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>📬 นับที่เต็ม</span><span style={{ fontWeight: 700, color: "#059669" }}>{colStats.filled}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>🔢 นับเฉพาะ</span><span style={{ fontWeight: 700, color: "#3b82f6" }}>{colStats.unique}</span></div>
+              <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราว่าง</span><span style={{ fontWeight: 700 }}>{colStats.emptyRate}%</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราเต็ม</span><span style={{ fontWeight: 700 }}>{colStats.fillRate}%</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0" }}><span>อัตราส่วนเฉพาะ</span><span style={{ fontWeight: 700 }}>{colStats.uniqueRate}%</span></div>
+            </div>
+            <div style={{ height: 1, background: "#f3f4f6", margin: "4px 0" }} />
+            <div style={{ padding: "6px 16px", fontSize: 11, color: "#6b7280" }}>
+              <div style={{ fontWeight: 600, marginBottom: 6 }}>Histogram</div>
+              {colStats.top5.map(([label, cnt], ti) => {
+                const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#ec4899", "#0891b2", "#6b7280"];
+                return <div key={ti} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                  <div style={{ width: 80, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</div>
+                  <div style={{ flex: 1, height: 10, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}><div style={{ width: (cnt / colStats.total * 100) + "%", height: "100%", background: colors[ti % colors.length], borderRadius: 5 }} /></div>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", minWidth: 20, textAlign: "right" }}>{cnt}</span>
+                </div>;
+              })}
+            </div>
+          </div>
+        </div>
+      </>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px;width:10px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-scroll{scrollbar-gutter:stable} .crm-table td{line-height:1.3} .crm-table tr{height:24px} @keyframes bellShake{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(10deg)}} .bell-shake{animation:bellShake .5s ease 3}`}</style>
     </div>
