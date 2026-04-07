@@ -1967,19 +1967,22 @@ function CRMApp({ currentUser, onLogout }) {
       {/* Column Stats Menu - Pancake style */}
       {colStats && <>
         <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />
-        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 380), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}>
-          {/* Left: unique values */}
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 420), top: Math.min(colStats.y, window.innerHeight - 400), background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden" }}>
+          {/* Left: unique values with ratio */}
           {(() => {
             const values = fc.map((c) => String(c[colStats.key] ?? ""));
+            const total = values.length;
             const counts = {};
             values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; });
             const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-            const colors = ["#3b82f6","#ef4444","#f59e0b","#10b981","#8b5cf6","#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6","#e11d48","#84cc16","#0ea5e9","#a855f7","#64748b"];
-            return <div style={{ width: 160, maxHeight: 340, overflowY: "auto", borderRight: "1px solid #f3f4f6" }}>
+            const colors = ["#3b82f6","#9ca3af","#10b981","#ef4444","#6b7280","#f59e0b","#8b5cf6","#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6","#e11d48","#84cc16","#0ea5e9"];
+            return <div style={{ width: 220, maxHeight: 380, overflowY: "auto", borderRight: "1px solid #f3f4f6" }}>
+              <div style={{ padding: "10px 14px", fontSize: 12, fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #f3f4f6" }}>อัตราส่วน</div>
               {sorted.map(([label, cnt], i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", fontSize: 12 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: "50%", background: colors[i % colors.length], flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, color: "#fff", fontWeight: 700 }}>{String.fromCharCode(65 + i % 26)}</div>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", fontSize: 13 }}>
+                  <div style={{ width: 14, height: 14, borderRadius: 3, background: colors[i % colors.length], flexShrink: 0 }} />
                   <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</span>
+                  <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>({cnt}/{total})</span>
                 </div>
               ))}
             </div>;
