@@ -1446,7 +1446,17 @@ function CRMApp({ currentUser, onLogout }) {
                             <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                               <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
                               <div style={{ display: "flex", flex: 1, height: 20, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
-                                {(() => { const counts = {}; values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; }); return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([, cnt], ti) => <div key={ti} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 2 }} />); })()}
+                                {(() => {
+                                  const counts = {};
+                                  values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
+                                  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, cnt], ti) => {
+                                    let display = label;
+                                    if (key === "status") { const s = statuses.find((st) => st.key === label); if (s) display = s.label; }
+                                    if (key === "received_product") display = label === "true" ? "ได้รับแล้ว" : label === "false" ? "รอส่ง" : label;
+                                    return <div key={ti} title={display + " (" + cnt + "/" + total + ")"} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 2, cursor: "pointer", transition: "opacity 0.15s" }}
+                                      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }} />;
+                                  });
+                                })()}
                               </div>
                             </div>
                           ) : (
