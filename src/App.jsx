@@ -969,7 +969,12 @@ function CRMApp({ currentUser, onLogout }) {
     created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { return new Date(c.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return c.created_at; } })() : "—"}</span> },
   };
   const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname","created_at"];
-  const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
+  // Merge missing columns into saved order
+  const mergeNewCols = (saved) => {
+    const missing = DEFAULT_COL_ORDER.filter((k) => !saved.includes(k));
+    return missing.length > 0 ? [...saved, ...missing] : saved;
+  };
+  const activeColOrder = (colOrder.length ? mergeNewCols(colOrder) : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
   const TH = activeColOrder.map((k) => COL_DEFS[k].label);
 
   return (
