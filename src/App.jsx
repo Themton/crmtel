@@ -412,7 +412,13 @@ function CRMApp({ currentUser, onLogout }) {
       if (newEmps.length > 0) { try { await supabase.from("crm_employees").insert(newEmps); } catch {} }
       const allEmp = [...syncedEmp, ...newEmps];
 
-      setCustomers(c); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย
+      const enrichedCust = c.map((cust) => {
+        if (!cust.assigned_to) return cust;
+        return { ...cust, nickname: cust.assigned_to };
+      });
+
+      setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
