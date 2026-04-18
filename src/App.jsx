@@ -419,18 +419,19 @@ function CRMApp({ currentUser, onLogout }) {
       // เก็บพนักงานที่มีเฉพาะใน CRM Tel (ไม่ลบ)
       Object.values(empByEmail).forEach(emp => syncedEmp.push(emp));
 
-      // สร้าง map ชื่อพนักงาน CRM Tel → display_name CRM2
-      const empNameMap = {};
-      syncedEmp.forEach(emp => {
-        if (emp.name) empNameMap[emp.name] = emp.nickname || emp.name;
-        if (emp.nickname) empNameMap[emp.nickname] = emp.nickname;
+      // ดึงชื่อพนักงาน CRM2 (sales_person) จาก orders/upsell → ใส่เป็นชื่อเล่นลูกค้า
+      const [ord, ups] = await Promise.all([safeFetch("orders"), safeFetch("upsell")]);
+      const spMap = {};
+      (ord || []).concat(ups || []).forEach((o) => {
+        if (o.mobile_no && o.sales_person) {
+          const ph = normalizePhone(o.mobile_no);
+          spMap[ph] = o.sales_person;
+        }
       });
-      // ชื่อเล่น = ชื่อพนักงาน CRM2 (display_name) ที่มอบหมายให้ลูกค้า
       const enrichedCust = c.map((cust) => {
-        const assigned = cust.assigned_to;
-        if (!assigned) return cust;
-        const empNick = empNameMap[assigned];
-        return empNick ? { ...cust, nickname: empNick } : cust;
+        const ph = normalizePhone(cust.phone);
+        const sp = spMap[ph];
+        return sp ? { ...cust, nickname: sp } : cust;
       });
 
       setCustomers(enrichedCust); setEmployees(syncedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
