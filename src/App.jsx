@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as XLSX from "xlsx";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
 const USE_DEMO = false;
-const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; if (o.mf) u += `?${o.mf}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; const fetchAll = async () => { let all = []; let offset = 0; const PAGE = 1000; while (true) { const u = `${SUPABASE_URL}/rest/v1/${t}?limit=${PAGE}&offset=${offset}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }; try { const r = await fetch(u, { headers: h }); const d = await r.json().catch(() => []); if (!Array.isArray(d) || d.length === 0) break; all = all.concat(d); if (d.length < PAGE) break; offset += PAGE; } catch { break; } } return { data: all }; }; return { select: () => ({ order: (col, opts) => { const dir = opts?.ascending === false ? "desc" : "asc"; return { range: (from, to) => ({ then: (r, j) => { const u = `${SUPABASE_URL}/rest/v1/${t}?order=${col}.${dir}&limit=${to - from + 1}&offset=${from}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }; return fetch(u, { headers: h }).then(res => res.json()).then(d => r({ data: d })).catch(j); } }), then: (r, j) => fetchAll().then(r).catch(j) }; }, then: (r, j) => fetchAll().then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("DELETE", { mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }), gte: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=gte.${val}` }).then(r).catch(j) }) }) }; } };
+const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; if (o.mf) u += `?${o.mf}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; const fetchAll = async () => { let all = []; let offset = 0; const PAGE = 1000; while (true) { const u = `${SUPABASE_URL}/rest/v1/${t}?limit=${PAGE}&offset=${offset}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }; try { const r = await fetch(u, { headers: h }); const d = await r.json().catch(() => []); if (!Array.isArray(d) || d.length === 0) break; all = all.concat(d); if (d.length < PAGE) break; offset += PAGE; } catch { break; } } return { data: all }; }; return { select: () => ({ order: () => ({ then: (r, j) => fetchAll().then(r).catch(j) }), then: (r, j) => fetchAll().then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("DELETE", { mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }), gte: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=gte.${val}` }).then(r).catch(j) }) }) }; } };
 
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
@@ -93,14 +92,14 @@ function PillDropdown({ label, value, options, onChange, color = "#2563eb" }) {
   const sel = options.find((o) => o.value === value);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
-        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
         {open ? <I.ChevUp /> : <I.ChevDown />}
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", padding: 8, zIndex: 200, minWidth: 200, maxHeight: 360, overflowY: "auto", animation: "fadeIn .15s" }}>
-        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 11, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
+        {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
-          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
+          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
           {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -115,11 +114,11 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
         {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.key && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -134,11 +133,11 @@ function SubjectDropdown({ value, subjects, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
         {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.label && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -159,7 +158,7 @@ function OfferDropdown({ value, onChange }) {
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
-        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 11, color: "#6b7280" }}
+        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
           onMouseEnter={(e) => { if (value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value) e.currentTarget.style.background = "transparent"; }}>
           — ว่าง —
         </button>
@@ -181,14 +180,14 @@ function RatingSelector({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
         {value !== null && value !== undefined ? value : "—"} <I.ChevDown />
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
         {[0,1,2,3,4,5].map((n) => (
-          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 11 }}
+          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
             onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 11, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
             <span style={{ color: "#374151" }}>{{ 0: "ยังไม่ประเมิน", 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
             {value === n && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
@@ -209,10 +208,10 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (editing) {
     return type === "textarea" ? (
       <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 11, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
     ) : (
       <input ref={ref} type={inputType} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 11, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
     );
   }
   let display = value || "—";
@@ -222,41 +221,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
     <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", minHeight: 18, ...sx }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
-      <span style={{ fontSize: 11, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
-    </div>
-  );
-}
-
-function InlineAssignDropdown({ value, employees, onSave }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
-  const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
-  return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <div onClick={() => setOpen(!open)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", fontSize: 11, fontWeight: 600, color: value ? "#92400e" : "#d97706", whiteSpace: "nowrap" }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
-        {value || "ยังไม่มอบหมาย"}
-      </div>
-      {open && <div style={{ position: "absolute", top: "100%", left: 0, background: "#fff", borderRadius: 10, boxShadow: "0 6px 20px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 200, zIndex: 200, animation: "fadeIn .1s" }}>
-        <div onClick={() => { onSave(""); setOpen(false); }} style={{ padding: "6px 12px", cursor: "pointer", fontSize: 11, color: "#9ca3af", borderBottom: "1px solid #f3f4f6" }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-          ยังไม่มอบหมาย
-        </div>
-        <div style={{ maxHeight: 200, overflowY: "auto" }}>
-          {employees.map((em, i) => (
-            <div key={em.id} onClick={() => { onSave(em.name); setOpen(false); }}
-              style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", background: value === em.name ? "#eff6ff" : "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "#f8fafc")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = value === em.name ? "#eff6ff" : "transparent")}>
-              <div style={{ width: 22, height: 22, borderRadius: "50%", background: colors[i % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1)}</div>
-              <span style={{ fontSize: 11, fontWeight: value === em.name ? 700 : 400 }}>{em.nickname || em.name}</span>
-              {value === em.name && <span style={{ marginLeft: "auto", color: "#3b82f6", fontSize: 11 }}>✓</span>}
-            </div>
-          ))}
-        </div>
-      </div>}
+      <span style={{ fontSize: 10, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
     </div>
   );
 }
@@ -267,19 +232,14 @@ function LoginScreen({ onLogin }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [allUsers, setAllUsers] = useState([{ username: "admin", password: "admin123", name: "Admin", role: "admin" }]);
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
-    // Load accounts from shared 'accounts' table (crm-themt2)
+    // ใช้ accounts ตัวเดียวกับ crm-themt2
     supabase.from("accounts").select().then((res) => {
       if (res.data) {
-        const accUsers = res.data.filter((a) => a.active !== false).map((a) => ({
-          username: a.email,
-          password: String(a.password),
-          name: a.display_name || a.email,
-          role: a.role === "admin" ? "admin" : a.role === "supervisor" ? "supervisor" : "employee"
-        }));
-        setAllUsers(accUsers.length > 0 ? accUsers : [{ username: "admin", password: "admin123", name: "Admin", role: "admin" }]);
+        const accUsers = res.data.filter(a=>a.active).map((a) => ({ username: a.email, password: String(a.password), name: a.display_name||a.email, role: a.role==="admin"?"admin":"employee" }));
+        setAllUsers(accUsers);
       }
     });
   }, []);
@@ -299,35 +259,35 @@ function LoginScreen({ onLogin }) {
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ width: 140, height: 140, objectFit: "contain", marginBottom: 16 }} />
           <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, margin: 0 }}>CRM THE MT</h1>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, marginTop: 8 }}>เพราะคุณคือ สุดยอดนักขายมือทอง</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, marginTop: 8 }}>เพราะคุณคือ สุดยอดนักขายมือทอง</p>
         </div>
 
         {/* Login Card */}
         <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", marginBottom: 28, textAlign: "center" }}>เข้าสู่ระบบ</h2>
 
-          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 11, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
+          {error && <div style={{ background: "#fee2e2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, fontWeight: 600, textAlign: "center", animation: "fadeIn .2s" }}>{error}</div>}
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Email</label>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>ชื่อผู้ใช้</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="email@example.com"
-                style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username"
+                style={{ width: "100%", padding: "12px 14px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
                 onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }} />
             </div>
           </div>
 
           <div style={{ marginBottom: 28 }}>
-            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 8 }}>รหัสผ่าน</label>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 8 }}>รหัสผ่าน</label>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}>
                 <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
               </span>
               <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPass ? "text" : "password"} placeholder="password"
-                style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                style={{ width: "100%", padding: "12px 44px 12px 44px", borderRadius: 12, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
                 onFocus={(e) => { e.target.style.borderColor = "#d4a017"; e.target.style.fontWeight = "700"; }} onBlur={(e) => { e.target.style.borderColor = "#e5e7eb"; e.target.style.fontWeight = "400"; }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(e); }} />
               <button onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 0 }}>
@@ -355,28 +315,13 @@ function LoginScreen({ onLogin }) {
 // ---- MAIN WRAPPER ----
 export default function AppWrapper() {
   const [user, setUser] = useState(() => {
-    try {
-      // Check crmtel session first
-      const s = sessionStorage.getItem("crm_user");
-      if (s) return JSON.parse(s);
-      // Check crm-themt2 login (shared localStorage on same origin)
-      const ps = localStorage.getItem("ps_user");
-      if (ps) {
-        const psUser = JSON.parse(ps);
-        const mapped = {
-          username: psUser.username,
-          password: psUser.password,
-          name: psUser.displayName || psUser.username,
-          role: psUser.role === "admin" ? "admin" : psUser.role === "supervisor" ? "supervisor" : "employee"
-        };
-        sessionStorage.setItem("crm_user", JSON.stringify(mapped));
-        return mapped;
-      }
-      return null;
-    } catch { return null; }
+    try { const s = sessionStorage.getItem("crm_user"); if(s) return JSON.parse(s); } catch {}
+    // Shared login — เช็คจาก crm-themt2
+    try { const p = localStorage.getItem("ps_user"); if(p){ var u=JSON.parse(p); return {username:u.username,name:u.displayName||u.username,role:u.role==="admin"?"admin":"employee",password:""}; } } catch {}
+    return null;
   });
-  const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); };
-  const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); };
+  const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); localStorage.setItem("ps_user", JSON.stringify({username:u.username,displayName:u.name,role:u.role==="admin"?"admin":"user",active:true})); };
+  const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); localStorage.removeItem("ps_user"); };
   if (!user) return <LoginScreen onLogin={handleLogin} />;
   return <CRMApp currentUser={user} onLogout={handleLogout} />;
 }
@@ -405,8 +350,6 @@ function CRMApp({ currentUser, onLogout }) {
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
-  const [colStats, setColStats] = useState(null);
-  const [footerStats, setFooterStats] = useState({});
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null);
@@ -415,16 +358,17 @@ function CRMApp({ currentUser, onLogout }) {
   const [advFilters, setAdvFilters] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_advFilters")) || []; } catch { return []; } });
   const [empFilter, setEmpFilter] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_empFilter")) || []; } catch { return []; } });
   const [empSearch, setEmpSearch] = useState("");
+  const [sortCol, setSortCol] = useState("");
+  const [sortDir, setSortDir] = useState("asc");
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState(() => sessionStorage.getItem("crm_promoFilter") || "");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
   const [colOrderLoaded, setColOrderLoaded] = useState(false);
-  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
-  const [activityLog, setActivityLog] = useState([]);
   const fileRef = useRef(null);
   const [pageSize, setPageSize] = useState(100);
+  const [viewMode, setViewMode] = useState("table"); // "table" or "list"
   const PAGE_SIZE = pageSize;
   const [lastChecked, setLastChecked] = useState(null);
 
@@ -439,22 +383,31 @@ function CRMApp({ currentUser, onLogout }) {
   useEffect(() => { sessionStorage.setItem("crm_promoFilter", promoFilter); }, [promoFilter]);
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
+  const normalizePhone = (p) => { let s = String(p || "").replace(/\D/g, ""); if (s.length === 9) s = "0" + s; return s; };
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, rawAccounts, s, cs, sv, tr] = await Promise.all([
-        safeFetch("crm_customers"), safeFetch("accounts"), safeFetch("crm_statuses"),
+      const [c, e, s, cs, sv, tr] = await Promise.all([
+        safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
       ]);
-      // Map accounts to employees format
-      const e = (rawAccounts || []).filter((a) => a.active !== false).map((a) => ({
-        id: a.id, name: a.display_name || a.email, nickname: a.display_name || "", username: a.email,
-        email: a.email, role: a.role === "admin" ? "admin" : a.role === "supervisor" ? "supervisor" : "employee",
-        password: a.password, department: a.role || "employee"
-      }));
-      setCustomers(c); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
-      // Fetch activity log
-      try { const logRes = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).range(0, 199); if (logRes.data) setActivityLog(logRes.data); } catch {}
+      // ดึงชื่อจาก CRM2 (orders + upsell) เพื่อใช้เป็นชื่อเล่น
+      const [ord, ups] = await Promise.all([safeFetch("orders"), safeFetch("upsell")]);
+      const nameMap = {};
+      ord.concat(ups).forEach((o) => {
+        if (o.mobile_no && o.name) {
+          const ph = normalizePhone(o.mobile_no);
+          if (!nameMap[ph]) nameMap[ph] = o.name;
+        }
+      });
+      // เติมชื่อเล่นจาก CRM2 ถ้ายังไม่มี
+      const enriched = c.map((cust) => {
+        if (cust.nickname) return cust;
+        const ph = normalizePhone(cust.phone);
+        const crm2Name = nameMap[ph];
+        return crm2Name ? { ...cust, nickname: crm2Name } : cust;
+      });
+      setCustomers(enriched); setEmployees(e); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
@@ -500,6 +453,7 @@ function CRMApp({ currentUser, onLogout }) {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   // Auto-refresh: check for changes every 2 seconds (lightweight)
+  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
   useEffect(() => {
     const checkForChanges = async () => {
       try {
@@ -541,24 +495,30 @@ function CRMApp({ currentUser, onLogout }) {
   }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
-  const tableMap = { crm_customers: setCustomers, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
+  const tableMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
 
   // ---- SAVE (ADD / EDIT) ----
   const handleSave = async (table, data, mode) => {
     if (mode === "add") {
       const { id, ...rest } = data;
-      if (table === "crm_customers" && !rest.created_at) rest.created_at = new Date().toISOString();
       const res = await supabase.from(table).insert(rest);
       if (res.data) showToast("เพิ่มสำเร็จ");
       else showToast("เกิดข้อผิดพลาด", "warning");
+      // Sync พนักงาน → accounts (shared login)
+      if (table === "crm_employees" && rest.username) {
+        await supabase.from("accounts").insert({ email: rest.username, password: rest.password || "1234", display_name: rest.name, role: "user", active: true });
+      }
     } else {
       const { id, ...rest } = data;
       await supabase.from(table).update(rest).eq("id", id);
       showToast("บันทึกแล้ว");
+      // Sync แก้ไขพนักงาน → accounts
+      if (table === "crm_employees" && rest.username) {
+        await supabase.from("accounts").update({ password: rest.password || "1234", display_name: rest.name }).eq("email", rest.username);
+      }
     }
     setModal(null);
     await fetchAll(); broadcastChange();
-    if (table === "crm_customers") logActivity(mode === "add" ? "เพิ่มลูกค้า" : "แก้ไขลูกค้า", data.name || "");
   };
 
   // ---- DELETE → MOVE TO TRASH ----
@@ -568,26 +528,20 @@ function CRMApp({ currentUser, onLogout }) {
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
       if (item) {
-        const trashRow = { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
-        let res = await supabase.from("crm_trash").insert(trashRow);
-        if (res.error) {
-          console.error("Trash insert error:", res.error);
-          // Fallback: try with minimal columns
-          const minRow = { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", status: item.status || "", assigned_to: item.assigned_to || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
-          res = await supabase.from("crm_trash").insert(minRow);
-          if (res.error) {
-            showToast("❌ ย้ายถังขยะไม่ได้: " + res.error.message, "warning");
-            return;
-          }
-        }
+        const { id: oid, ...rest } = item;
+        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
       }
     }
     setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
+    // ลบพนักงาน → ปิด accounts ด้วย
+    if (table === "crm_employees") {
+      const emp = employees.find((e) => e.id === id);
+      if (emp && emp.username) await supabase.from("accounts").update({ active: false }).eq("email", emp.username);
+    }
     await supabase.from(table).delete().eq("id", id);
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
-    if (table === "crm_customers") logActivity("ลบลูกค้า", item?.name || "id:" + id);
     showToast("ลบสำเร็จ ✓");
   };
 
@@ -600,19 +554,11 @@ function CRMApp({ currentUser, onLogout }) {
     const trashRows = selectedRows.map((rid) => {
       const item = customers.find((c) => c.id === rid);
       if (!item) return null;
-      return { name: item.name || "", phone: item.phone || "", note: item.note || "", previous_promo: item.previous_promo || "", order_date: item.order_date || null, received_product: item.received_product || false, status: item.status || "", assigned_to: item.assigned_to || "", supervisor: item.supervisor || "", call_subject: item.call_subject || "", call_date: item.call_date || "", call_note: item.call_note || "", customer_relation: item.customer_relation || 0, next_follow: item.next_follow || "", product_price: item.product_price || 0, nickname: item.nickname || "", original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+      const { id: oid, ...rest } = item;
+      return { ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
     }).filter(Boolean);
     for (let b = 0; b < Math.ceil(trashRows.length / BATCH); b++) {
-      const batch = trashRows.slice(b * BATCH, (b + 1) * BATCH);
-      let res = await supabase.from("crm_trash").insert(batch);
-      if (res.error) {
-        console.error("Trash batch error:", res.error);
-        // Fallback: insert one by one with minimal columns
-        for (const row of batch) {
-          const minRow = { name: row.name || "", phone: row.phone || "", note: row.note || "", previous_promo: row.previous_promo || "", status: row.status || "", assigned_to: row.assigned_to || "", original_id: row.original_id, deleted_at: row.deleted_at, deleted_by: row.deleted_by };
-          await supabase.from("crm_trash").insert(minRow);
-        }
-      }
+      await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
       setProgress({ current: Math.min((b + 1) * BATCH, total) * 0.5, total, label: "กำลังย้ายไปถังขยะ..." });
     }
     // Batch delete from customers
@@ -624,7 +570,6 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress(null);
     setSelectedRows([]);
     await fetchAll(); broadcastChange();
-    logActivity("ลบหลายรายการ", total + " ลูกค้า", total);
     showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -640,7 +585,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
-    logActivity("กู้คืน", item?.name || ""); showToast("กู้คืนสำเร็จ ✓");
+    showToast("กู้คืนสำเร็จ ✓");
   };
 
   const handlePermanentDelete = async (id) => {
@@ -650,7 +595,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
     setProgress(null);
     await fetchAll(); broadcastChange();
-    logActivity("ลบถาวร", "id:" + id); showToast("ลบถาวรสำเร็จ ✓");
+    showToast("ลบถาวรสำเร็จ ✓");
   };
 
   const handleEmptyTrash = async () => {
@@ -667,166 +612,84 @@ function CRMApp({ currentUser, onLogout }) {
   const broadcastChange = async () => {
     try { await supabase.from("crm_settings").delete().eq("key", "last_updated"); await supabase.from("crm_settings").insert({ key: "last_updated", value: Date.now().toString() }); } catch {}
   };
-  const logActivity = async (action, detail, count = 1) => {
-    try {
-      const res = await supabase.from("crm_activity_log").insert({ user_name: currentUser?.name || "unknown", action, detail, count, created_at: new Date().toISOString() });
-      if (res.error) console.error("logActivity error:", res.error.message);
-      // Refresh log
-      const logRes = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).range(0, 199);
-      if (logRes.data) setActivityLog(logRes.data);
-      if (logRes.error) console.error("fetchLog error:", logRes.error.message);
-    } catch (e) { console.error("logActivity catch:", e); }
-  };
   const upd = async (id, f, v) => {
-    const item = customers.find((c) => c.id === id);
     setCustomers((p) => p.map((c) => c.id === id ? { ...c, [f]: v } : c));
     await supabase.from("crm_customers").update({ [f]: v }).eq("id", id);
-    logActivity("แก้ไข", (item?.name || "") + " → " + (COL_DEFS[f]?.label || f) + ": " + String(v).slice(0, 50));
     broadcastChange();
   };
 
-  // ---- IMPORT CSV/XLSX ----
-  const processImportRows = async (headers, dataRows, fileInput) => {
-    console.log("processImportRows called:", { headerCount: headers.length, rowCount: dataRows.length });
-    console.log("Headers:", headers);
-    if (dataRows.length > 0) console.log("First data row:", dataRows[0]);
-    const ni = headers.findIndex((h) => h === "ชื่อ" || h === "name");
-    const pi = headers.findIndex((h) => h === "เบอร์โทร" || h.includes("phone"));
-    const noi = headers.findIndex((h) => h === "ที่อยู่" || h === "note" || h === "address");
-    const pri = headers.findIndex((h) => h === "โปรก่อนหน้า" || h.includes("promo"));
-    const csi = headers.findIndex((h) => h === "หัวข้อโทร" || h === "call_subject" || h === "subject");
-    const odi = headers.findIndex((h) => h === "วันที่สั่งซื้อ" || h === "order_date");
-    const rpi = headers.findIndex((h) => h === "ได้รับสินค้า" || h.includes("received"));
-    const nni = headers.findIndex((h) => h === "ชื่อเล่น" || h === "nickname");
-    const sti = headers.findIndex((h) => h === "สถานะ" || h === "status");
-    const ati = headers.findIndex((h) => h === "มอบหมาย" || h.includes("assigned") || h === "assign");
-    const cdi = headers.findIndex((h) => h === "วันที่โทร" || h === "call_date");
-    const cni = headers.findIndex((h) => h === "หมายเหตุ" || h === "call_note");
-    const cri = headers.findIndex((h) => h.includes("ความสัมพันธ์") || h === "customer_relation" || h === "relation");
-    const nfi = headers.findIndex((h) => h === "ครั้งถัดไป" || h === "next_follow" || h === "follow");
-    const ppi = headers.findIndex((h) => h === "โปรสินค้า" || h === "product_price");
-    const svi = headers.findIndex((h) => h === "หัวหน้า" || h === "supervisor");
-    if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
-    console.log("Import columns matched:", { ชื่อ: ni, เบอร์โทร: pi, ที่อยู่: noi, โปรก่อนหน้า: pri, หัวข้อโทร: csi, วันที่สั่งซื้อ: odi, ได้รับสินค้า: rpi, ชื่อเล่น: nni, สถานะ: sti, มอบหมาย: ati, วันที่โทร: cdi, หมายเหตุ: cni, ความสัมพันธ์: cri, ครั้งถัดไป: nfi, โปรสินค้า: ppi, หัวหน้า: svi });
-    const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
-    const successList = []; const dupeList = []; const failList = [];
-    const allRows = [];
-    for (const v of dataRows) {
-      const name = ni >= 0 ? String(v[ni] ?? "").trim() : "";
-      let phone = pi >= 0 ? String(v[pi] ?? "").trim() : "";
-      // Fix phone: XLSX might strip leading zero from numbers
-      if (phone && /^\d{9}$/.test(phone)) phone = "0" + phone;
-      if (!name && !phone) continue;
-      const cleanPhone = phone.replace(/\D/g, "");
-      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: csi >= 0 ? String(v[csi] || "") : "", order_date: odi >= 0 ? String(v[odi] || "") : "", assigned_to: ati >= 0 ? String(v[ati] || "") : "", status: sti >= 0 ? String(v[sti] || "") : "" }); continue; }
-      if (cleanPhone) existingPhones.add(cleanPhone);
-      const orderDate = odi >= 0 ? String(v[odi] || "") : "";
-      const rawSubject = csi >= 0 ? String(v[csi] || "").trim() : "";
-      const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-      const rawStatus = sti >= 0 ? String(v[sti] || "").trim() : "";
-      const matchedStatus = statuses.find((s) => s.label === rawStatus) || statuses.find((s) => s.label.toLowerCase() === rawStatus.toLowerCase()) || statuses.find((s) => s.key === rawStatus);
-      // Parse date helper: handles many formats → ISO or null
-      const parseDate = (str) => {
-        if (!str) return null;
-        const s = String(str).trim();
-        if (!s) return null;
-        const fixYear = (yy) => { let y = parseInt(yy); if (y > 2400) y -= 543; if (y >= 43 && y < 100) y += 1957; else if (y < 100) y += 2000; return y; };
-        // "HH:MM DD/MM/YYYY"
-        const m1 = s.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-        if (m1) { const y = fixYear(m1[5]); return y + "-" + m1[4].padStart(2,"0") + "-" + m1[3].padStart(2,"0") + "T" + m1[1].padStart(2,"0") + ":" + m1[2] + ":00"; }
-        // "DD/MM/YYYY" or "DD/MM/YY" or "DD/M/YY"
-        const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-        if (m2) { const y = fixYear(m2[3]); return y + "-" + m2[2].padStart(2,"0") + "-" + m2[1].padStart(2,"0"); }
-        // ISO format already
-        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-        // Try native parse
-        const d = new Date(s);
-        if (!isNaN(d.getTime()) && d.getFullYear() > 1900) return d.toISOString().slice(0, 10);
-        return null;
-      };
-      const rpVal = rpi >= 0 ? String(v[rpi] || "") : "";
-      const ppVal = ppi >= 0 ? String(v[ppi] || "") : "";
-      const ppNum = /^\d+\.?\d*$/.test(ppVal.trim()) ? Number(ppVal) : 0;
-      allRows.push({ name, phone, note: noi >= 0 ? String(v[noi] || "") : "", previous_promo: pri >= 0 ? String(v[pri] || "") : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: parseDate(orderDate), received_product: rpVal.includes("ได้รับ") || rpVal === "true" || rpVal === "1", nickname: nni >= 0 ? String(v[nni] || "") : "", status: matchedStatus ? matchedStatus.key : "not_called", assigned_to: ati >= 0 ? String(v[ati] || "") : "", call_date: cdi >= 0 ? parseDate(String(v[cdi] || "")) : null, call_note: cni >= 0 ? String(v[cni] || "") : "", customer_relation: cri >= 0 ? (parseInt(v[cri]) || 0) : 0, next_follow: nfi >= 0 ? parseDate(String(v[nfi] || "")) : null, product_price: ppNum, supervisor: svi >= 0 ? String(v[svi] || "") : "", created_at: new Date().toISOString() });
-    }
-    console.log("Import result:", { allRows: allRows.length, dupes: dupeList.length, existingPhones: existingPhones.size });
-    if (allRows.length > 0) console.log("First row to insert:", allRows[0]);
-    if (allRows.length) {
-      const BATCH = 50;
-      const totalBatches = Math.ceil(allRows.length / BATCH);
-      setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล " + allRows.length + " รายการ..." });
-      for (let b = 0; b < totalBatches; b++) {
-        const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
-        const res = await supabase.from("crm_customers").insert(batch);
-        if (res.error) {
-          console.error("Batch insert error:", res.error.message, res.error);
-          for (const row of batch) {
-            const r2 = await supabase.from("crm_customers").insert(row);
-            if (!r2.error) successList.push({ name: row.name, phone: row.phone });
-            else { failList.push({ name: row.name, phone: row.phone, error: r2.error.message }); console.error("Row insert error:", row.name, r2.error.message); }
-          }
-        } else {
-          batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
-        }
-        setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-      }
-      await fetchAll(); broadcastChange();
-      setProgress(null);
-    }
-    setImportResult({ success: successList, dupes: dupeList, fails: failList });
-    if (successList.length > 0) logActivity("นำเข้าข้อมูล", successList.length + " รายการ (ซ้ำ " + dupeList.length + ")", successList.length);
-    if (successList.length === 0 && dupeList.length === 0 && allRows.length === 0) {
-      showToast("ไม่พบข้อมูลที่ import ได้ (ตรวจสอบหัวคอลัมน์)", "warning");
-    }
-    if (fileInput) fileInput.value = "";
-  };
-
+  // ---- IMPORT CSV ----
   const handleImport = (e) => {
     const file = e.target.files[0]; if (!file) return;
-    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
-    
-    if (isExcel) {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const wb = XLSX.read(new Uint8Array(ev.target.result), { type: "array" });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-          if (data.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-          const headers = data[0].map((h) => String(h || "").toLowerCase());
-          const dataRows = data.slice(1);
-          console.log("XLSX Import:", data.length + " rows, headers:", headers);
-          await processImportRows(headers, dataRows, e.target);
-        } catch (err) {
-          console.error("XLSX Import error:", err);
-          showToast("❌ อ่านไฟล์ XLSX ไม่ได้: " + err.message, "warning");
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      let text = ev.target.result;
+      // Strip BOM
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      const lines = text.split(/\r?\n/).filter((l) => l.trim());
+      if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
+      // Parse CSV properly (handle commas inside quotes)
+      const parseCSVLine = (line) => {
+        const result = []; let cur = ""; let inQuote = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQuote = !inQuote; }
+          else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
+          else { cur += ch; }
         }
+        result.push(cur.trim());
+        return result;
       };
-      reader.readAsArrayBuffer(file);
-    } else {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        let text = ev.target.result;
-        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-        const lines = text.split(/\r?\n/).filter((l) => l.trim());
-        if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-        const parseCSVLine = (line) => {
-          const result = []; let cur = ""; let inQuote = false;
-          for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') { inQuote = !inQuote; }
-            else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
-            else { cur += ch; }
+      const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
+      const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
+      const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
+      const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
+      const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
+      const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
+      const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
+      const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
+      const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
+      if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
+      const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
+      const successList = []; const dupeList = [];
+      const allRows = [];
+      for (let i = 1; i < lines.length; i++) {
+        const v = parseCSVLine(lines[i]).map((x) => x.replace(/^"|"$/g, ""));
+        const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
+        if (!name && !phone) continue;
+        const cleanPhone = phone.replace(/\D/g, "");
+        if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
+        if (cleanPhone) existingPhones.add(cleanPhone);
+        const orderDate = odi >= 0 ? v[odi] || "" : "";
+        const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
+        const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", status: "not_called" });
+      }
+      if (allRows.length) {
+        const BATCH = 50;
+        const totalBatches = Math.ceil(allRows.length / BATCH);
+        setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+        for (let b = 0; b < totalBatches; b++) {
+          const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
+          const res = await supabase.from("crm_customers").insert(batch);
+          if (res.error) {
+            // Fallback: insert one by one
+            for (const row of batch) {
+              const r2 = await supabase.from("crm_customers").insert(row);
+              if (!r2.error) successList.push({ name: row.name, phone: row.phone });
+            }
+          } else {
+            batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
           }
-          result.push(cur.trim());
-          return result;
-        };
-        const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
-        const dataRows = lines.slice(1).map((line) => parseCSVLine(line).map((x) => x.replace(/^"|"$/g, "")));
-        await processImportRows(headers, dataRows, e.target);
-      };
-      reader.readAsText(file);
-    }
+          setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+        }
+        await fetchAll(); broadcastChange();
+        setProgress(null);
+      }
+      setImportResult({ success: successList, dupes: dupeList });
+      e.target.value = "";
+    };
+    reader.readAsText(file);
   };
 
   // ---- SUPERVISOR ASSIGN ----
@@ -857,7 +720,6 @@ function CRMApp({ currentUser, onLogout }) {
       }
     }
     showToast("กระจาย " + total + " ลูกค้าสำเร็จ ✓ → " + summary);
-    logActivity("มอบหมาย", summary, total);
     setSuccessModal({ count: total, detail: summary });
     setAssignSelected([]); setAssignEmployees([]);
   };
@@ -877,8 +739,8 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   const handleExport = () => {
-    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น","วันที่สร้าง"];
-    const rows = customers.map((c) => { const stLabel = statuses.find((s) => s.key === c.status)?.label || c.status; return [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,stLabel,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname,c.created_at].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","); });
+    const h = ["ชื่อ","เบอร์โทร","ที่อยู่","โปรก่อนหน้า","วันที่สั่งซื้อ","ได้รับสินค้า","สถานะ","มอบหมาย","หัวหน้า","หัวข้อโทร","วันที่โทร","หมายเหตุ","ความสัมพันธ์","ครั้งถัดไป","โปรสินค้า","ชื่อเล่น"];
+    const rows = customers.map((c) => [c.name,c.phone,c.note,c.previous_promo,c.order_date,c.received_product,c.status,c.assigned_to,c.supervisor,c.call_subject,c.call_date,c.call_note,c.customer_relation,c.next_follow,c.product_price,c.nickname].map((v) => '"' + String(v||"").replace(/"/g,'""') + '"').join(","));
     const blob = new Blob(["\uFEFF" + [h.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "crm_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
   };
@@ -893,10 +755,7 @@ function CRMApp({ currentUser, onLogout }) {
       // Search
       if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter
-      if (empFilter.length > 0) {
-        if (empFilter.includes("__none__")) { if (c.assigned_to) return false; }
-        else if (!empFilter.includes(c.assigned_to)) return false;
-      }
+      if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
       // Advanced filters
       for (const af of advFilters) {
         if (!af.field || !af.value) continue;
@@ -906,31 +765,22 @@ function CRMApp({ currentUser, onLogout }) {
           continue;
         }
         let cv;
-        const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
-        if (af.field === "nickname") {
-          const emp = employees.find((em) => em.name === c.assigned_to);
-          cv = String(emp?.nickname || "").toLowerCase();
-        } else if (dateFields.includes(af.field)) {
-          const raw = c[af.field];
-          try { cv = raw ? new Date(raw).toISOString().slice(0, 10) : ""; } catch { cv = String(raw || "").slice(0, 10); }
-        } else {
-          cv = String(c[af.field] ?? "").toLowerCase();
-        }
+        cv = String(c[af.field] || "").toLowerCase();
         const fv = af.value.toLowerCase();
-        const multiVals = af.value.split("|||").filter(Boolean);
-        if (multiVals.length > 1) {
-          // Multi-select: match any
-          if (af.op === "eq" && !multiVals.some((mv) => cv === mv.toLowerCase())) return false;
-          if (af.op === "neq" && multiVals.some((mv) => cv === mv.toLowerCase())) return false;
-          if (af.op === "contains" && !multiVals.some((mv) => cv.includes(mv.toLowerCase()))) return false;
-        } else {
-          if (af.op === "contains" && !cv.includes(fv)) return false;
-          if (af.op === "eq" && cv !== fv) return false;
-          if (af.op === "neq" && cv === fv) return false;
-        }
+        if (af.op === "contains" && !cv.includes(fv)) return false;
+        if (af.op === "eq" && cv !== fv) return false;
+        if (af.op === "neq" && cv === fv) return false;
       }
       return true;
     });
+    // Sort
+    if (sortCol) {
+      result = [...result].sort((a, b) => {
+        const av = a[sortCol] ?? ""; const bv = b[sortCol] ?? "";
+        const cmp = typeof av === "number" ? av - bv : String(av).localeCompare(String(bv));
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
     return result;
   })();
 
@@ -942,12 +792,12 @@ function CRMApp({ currentUser, onLogout }) {
   const svC = selectedSupervisor ? customers.filter((c) => c.supervisor === selectedSupervisor.name) : [];
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
-  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 11, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
-  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 11, cursor: "pointer" };
+  const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
+  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" };
   const bi = (d) => ({ padding: "6px 8px", borderRadius: 8, border: "1px solid " + (d ? "#fee2e2" : "#e5e7eb"), background: "#fff", cursor: "pointer", color: d ? "#ef4444" : "#6b7280", display: "flex", alignItems: "center" });
-  const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 11, cursor: "pointer" };
-  const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box" };
-  const lS = { display: "block", fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 6 };
+  const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer" };
+  const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" };
+  const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Column definitions - key, label, render function
   const COL_DEFS = {
@@ -956,7 +806,7 @@ function CRMApp({ currentUser, onLogout }) {
     note: { label: "ที่อยู่", render: (c) => <EditableCell value={c.note} onSave={(v) => upd(c.id, "note", v)} type="textarea" />, maxW: 180 },
     previous_promo: { label: "โปรก่อนหน้า", render: (c) => <EditableCell value={c.previous_promo} onSave={(v) => upd(c.id, "previous_promo", v)} /> },
     order_date: { label: "วันที่สั่งซื้อ", render: (c) => <EditableCell value={c.order_date} onSave={(v) => upd(c.id, "order_date", v)} type="datetime" /> },
-    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", false)}>✓ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 11 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
+    received_product: { label: "ได้รับสินค้า", render: (c) => c.received_product ? <span style={{ color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: 9 }} onClick={() => upd(c.id, "received_product", false)}>✓ได้รับ</span> : <span style={{ color: "#d97706", cursor: "pointer", fontSize: 9 }} onClick={() => upd(c.id, "received_product", true)}>รอส่ง</span> },
     status: { label: "สถานะ", render: (c) => <InlineStatusDropdown value={c.status} statuses={statuses} onChange={(v) => { upd(c.id, "status", v); if (c.status === "not_called" && v !== "not_called") upd(c.id, "call_date", new Date().toISOString().slice(0, 10)); }} />, minW: 120 },
     call_subject: { label: "หัวข้อโทร", render: (c) => <SubjectDropdown value={c.call_subject} subjects={callSubjects} onChange={(v) => upd(c.id, "call_subject", v)} /> },
     call_date: { label: "วันที่โทร", render: (c) => <EditableCell value={c.call_date} onSave={(v) => upd(c.id, "call_date", v)} type="date" /> },
@@ -964,17 +814,11 @@ function CRMApp({ currentUser, onLogout }) {
     customer_relation: { label: "ความสัมพันธ์ลูกค้า", render: (c) => <RatingSelector value={c.customer_relation} onChange={(v) => upd(c.id, "customer_relation", v)} /> },
     next_follow: { label: "ครั้งถัดไป", render: (c) => <EditableCell value={c.next_follow} onSave={(v) => upd(c.id, "next_follow", v)} type="date" /> },
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
-    assigned_to: { label: "มอบหมาย", render: (c) => <InlineAssignDropdown value={c.assigned_to} employees={employees} onSave={(v) => upd(c.id, "assigned_to", v)} /> },
-    nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{(() => { const emp = employees.find((e) => e.name === c.assigned_to); return emp?.nickname || ""; })()}</span> },
-    created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { return new Date(c.created_at).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return c.created_at; } })() : "—"}</span> },
+    assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 9, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
+    nickname: { label: "ชื่อเล่น", render: (c) => <EditableCell value={c.nickname} onSave={(v) => upd(c.id, "nickname", v)} /> },
   };
-  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname","created_at"];
-  // Merge missing columns into saved order
-  const mergeNewCols = (saved) => {
-    const missing = DEFAULT_COL_ORDER.filter((k) => !saved.includes(k));
-    return missing.length > 0 ? [...saved, ...missing] : saved;
-  };
-  const activeColOrder = (colOrder.length ? mergeNewCols(colOrder) : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
+  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
+  const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
   const TH = activeColOrder.map((k) => COL_DEFS[k].label);
 
   return (
@@ -986,23 +830,23 @@ function CRMApp({ currentUser, onLogout }) {
         <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM THE MT</span>
         {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }} className={notifications.length > 0 ? "bell-shake" : ""}>
               🔔
-              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 11, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
+              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
             </button>
             {showNotif && <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 340, zIndex: 200, animation: "fadeIn .15s" }}>
               <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
-                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>อ่านทั้งหมด</button>}
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
+                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>อ่านทั้งหมด</button>}
               </div>
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 {notifications.length === 0 ? (
-                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 11 }}>ไม่มีแจ้งเตือน</div>
+                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>ไม่มีแจ้งเตือน</div>
                 ) : notifications.map((n) => (
                   <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", background: "#fffbeb" }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 11, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
                       <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
@@ -1012,17 +856,21 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
           </div>
-          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
+          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
         <nav style={{ width: sidebarOpen ? 220 : 60, background: "#fff", borderRight: "1px solid #e5e7eb", padding: "20px 0", flexShrink: 0, transition: "width 0.25s ease", overflow: "hidden" }}>
-          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "supervisor", label: "ประวัติการใช้งาน", icon: <I.Chart />, role: "admin" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => currentUser?.role === "supervisor" ? (t.supervisor === currentUser?.name || t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name) : (t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name)).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
+          {[{ key: "dashboard", label: "แดชบอร์ด", icon: <I.Chart />, role: "all" }, { key: "customers", label: "ลูกค้า", icon: <I.Users />, role: "all" }, { key: "employees", label: "พนักงาน", icon: <I.User />, role: "admin" }, { key: "trash", label: "ข้อมูลที่ลบแล้ว (" + (currentUser?.role === "admin" ? trash.length : trash.filter((t) => currentUser?.role === "supervisor" ? (t.supervisor === currentUser?.name || t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name) : (t.assigned_to === currentUser?.name || t.deleted_by === currentUser?.name)).length) + ")", icon: <I.Trash2 />, role: "all" }, { key: "settings", label: "ตั้งค่าระบบ", icon: <I.Settings />, role: "admin" }].filter((item) => item.role === "all" || currentUser?.role === "admin").map((item) => (
             <button key={item.key} onClick={() => { setTab(item.key); setSearch(""); setSelectedRows([]); setAdvFilters([]); setEmpFilter([]); setToolbarTab(null); setAssignSelected([]); setPromoFilter(""); setPage(1); }}
               title={item.label}
-              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 11, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
             </button>))}
+          {/* ลิงก์ไป Telesale */}
+          <a href="https://themton.github.io/crm-themt2/" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: "linear-gradient(90deg, #eff6ff, #dbeafe)", color: "#1d4ed8", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: "3px solid #3b82f6", whiteSpace: "nowrap", textDecoration: "none", boxSizing: "border-box", marginTop: 8 }}>
+            <span style={{ flexShrink: 0 }}>📋</span> {sidebarOpen && "ระบบ Telesale →"}
+          </a>
         </nav>
         <main style={{ flex: 1, padding: 28, overflowY: tab === "customers" ? "hidden" : "auto", overflowX: "hidden" }}>
 
@@ -1053,12 +901,12 @@ function CRMApp({ currentUser, onLogout }) {
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
-                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>🔄 รีเฟรช</button>
+                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
               </div>
             </div>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
-              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
+              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
@@ -1072,7 +920,7 @@ function CRMApp({ currentUser, onLogout }) {
                       <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</span>
                         <div style={{ width: "100%", maxWidth: 50, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
-                        <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
+                        <span style={{ fontSize: 10, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
                       </div>
                     );
                   })}
@@ -1091,10 +939,10 @@ function CRMApp({ currentUser, onLogout }) {
                       const dateStr = (() => { try { const dt = new Date(d + "T00:00:00"); return dt.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }); } catch { return d; } })();
                       return (
                         <div key={d} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#d4a017" }}>{dailyCalls[d].total}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#d4a017" }}>{dailyCalls[d].total}</span>
                           <div style={{ width: "100%", maxWidth: 40, borderRadius: "8px 8px 0 0", background: "linear-gradient(180deg, #2563eb, #38bdf8)", height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8, cursor: "pointer", position: "relative" }}
                             title={Object.entries(dailyCalls[d]).filter(([k]) => k !== "total").map(([k, v]) => k + ": " + v).join(", ")} />
-                          <span style={{ fontSize: 11, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
+                          <span style={{ fontSize: 9, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.1 }}>{dateStr}</span>
                         </div>
                       );
                     })}
@@ -1107,7 +955,7 @@ function CRMApp({ currentUser, onLogout }) {
             {dailyKeys.length > 0 && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 16 }}>สรุปรายวัน</h3>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017" }}>โทรแล้ว</th>
@@ -1118,10 +966,10 @@ function CRMApp({ currentUser, onLogout }) {
                     {[...dailyKeys].reverse().map((d, idx) => {
                       const dateStr = (() => { try { return new Date(d + "T00:00:00").toLocaleDateString("th-TH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })();
                       return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#fffbeb" : "transparent" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
+                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
                         <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017", fontSize: 16 }}>{dailyCalls[d].total}</td>
-                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
-                        <td style={{ padding: "10px 14px", fontSize: 11 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
+                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
+                        <td style={{ padding: "10px 14px", fontSize: 12 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
                       </tr>;
                     })}
                   </tbody>
@@ -1136,13 +984,13 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>ลูกค้า ({fc.length})</h2>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {selectedRows.length > 0 && <>
+                {selectedRows.length > 0 && currentUser?.role === "admin" && <>
                   <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #d4a017", background: "#fffbeb", color: "#d4a017" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
-                  {currentUser?.role === "admin" && <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>}
+                  <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
                 </>}
-                <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={handleImport} style={{ display: "none" }} />
+                <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
-                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 11, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
+                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
               </div>
@@ -1156,22 +1004,22 @@ function CRMApp({ currentUser, onLogout }) {
                 const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
                 if (allPrices.length === 0) return null;
                 return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
-                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
+                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
                   {allPrices.map((p) => {
                     const count = myC.filter((c) => extractPrice(c.previous_promo) === p).length;
-                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
                   })}
                 </div>;
               })()}
               <div style={{ display: "flex", gap: 0, borderBottom: "1px solid #e5e7eb", overflowX: "auto" }}>
                 {[
                   { key: "filter", label: "ตัวกรอง", icon: "▼" },
-                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: empFilter.length > 0 ? "👤 " + (empFilter[0] === "__none__" ? "ยังไม่มอบหมาย" : empFilter[0]) : "พนักงาน", icon: empFilter.length > 0 ? "✓" : "👤" }] : []),
+                  ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "employee", label: "พนักงาน", icon: "👤" }] : []),
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
-                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : (t.key === "employee" && empFilter.length > 0 ? "#fef3c7" : "transparent"), color: toolbarTab === t.key ? "#fff" : (t.key === "employee" && empFilter.length > 0 ? "#92400e" : "#6b7280"), fontWeight: 600, fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 8, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -1179,21 +1027,20 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ padding: "6px 12px", display: "flex", alignItems: "center" }}>
                   <div style={{ position: "relative" }}>
                     <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ padding: "7px 12px 7px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, outline: "none", width: 180 }} />
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ padding: "7px 12px 7px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", width: 180 }} />
                   </div>
                 </div>
               </div>
 
               {/* FILTER PANEL */}
-              {toolbarTab === "filter" && (<>
-                <div onClick={() => setToolbarTab(null)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
-                <div style={{ position: "relative", zIndex: 100 }}>
+              {toolbarTab === "filter" && (
+                <div style={{ position: "relative" }}>
                   <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 560, zIndex: 100, animation: "fadeIn .15s" }}>
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>กรอง</span>
-                          <span style={{ fontSize: 11, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>กรอง</span>
+                          <span style={{ fontSize: 13, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
                         </div>
                         <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
                       </div>
@@ -1202,128 +1049,113 @@ function CRMApp({ currentUser, onLogout }) {
                       {advFilters.map((af, idx) => (
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
                           <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
-                            {activeColOrder.map((k) => <option key={k} value={k}>{COL_DEFS[k].label}</option>)}
+                            {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                           </select>
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
                           </select>
-                          {(() => {
-                            const dateFields = ["created_at", "call_date", "next_follow", "order_date"];
-                            const isDateField = dateFields.includes(af.field);
-                            let opts = [];
-                            if (af.field === "status") opts = statuses.map((s) => ({ v: s.key, l: s.label }));
-                            else if (af.field === "call_subject") opts = callSubjects.map((s) => ({ v: s.label, l: s.label }));
-                            else if (af.field === "received_product") opts = [{ v: "true", l: "ได้รับแล้ว" }, { v: "false", l: "รอส่ง" }];
-                            else if (af.field === "customer_relation") opts = [0,1,2,3,4,5].map((n) => ({ v: String(n), l: String(n) }));
-                            else if (af.field === "assigned_to") opts = [{ v: "__unassigned__", l: "ยังไม่มอบหมาย" }, ...employees.map((em) => ({ v: em.name, l: em.name }))];
-                            else if (af.field === "nickname") opts = [...new Set(employees.map((em) => em.nickname).filter(Boolean))].sort().map((n) => ({ v: n, l: n }));
-                            else if (isDateField) opts = [...new Set(customers.map((c2) => { const raw = c2[af.field]; if (!raw) return ""; try { return new Date(raw).toISOString().slice(0, 10); } catch { return ""; } }).filter(Boolean))].sort().reverse().map((d) => ({ v: d, l: (() => { try { return new Date(d).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })() }));
-                            else opts = [...new Set(customers.map((c2) => String(c2[af.field] ?? "")).filter((x) => x !== ""))].sort().map((v) => ({ v, l: v.length > 35 ? v.slice(0, 35) + "..." : v }));
-                            
-                            const selected = (af.value || "").split("|||").filter(Boolean);
-                            const toggle = (val) => { const nf = [...advFilters]; const cur = (nf[idx].value || "").split("|||").filter(Boolean); nf[idx].value = cur.includes(val) ? cur.filter((x) => x !== val).join("|||") : [...cur, val].join("|||"); setAdvFilters(nf); };
-                            
-                            return opts.length > 0 ? (
-                              <div style={{ position: "relative", flex: 1 }}>
-                                <div onClick={(e) => { e.currentTarget.nextSibling.style.display = e.currentTarget.nextSibling.style.display === "none" ? "block" : "none"; }} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, cursor: "pointer", background: "#fff", minHeight: 30, display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-                                  {selected.length === 0 && <span style={{ color: "#9ca3af" }}>เลือก ({opts.length})</span>}
-                                  {selected.slice(0, 3).map((sv) => { const o = opts.find((x) => x.v === sv); return <span key={sv} style={{ padding: "1px 8px", borderRadius: 4, background: "#fef3c7", color: "#92400e", fontSize: 11, fontWeight: 700 }}>{o?.l || sv}</span>; })}
-                                  {selected.length > 3 && <span style={{ fontSize: 11, color: "#9ca3af" }}>+{selected.length - 3}</span>}
-                                </div>
-                                <div style={{ display: "none", position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", zIndex: 200, maxHeight: 200, overflowY: "auto", marginTop: 4 }}>
-                                  {opts.map((o) => (
-                                    <label key={o.v} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", cursor: "pointer", fontSize: 11, background: selected.includes(o.v) ? "#fffbeb" : "transparent" }}
-                                      onMouseEnter={(e2) => { if (!selected.includes(o.v)) e2.currentTarget.style.background = "#f8fafc"; }}
-                                      onMouseLeave={(e2) => { e2.currentTarget.style.background = selected.includes(o.v) ? "#fffbeb" : "transparent"; }}>
-                                      <input type="checkbox" checked={selected.includes(o.v)} onChange={() => toggle(o.v)} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
-                                      <span>{o.l}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : (
-                              <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, flex: 1, outline: "none" }} />
-                            );
-                          })()}
+                          {af.field === "status" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
+                            </select>
+                          ) : af.field === "call_subject" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
+                            </select>
+                          ) : af.field === "received_product" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
+                            </select>
+                          ) : af.field === "customer_relation" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                            </select>
+                          ) : af.field === "assigned_to" ? (
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                              <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
+                            </select>
+                          ) : (
+                            (() => {
+                              const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              return vals.length > 0 && vals.length <= 500 ? (
+                                <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                                  <option value="">เลือก ({vals.length})</option>
+                                  {vals.map((v) => <option key={v} value={v}>{v.length > 40 ? v.slice(0, 40) + "..." : v}</option>)}
+                                </select>
+                              ) : (
+                                <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                              );
+                            })()
+                          )}
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
                       ))}
-                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 11, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
+                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <span style={{ fontSize: 11, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
+                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <span style={{ fontSize: 13, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
-              </>)}
+              )}
 
               {/* EMPLOYEE FILTER PANEL */}
-              {toolbarTab === "employee" && (<>
-                <div onClick={() => setToolbarTab(null)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
-                <div style={{ position: "relative", zIndex: 100 }}>
+              {toolbarTab === "employee" && (
+                <div style={{ position: "relative" }}>
                   <div style={{ position: "absolute", top: 4, left: 20, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 320, zIndex: 100, animation: "fadeIn .15s" }}>
                     <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid #f3f4f6" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#374151" }}>กรองตามผู้คน</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>กรองตามผู้คน</span>
                         <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
                       </div>
                       <div style={{ position: "relative" }}>
-                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 11 }}>🔍</span>
-                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 11, outline: "none", boxSizing: "border-box" }} />
+                        <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 14 }}>🔍</span>
+                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                       </div>
                     </div>
                     <div style={{ maxHeight: 320, overflowY: "auto", padding: "4px 0" }}>
-                      <div onClick={() => { setEmpFilter([]); setToolbarTab(null); }}
+                      <div onClick={() => setEmpFilter([])}
                         style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.length === 0 ? "#eff6ff" : "transparent" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "transparent")}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#d4a017", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff" }}>✦</div>
-                        <span style={{ fontSize: 11, color: "#374151", fontWeight: empFilter.length === 0 ? 700 : 400 }}>ทั้งหมด</span>
-                        {empFilter.length === 0 && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
-                      </div>
-                      <div onClick={() => { setEmpFilter(["__none__"]); setToolbarTab(null); }}
-                        style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.includes("__none__") ? "#eff6ff" : "transparent" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "#f8fafc")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.includes("__none__") ? "#eff6ff" : "transparent")}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>👤</div>
-                        <span style={{ fontSize: 11, color: "#374151", fontWeight: empFilter.includes("__none__") ? 700 : 400 }}>ยังไม่มอบหมาย</span>
-                        {empFilter.includes("__none__") && <span style={{ color: "#3b82f6", fontSize: 16, marginLeft: "auto" }}>✓</span>}
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
+                        <span style={{ fontSize: 13, color: "#374151" }}>บันทึกไม่มีคน</span>
                       </div>
                       {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase()) || (em.nickname || "").toLowerCase().includes(empSearch.toLowerCase())).map((em, ei) => {
                         const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
                         const isSelected = empFilter.includes(em.name);
-                        return <div key={em.id} onClick={() => { setEmpFilter(isSelected ? [] : [em.name]); if (!isSelected) setToolbarTab(null); }}
+                        return <div key={em.id} onClick={() => setEmpFilter(isSelected ? empFilter.filter((n) => n !== em.name) : [...empFilter, em.name])}
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: isSelected ? "#eff6ff" : "transparent" }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "#f8fafc")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "transparent")}>
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
-                          <span style={{ flex: 1, fontSize: 11, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
+                          <span style={{ flex: 1, fontSize: 13, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
                           {isSelected && <span style={{ color: "#3b82f6", fontSize: 16 }}>✓✓</span>}
                         </div>;
                       })}
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
+                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
-              </>)}
+              )}
 
               {/* COLUMN REORDER PANEL */}
               {toolbarTab === "columns" && (
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f8fafc" }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศร)</span></div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#374151", marginBottom: 12 }}>สลับคอลัมน์ <span style={{ color: "#9ca3af", fontWeight: 400 }}>(ลากหรือกดลูกศร)</span></div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {activeColOrder.map((key, idx) => (
                       <div key={key}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 11, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 13, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
                         draggable
                         onDragStart={(e) => { setDragCol(idx); e.dataTransfer.effectAllowed = "move"; }}
                         onDragEnd={() => setDragCol(null)}
@@ -1344,21 +1176,21 @@ function CRMApp({ currentUser, onLogout }) {
                         }}
                         onMouseEnter={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; } }}
                         onMouseLeave={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}>
-                        <span style={{ cursor: "grab", fontSize: 11, opacity: 0.5 }}>☰</span>
+                        <span style={{ cursor: "grab", fontSize: 12, opacity: 0.5 }}>☰</span>
                         <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); setDragCol(idx - 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>◀</button>
-                        <span style={{ fontSize: 11 }}>{COL_DEFS[key].label}</span>
+                        <span style={{ fontSize: 12 }}>{COL_DEFS[key].label}</span>
                         <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); setDragCol(idx + 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>▶</button>
                       </div>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
+                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
                     <button onClick={async () => {
                       const settingKey = "col_order_" + (currentUser?.name || "default");
                       await supabase.from("crm_settings").delete().eq("key", settingKey);
                       await supabase.from("crm_settings").insert({ key: settingKey, value: JSON.stringify(activeColOrder) });
                       showToast("บันทึกลำดับคอลัมน์สำเร็จ ✓ (พนักงานในทีมจะเห็นเหมือนกัน)");
-                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
+                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
                   </div>
                 </div>
               )}
@@ -1366,47 +1198,40 @@ function CRMApp({ currentUser, onLogout }) {
             {/* PAGINATION TOP */}
             {<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: "#6b7280" }}>แสดง</span>
-                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 11, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>แสดง</span>
+                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 13, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
                   <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
                 </select>
-                <span style={{ fontSize: 11, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
+                <span style={{ fontSize: 13, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
-                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
+                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
+                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
-                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 11 }}>...</span>}
-                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 11, cursor: "pointer" }}>{p}</button></span>
+                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
+                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
                 ))}
-                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
-                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 11, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
-              </div>
-            </div>}
-            {selectedRows.length > 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 20px", background: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
-              <span style={{ fontSize: 11, color: "#92400e", fontWeight: 600 }}>✓ เลือกแล้ว {selectedRows.length} รายการ {selectedRows.length > pagedFc.length ? "(ข้ามหน้า)" : ""}</span>
-              <div style={{ display: "flex", gap: 8 }}>
-                {selectedRows.length < fc.length && <button onClick={() => setSelectedRows(fc.map((c) => c.id))} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>เลือกทั้งหมด {fc.length}</button>}
-                <button onClick={() => setSelectedRows([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 11, cursor: "pointer" }}>ยกเลิก</button>
+                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
+                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", height: "calc(100vh - 260px)" }}>
-                <table style={{ borderCollapse: "collapse", fontSize: 11, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
+                <table style={{ borderCollapse: "collapse", fontSize: 10, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "4px 6px", width: 30, fontSize: 11, fontWeight: 700, color: "#9ca3af" }}>#</th>
-                    <th style={{ padding: "4px 6px", width: 55 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                        <input type="checkbox" checked={selectedRows.length > 0 && selectedRows.length === fc.length} onChange={(e) => setSelectedRows(e.target.checked ? fc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 14, height: 14 }} />
-                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "1px solid #e5e7eb", borderRadius: 4, background: "#fff", color: "#d4a017", fontSize: 11, cursor: "pointer", padding: "1px 2px", fontWeight: 700 }}>
+                    <th style={{ padding: "4px 6px", width: 30, fontSize: 10, fontWeight: 700, color: "#9ca3af" }}>#</th>
+                    <th style={{ padding: "4px 6px", width: 40 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 13, height: 13 }} />
+                        <select onChange={(e) => { if (e.target.value === "page") setSelectedRows(pagedFc.map((c) => c.id)); else if (e.target.value === "all") setSelectedRows(fc.map((c) => c.id)); else setSelectedRows([]); e.target.value = ""; }} style={{ border: "none", background: "none", color: "#d4a017", fontSize: 9, cursor: "pointer", padding: 0, width: 12 }}>
                           <option value="">▾</option>
-                          <option value="page">📄 หน้านี้ ({pagedFc.length})</option>
-                          <option value="all">📋 ทุกหน้า ({fc.length})</option>
-                          <option value="none">✕ ยกเลิก</option>
+                          <option value="page">หน้าปัจจุบัน ({pagedFc.length})</option>
+                          <option value="all">ทุกหน้า ({fc.length})</option>
+                          <option value="none">ยกเลิกทั้งหมด</option>
                         </select>
                       </div>
                     </th>
-                    {TH.map((h, i) => <th key={i} onContextMenu={(e) => { e.preventDefault(); const key = activeColOrder[i]; const values = fc.map((c) => String(c[key] ?? "")); const total = values.length; const filled = values.filter((v) => v && v !== "0" && v !== "false").length; const empty = total - filled; const unique = new Set(values.filter(Boolean)).size; const counts = {}; values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; }); const top5 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8); setColStats({ x: e.clientX, y: e.clientY, label: h, key, total, filled, empty, unique, fillRate: total ? Math.round(filled / total * 100) : 0, emptyRate: total ? Math.round(empty / total * 100) : 0, uniqueRate: total ? Math.round(unique / total * 100) : 0, top5 }); }} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 11, cursor: "context-menu" }}>
+                    {TH.map((h, i) => <th key={i} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10 }}>
                       {h}
                       <div onMouseDown={(e) => { e.preventDefault(); const startX = e.clientX; const th = e.target.parentElement; const startW = th.offsetWidth; const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(40, startW + diff) })); }; const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }; document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); }} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 4, cursor: "col-resize", background: "transparent" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#d4a01740")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")} />
                     </th>)}
@@ -1414,66 +1239,13 @@ function CRMApp({ currentUser, onLogout }) {
                   <tbody>
                     {pagedFc.map((c, idx) => (
                       <tr key={c.id} style={{ borderBottom: "1px solid #f0f0f0", height: 22 }} onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fafafa")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
-                        <td style={{ padding: "1px 6px", color: "#b0b0b0", fontSize: 11, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                        <td style={{ padding: "1px 6px", color: "#b0b0b0", fontSize: 9, textAlign: "center" }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                         <td style={{ padding: "1px 6px" }}><input type="checkbox" checked={selectedRows.includes(c.id)} onChange={(e) => { if (e.nativeEvent.shiftKey && lastChecked !== null) { const curIdx = pagedFc.findIndex((x) => x.id === c.id); const lastIdx = pagedFc.findIndex((x) => x.id === lastChecked); if (curIdx >= 0 && lastIdx >= 0) { const start = Math.min(curIdx, lastIdx); const end2 = Math.max(curIdx, lastIdx); const rangeIds = pagedFc.slice(start, end2 + 1).map((x) => x.id); setSelectedRows((prev) => [...new Set([...prev, ...rangeIds])]); setLastChecked(c.id); return; } } setLastChecked(c.id); setSelectedRows(e.target.checked ? [...selectedRows, c.id] : selectedRows.filter((r) => r !== c.id)); }} style={{ accentColor: "#d4a017", width: 13, height: 13 }} /></td>
                         {activeColOrder.map((key) => { const col = COL_DEFS[key]; return <td key={key} style={{ padding: "1px 2px", minWidth: col.minW ? col.minW * 0.55 : undefined, maxWidth: col.maxW ? col.maxW * 0.6 : undefined }}>{col.render(c)}</td>; })}
                       </tr>
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
-                  <tfoot style={{ position: "sticky", bottom: 0, zIndex: 10 }}><tr style={{ background: "#f8f8f6", borderTop: "2px solid #e5e7eb", boxShadow: "0 -2px 8px rgba(0,0,0,0.06)", height: 32 }}>
-                    <td colSpan={2} style={{ padding: "3px 4px" }}></td>
-                    {activeColOrder.map((key) => {
-                      const values = fc.map((c) => String(c[key] ?? ""));
-                      const total = values.length;
-                      const filled = values.filter((v) => v && v !== "0" && v !== "false").length;
-                      const empty = total - filled;
-                      const unique = new Set(values.filter(Boolean)).size;
-                      const mode = footerStats[key] || "histogram";
-                      const colors = ["#3b82f6","#ef4444","#f59e0b","#10b981","#8b5cf6","#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6"];
-                      
-                      const statLabels = { total: "นับ", empty: "ว่าง", filled: "เต็ม", unique: "เฉพาะ", emptyRate: "ว่าง%", fillRate: "เต็ม%", uniqueRate: "เฉพาะ%" };
-                      let val = "";
-                      if (mode === "total") val = total;
-                      else if (mode === "empty") val = empty;
-                      else if (mode === "filled") val = filled;
-                      else if (mode === "unique") val = unique;
-                      else if (mode === "emptyRate") val = (total ? Math.round(empty / total * 100) : 0) + "%";
-                      else if (mode === "fillRate") val = (total ? Math.round(filled / total * 100) : 0) + "%";
-                      else if (mode === "uniqueRate") val = (total ? Math.round(unique / total * 100) : 0) + "%";
-                      
-                      return <td key={key} style={{ padding: "2px 2px" }}>
-                        <div onMouseEnter={(e) => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); e.currentTarget.style.background = "#fef3c7"; const rect = e.currentTarget.getBoundingClientRect(); setColStats((prev) => ({ x: Math.min(rect.left, window.innerWidth - 240), y: 0, key, label: COL_DEFS[key]?.label || key, showMenu: prev?.key === key ? prev.showMenu : false })); }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; if (!window._colStatsLocked) window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}
-                          onClick={(e) => { e.stopPropagation(); if (window._colStatsTimer) clearTimeout(window._colStatsTimer); window._colStatsLocked = true; const rect = e.currentTarget.getBoundingClientRect(); setColStats({ x: Math.min(rect.left, window.innerWidth - 420), y: 0, key, label: COL_DEFS[key]?.label || key, showMenu: true }); }}
-                          style={{ cursor: "pointer", borderRadius: 4, padding: "1px 2px" }}>
-                          {mode === "histogram" ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>นับ ▼</span>
-                              <div style={{ display: "flex", flex: 1, height: 20, borderRadius: 4, overflow: "hidden", background: "#f3f4f6" }}>
-                                {(() => {
-                                  const counts = {};
-                                  values.forEach((v) => { counts[v || "(ว่าง)"] = (counts[v || "(ว่าง)"] || 0) + 1; });
-                                  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, cnt], ti) => {
-                                    let display = label;
-                                    if (key === "status") { const s = statuses.find((st) => st.key === label); if (s) display = s.label; }
-                                    if (key === "received_product") display = label === "true" ? "ได้รับแล้ว" : label === "false" ? "รอส่ง" : label;
-                                    return <div key={ti} title={display + " (" + cnt + "/" + total + ")"} style={{ width: (cnt / (total || 1) * 100) + "%", background: colors[ti % colors.length], minWidth: 2, cursor: "pointer", transition: "opacity 0.15s" }}
-                                      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }} onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }} />;
-                                  });
-                                })()}
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                              <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>{statLabels[mode] || "นับ"} ▼</span>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: "#3b82f6" }}>{val}</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>;
-                    })}
-                  </tr></tfoot>
                 </table>
               </div>
             </div>
@@ -1487,60 +1259,80 @@ function CRMApp({ currentUser, onLogout }) {
             const promoFilteredSvC = selectedSupervisor ? svC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter) : [];
             const promoFilteredUnC = unC.filter((c) => !promoFilter || extractPrice(c.previous_promo) === promoFilter);
             return <div>
-
-            {/* ACTIVITY LOG — แสดงเลย */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>📋 ประวัติการใช้งาน ({activityLog.length})</h2>
-                <button onClick={async () => { const res = await supabase.from("crm_activity_log").select().order("created_at", { ascending: false }).range(0, 199); if (res.data) setActivityLog(res.data); showToast("โหลดประวัติแล้ว"); }} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>🔄 รีเฟรช</button>
-              </div>
-              <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-                <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                  <thead><tr style={{ background: "#f8fafc", position: "sticky", top: 0, zIndex: 1 }}>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>เวลา</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>ผู้ใช้</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>การกระทำ</th>
-                    <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>รายละเอียด</th>
-                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #e5e7eb" }}>จำนวน</th>
-                  </tr></thead>
-                  <tbody>
-                    {activityLog.length === 0 && <tr><td colSpan={5} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ยังไม่มีประวัติ (รัน SQL สร้างตาราง crm_activity_log ก่อน)</td></tr>}
-                    {activityLog.map((log) => {
-                      const actionColors = { "แก้ไข": "#3b82f6", "เพิ่มลูกค้า": "#059669", "ลบลูกค้า": "#dc2626", "ลบหลายรายการ": "#dc2626", "ลบถาวร": "#7f1d1d", "นำเข้าข้อมูล": "#7c3aed", "มอบหมาย": "#d97706", "กู้คืน": "#0891b2", "แก้ไขลูกค้า": "#2563eb" };
-                      const color = actionColors[log.action] || "#6b7280";
-                      const timeStr = (() => { try { const d = new Date(log.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short" }) + " " + d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); } catch { return log.created_at; } })();
-                      return <tr key={log.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "8px 14px", color: "#9ca3af", whiteSpace: "nowrap", fontSize: 11 }}>{timeStr}</td>
-                        <td style={{ padding: "8px 14px", fontWeight: 600 }}>{log.user_name}</td>
-                        <td style={{ padding: "8px 14px" }}><span style={{ padding: "2px 10px", borderRadius: 6, fontWeight: 600, fontSize: 11, color: "#fff", background: color }}>{log.action}</span></td>
-                        <td style={{ padding: "8px 14px", color: "#4b5563", maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{log.detail}</td>
-                        <td style={{ padding: "8px 14px", textAlign: "center", fontWeight: 600, color: log.count > 1 ? "#d97706" : "#9ca3af" }}>{log.count > 1 ? log.count : ""}</td>
-                      </tr>;
-                    })}
-                  </tbody>
-                </table>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>หัวหน้า / มอบหมาย</h2>
+            <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+              {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
+                <button key={sv.id} onClick={() => { setSelectedSupervisor(is2 ? null : sv); setAssignSelected([]); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 14, border: is2 ? "2px solid #d4a017" : "2px solid #e5e7eb", background: is2 ? "#fffbeb" : "#fff", cursor: "pointer" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: "50%", background: is2 ? "#2563eb" : "#fde68a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: is2 ? "#fff" : "#92400e" }}>{sv.name?.charAt(0)}</div>
+                  <div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, fontSize: 14 }}>{sv.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sv.department} · {customers.filter((c2) => c2.supervisor === sv.name).length}</div></div>
+                </button>); })}
+            </div>
+            {selectedSupervisor ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+                <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                  <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 12, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
+                      <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...promoFilteredSvC, ...promoFilteredUnC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
+                    </div>
+                    {/* Promo filter */}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280" }}>กรองโปร:</span>
+                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #d4a017" : "1px solid #e5e7eb", background: !promoFilter ? "#fffbeb" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
+                      {allPrices.map((p) => {
+                        const count = [...(selectedSupervisor ? svC : []), ...unC].filter((c) => extractPrice(c.previous_promo) === p).length;
+                        return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 12px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                      })}
+                    </div>
+                  </div>
+                  <div style={{ maxHeight: 500, overflowY: "auto" }}>
+                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
+                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
+                    {promoFilteredSvC.length === 0 && promoFilteredUnC.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
+                  </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#3d2a0a" }}>มอบหมายให้พนักงาน</h4>
+                    <div style={{ border: "1px solid #e5e7eb", borderRadius: 10, maxHeight: 200, overflowY: "auto", marginBottom: 14 }}>
+                      {employees.map((em) => (
+                        <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
+                          onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
+                          <input type="checkbox" checked={assignEmployees.includes(em.name)} onChange={(e2) => setAssignEmployees(e2.target.checked ? [...assignEmployees, em.name] : assignEmployees.filter((n) => n !== em.name))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
+                          <span style={{ fontSize: 14 }}>{em.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {assignEmployees.length > 1 && assignSelected.length > 0 && (
+                      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#92400e" }}>
+                        กระจายเท่ากัน: {assignEmployees.map((name) => name + " (" + Math.floor(assignSelected.length / assignEmployees.length) + (assignEmployees.indexOf(name) < assignSelected.length % assignEmployees.length ? "+1" : "") + ")").join(", ")}
+                      </div>
+                    )}
+                    <button onClick={handleAssign} disabled={!assignSelected.length || !assignEmployees.length} style={{ ...bp, width: "100%", justifyContent: "center", opacity: (!assignSelected.length || !assignEmployees.length) ? 0.5 : 1 }}>มอบหมาย {assignSelected.length} ลูกค้า → {assignEmployees.length} คน</button>
+                  </div>
+                  <div style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                    <h4 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 700, color: "#dc2626" }}>ถอนสิทธิ์</h4>
+                    <button onClick={handleRevoke} disabled={!assignSelected.length} style={{ ...bd, width: "100%", justifyContent: "center", padding: "10px", opacity: !assignSelected.length ? 0.5 : 1 }}>ถอนสิทธิ์ {assignSelected.length}</button>
+                  </div>
                 </div>
               </div>
-            </div>
-
+            ) : <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center" }}><div style={{ fontSize: 48, opacity: 0.3 }}>👆</div><div style={{ color: "#6b7280" }}>เลือกหัวหน้าด้านบน</div></div>}
           </div>; })()}
 
           {/* EMPLOYEES */}
           {tab === "employees" && <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>จัดการบัญชีที่ระบบ crm-themt2</span>
+              <button onClick={() => setMultiAddEmp([{ name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-              {employees.map((e2) => {
-                const custCount = customers.filter((c2) => c2.assigned_to === e2.name).length;
-                return <div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative", borderLeft: custCount > 0 ? "4px solid #d4a017" : "4px solid #e5e7eb" }}>
-                  <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                  <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: custCount > 0 ? "#fef3c7" : "#f3f4f6", color: custCount > 0 ? "#92400e" : "#9ca3af" }}>{custCount} ลูกค้า</span>
-                </div>;
-              })}
+              {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
+                <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
+                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
+                <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
+                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
+              </div>))}
             </div>
           </div>}
 
@@ -1549,7 +1341,7 @@ function CRMApp({ currentUser, onLogout }) {
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, color: "#3d2a0a" }}>ตั้งค่าระบบ</h2>
             <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#fff", borderRadius: 12, padding: 4, width: "fit-content", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               {[{ key: "statuses", label: "สถานะ" }, { key: "call_subjects", label: "หัวข้อโทร" }].map((st) => (
-                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #d4a017, #b8860b)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>{st.label}</button>))}
+                <button key={st.key} onClick={() => setSettingsSubTab(st.key)} style={{ padding: "10px 20px", borderRadius: 10, border: "none", background: settingsSubTab === st.key ? "linear-gradient(135deg, #d4a017, #b8860b)" : "transparent", color: settingsSubTab === st.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>{st.label}</button>))}
             </div>
             {settingsSubTab === "statuses" && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>สถานะ</h3><button onClick={() => setModal({ type: "status", mode: "add", data: { key: "", label: "", color: "#d4a017" } })} style={bp}><I.Plus /> เพิ่ม</button></div>
@@ -1563,7 +1355,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวหน้า</h3><button onClick={() => setModal({ type: "supervisor", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่ม</button></div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{supervisors.map((sv) => (<div key={sv.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, position: "relative" }}>
                 <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "supervisor", mode: "edit", data: { ...sv } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_supervisors", sv.id)} style={bi(true)}><I.Trash /></button></div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 11, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 13, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
               </div>))}</div>
             </div>}
           </div>}
@@ -1578,7 +1370,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 11, outline: "none", width: 220 }} />
+                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 13, outline: "none", width: 220 }} />
                 </div>
                 {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
               </div>
@@ -1591,7 +1383,7 @@ function CRMApp({ currentUser, onLogout }) {
             ) : (
               <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                     <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
                       {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
@@ -1603,14 +1395,14 @@ function CRMApp({ currentUser, onLogout }) {
                             <td style={{ padding: "12px 14px", fontWeight: 600, color: "#3d2a0a" }}>{t.name}</td>
                             <td style={{ padding: "12px 14px" }}>{t.phone}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
-                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
+                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280" }}>{t.assigned_to || "—"}</td>
                             <td style={{ padding: "12px 14px", color: "#4b5563", fontWeight: 500 }}>{t.deleted_by || "—"}</td>
-                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 11 }}>{t.deleted_at}</td>
+                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 12 }}>{t.deleted_at}</td>
                             <td style={{ padding: "12px 14px" }}>
                               <div style={{ display: "flex", gap: 8 }}>
-                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 11, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
-                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 11, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
+                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
+                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
                               </div>
                             </td>
                           </tr>
@@ -1646,21 +1438,21 @@ function CRMApp({ currentUser, onLogout }) {
             <button onClick={() => setQuickUpdate(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}><I.X /></button>
           </div>
           <div style={{ padding: 28 }}>
-            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 11, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
-            <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 11, fontWeight: 700 }}>เลือกฟิลด์</label>
+            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
+            <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>เลือกฟิลด์</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
-                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
-                <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 11, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 14, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
                   <option value="">+ เพิ่มฟิลด์...</option>
                   {[{ v: "assigned_to", l: "มอบหมาย" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }, { v: "call_subject", l: "หัวข้อโทร" }, { v: "call_date", l: "วันที่โทร" }, { v: "call_note", l: "หมายเหตุ" }, { v: "customer_relation", l: "ความสัมพันธ์ลูกค้า" }, { v: "next_follow", l: "ครั้งถัดไป" }, { v: "product_price", l: "โปรสินค้า" }, { v: "order_date", l: "วันที่สั่งซื้อ" }, { v: "note", l: "ที่อยู่" }, { v: "name", l: "ชื่อ" }, { v: "phone", l: "เบอร์โทร" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
                 </select>
               </div>
             </div>
-            {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 11, fontWeight: 700 }}>การตั้งค่า</label>
+            {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>การตั้งค่า</label>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 13, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
                 {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                  <span style={{ fontSize: 11, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
+                  <span style={{ fontSize: 14, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
                   <div>
                     {f === "assigned_to" && (() => {
@@ -1674,7 +1466,7 @@ function CRMApp({ currentUser, onLogout }) {
                       const promoKeys = Object.keys(promoGroups).sort((a, b) => Number(a) - Number(b));
                       return <div>
                         {/* Employee selection */}
-                        <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
                         <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto", marginBottom: 12 }}>
                           {employees.map((em) => (
                             <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
@@ -1682,17 +1474,17 @@ function CRMApp({ currentUser, onLogout }) {
                                 const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
                                 setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
                               }} style={{ accentColor: "#d4a017" }} />
-                              <span style={{ fontSize: 11 }}>{em.name}</span>
+                              <span style={{ fontSize: 13 }}>{em.name}</span>
                             </label>
                           ))}
                         </div>
 
                         {/* Mode selection */}
                         {sel.length > 0 && <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>กระจายเท่ากัน</button>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
                           </div>
                         </div>}
 
@@ -1701,17 +1493,17 @@ function CRMApp({ currentUser, onLogout }) {
 
                         {/* Promo mode mapping */}
                         {sel.length > 0 && assignMode === "promo" && <div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 11, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
+                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
                             {promoKeys.map((pk) => {
                               const pkSel = promoMap[pk] || [];
                               return <div key={pk} style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", padding: "10px 12px", alignItems: "start", borderBottom: "1px solid #f3f4f6" }}>
-                                <span style={{ fontSize: 11, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 11 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
+                                <span style={{ fontSize: 13, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
                                 <span style={{ textAlign: "center", color: "#9ca3af", paddingTop: 6 }}>→</span>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {sel.map((name) => (
-                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 11 }}
+                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 12 }}
                                       onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                                       <input type="checkbox" checked={pkSel.includes(name)} onChange={(e2) => {
                                         const nv = e2.target.checked ? [...pkSel, name] : pkSel.filter((n) => n !== name);
@@ -1720,7 +1512,7 @@ function CRMApp({ currentUser, onLogout }) {
                                       <span>{name}</span>
                                     </label>
                                   ))}
-                                  {pkSel.length > 1 && <div style={{ fontSize: 11, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
+                                  {pkSel.length > 1 && <div style={{ fontSize: 10, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
                                 </div>
                               </div>;
                             })}
@@ -1748,9 +1540,9 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 10 }}>{selectedRows.length}</span></div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 12 }}>{selectedRows.length}</span></div>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, maxHeight: 180, overflowY: "auto" }}>
-                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 11 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
+                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 12 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -1845,48 +1637,48 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
           <div style={{ padding: 24 }}>
             {/* Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 11, fontWeight: 700, color: "#6b7280" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
               <span>ชื่อ</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
             </div>
             {/* Rows */}
             {multiAddEmp.map((emp, idx) => (
               <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
-                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
-                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
-                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
-                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }} />
-                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 11, outline: "none" }}>
+                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
                   <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option>
                 </select>
                 <button onClick={() => { if (multiAddEmp.length > 1) setMultiAddEmp(multiAddEmp.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
               </div>
             ))}
             {/* Add row button */}
-            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 11, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
               + เพิ่มอีกคน
             </button>
           </div>
           {/* Footer */}
           <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
-            <span style={{ fontSize: 11, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+              <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
               <button onClick={async () => {
                 const valid = multiAddEmp.filter((e) => e.name.trim());
                 if (!valid.length) { showToast("กรุณากรอกชื่ออย่างน้อย 1 คน", "warning"); return; }
                 setProgress({ current: 0, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 let ok = 0;
                 for (const emp of valid) {
-                  const res = await supabase.from("accounts").insert({ display_name: emp.name, email: emp.email || emp.username, password: emp.password || "1234", role: emp.role || "employee", active: true });
-                  if (!res.error) ok++;
+                  const res = await supabase.from("crm_employees").insert({ name: emp.name, nickname: emp.nickname || "", username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
+                  if (!res.error) { ok++; await supabase.from("accounts").insert({ email: emp.username || emp.name, password: emp.password || "1234", display_name: emp.name, role: "user", active: true }); }
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
                 setProgress(null);
                 await fetchAll(); broadcastChange();
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
-              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
+              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
             </div>
           </div>
         </div>
@@ -1899,14 +1691,14 @@ function CRMApp({ currentUser, onLogout }) {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 8 }}>อัพเดทสำเร็จ! {successModal.count} CRM THE MT</div>
-          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 11, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
             {successModal.detail}
           </div>
-          <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
+          <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
         </div>
       </div>}
 
-      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 11, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
+      {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
 
       {/* PROGRESS BAR */}
       {progress && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}>
@@ -1914,10 +1706,10 @@ function CRMApp({ currentUser, onLogout }) {
           <div style={{ fontSize: 16, fontWeight: 700, color: "#3d2a0a", marginBottom: 20 }}>{progress.label}</div>
           <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
             <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #d4a017, #f59e0b)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
+              <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
             </div>
           </div>
-          <div style={{ fontSize: 11, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
+          <div style={{ fontSize: 14, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
         </div>
       </div>}
 
@@ -1933,20 +1725,20 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, background: "#d1fae5", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#059669" }}>{importResult.success.length}</div>
-                <div style={{ fontSize: 11, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+                <div style={{ fontSize: 13, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
               </div>
               <div style={{ flex: 1, background: "#fef3c7", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#d97706" }}>{importResult.dupes.length}</div>
-                <div style={{ fontSize: 11, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
+                <div style={{ fontSize: 13, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
               </div>
             </div>
 
             {/* Success list */}
             {importResult.success.length > 0 && <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
               <div style={{ border: "1px solid #d1fae5", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.success.map((s, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 11, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#059669" }}>✓ {s.name}</span><span style={{ color: "#9ca3af" }}>{s.phone}</span>
                   </div>
                 ))}
@@ -1955,18 +1747,10 @@ function CRMApp({ currentUser, onLogout }) {
 
             {/* Dupe list */}
             {importResult.dupes.length > 0 && <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</span>
-                <button onClick={() => {
-                  const h = "ชื่อ,เบอร์โทร,ที่อยู่,โปรก่อนหน้า,วันที่สั่งซื้อ,สถานะ,มอบหมาย,หัวข้อโทร\n";
-                  const rows = importResult.dupes.map((d) => [d.name, d.phone, d.note, d.previous_promo, d.order_date, d.status, d.assigned_to, d.call_subject].map((v) => '"' + String(v || "").replace(/"/g, '""') + '"').join(",")).join("\n");
-                  const blob = new Blob(["\uFEFF" + h + rows], { type: "text/csv;charset=utf-8;" });
-                  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "เบอร์ซ้ำ_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
-                }} style={{ padding: "4px 12px", borderRadius: 6, border: "1px solid #d97706", background: "#fffbeb", color: "#d97706", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>⬇ ดาวน์โหลดเบอร์ซ้ำ</button>
-              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
               <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.dupes.map((d, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 11, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#92400e" }}>✗ {d.name}</span><span style={{ color: "#d97706" }}>{d.phone}</span>
                   </div>
                 ))}
@@ -1979,70 +1763,6 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
         </div>
       </div>}
-      {/* Column Stats - hover=values, click=menu */}
-      {colStats && <>
-        {colStats.showMenu && <div onClick={() => { window._colStatsLocked = false; setColStats(null); }} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />}
-        <div style={{ position: "fixed", left: Math.max(10, Math.min(colStats.x, window.innerWidth - (colStats.showMenu ? 420 : 240))), bottom: 40, background: "#fff", borderRadius: 10, boxShadow: "0 4px 20px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", display: "flex", zIndex: 3000, animation: "fadeIn .1s", overflow: "hidden", maxHeight: "60vh" }}
-          onMouseEnter={() => { if (window._colStatsTimer) clearTimeout(window._colStatsTimer); }}
-          onMouseLeave={() => { if (!window._colStatsLocked) window._colStatsTimer = setTimeout(() => setColStats(null), 200); }}>
-          {/* Left: unique values with ratio */}
-          {(() => {
-            const key = colStats.key;
-            const values = fc.map((c) => {
-              const raw = c[key];
-              // Map to display value
-              if (key === "status") { const s = statuses.find((st) => st.key === raw); return s ? s.label : String(raw ?? ""); }
-              if (key === "received_product") return raw ? "ได้รับแล้ว" : "รอส่ง";
-              if (key === "customer_relation") return String(raw ?? 0);
-              if (key === "created_at" || key === "order_date" || key === "call_date" || key === "next_follow") {
-                if (!raw) return "(ว่าง)";
-                try { return new Date(raw).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" }); } catch { return String(raw); }
-              }
-              return String(raw ?? "");
-            });
-            const total = values.length;
-            const counts = {};
-            values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; });
-            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-            const colors = ["#3b82f6","#9ca3af","#10b981","#ef4444","#6b7280","#f59e0b","#8b5cf6","#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6","#e11d48","#84cc16","#0ea5e9"];
-            return <div style={{ width: 220, maxHeight: 380, overflowY: "auto", borderRight: "1px solid #f3f4f6" }}>
-              <div style={{ padding: "10px 14px", fontSize: 11, fontWeight: 600, color: "#6b7280", borderBottom: "1px solid #f3f4f6" }}>อัตราส่วน</div>
-              {sorted.map(([label, cnt], i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", fontSize: 11 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 3, background: colors[i % colors.length], flexShrink: 0 }} />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</span>
-                  <span style={{ fontSize: 11, color: "#9ca3af", whiteSpace: "nowrap" }}>({cnt}/{total})</span>
-                </div>
-              ))}
-            </div>;
-          })()}
-          {/* Right: menu - only on click */}
-          {colStats.showMenu && <div style={{ width: 160, borderLeft: "1px solid #f3f4f6" }}>
-            {[
-              { key: "hide", label: "ซ่อน" },
-              { key: "histogram", label: "Histogram", highlight: true },
-              { key: "total", label: "นับทั้งหมด" },
-              { key: "empty", label: "นับที่ว่าง" },
-              { key: "filled", label: "นับที่เต็ม" },
-              { key: "unique", label: "นับเฉพาะ" },
-              { key: "emptyRate", label: "อัตราว่าง" },
-              { key: "fillRate", label: "อัตราเต็ม" },
-              { key: "uniqueRate", label: "อัตราส่วนเฉพาะ" },
-            ].map((item) => (
-              <div key={item.key} onClick={() => {
-                if (item.key === "hide") { setColOrder(activeColOrder.filter((k) => k !== colStats.key)); }
-                else { setFooterStats((p) => ({ ...p, [colStats.key]: item.key })); }
-                window._colStatsLocked = false; setColStats(null);
-              }}
-                style={{ padding: "8px 14px", cursor: "pointer", fontSize: 11, color: item.highlight ? "#3b82f6" : "#374151", background: footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent", fontWeight: footerStats[colStats.key] === item.key ? 700 : 400 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = item.highlight ? "#eff6ff" : "#f8fafc")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = footerStats[colStats.key] === item.key ? "#eff6ff" : "transparent")}>
-                {item.label}
-              </div>
-            ))}
-          </div>}
-        </div>
-      </>}
       {loading && <div style={{ position: "fixed", inset: 0, background: "rgba(255,255,255,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}><div style={{ textAlign: "center" }}><div style={{ width: 48, height: 48, border: "4px solid #e5e7eb", borderTop: "4px solid #d4a017", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} /><div style={{ color: "#3d2a0a", fontWeight: 600, fontSize: 16 }}>กำลังโหลดข้อมูล...</div></div></div>}
       <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}} @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}} @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}} @keyframes spin{to{transform:rotate(360deg)}} .crm-table th,.crm-table td{border:1px solid #d1d5db} input:focus,select:focus,textarea:focus{outline:none!important;border-color:#d4a017!important;box-shadow:0 0 0 3px rgba(212,160,23,0.15)!important;font-weight:700!important} .crm-scroll{overflow-x:scroll!important;overflow-y:visible} .crm-scroll::-webkit-scrollbar{height:14px;width:10px} .crm-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:7px} .crm-scroll::-webkit-scrollbar-thumb{background:#d4a017;border-radius:7px;border:3px solid #f1f1f1} .crm-scroll::-webkit-scrollbar-thumb:hover{background:#b8860b} .crm-scroll{scrollbar-gutter:stable} .crm-table td{line-height:1.3} .crm-table tr{height:24px} @keyframes bellShake{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(10deg)}} .bell-shake{animation:bellShake .5s ease 3}`}</style>
     </div>
@@ -2052,7 +1772,7 @@ function CRMApp({ currentUser, onLogout }) {
 function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, callSubjects, iS, lS }) {
   const [form, setForm] = useState(modal.data || {});
   const u = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-  const table = { customer: "crm_customers", employee: "accounts", status: "crm_statuses", supervisor: "crm_supervisors", call_subject: "crm_call_subjects" }[modal.type];
+  const table = { customer: "crm_customers", employee: "crm_employees", status: "crm_statuses", supervisor: "crm_supervisors", call_subject: "crm_call_subjects" }[modal.type];
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -2077,12 +1797,12 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         {modal.type === "status" && <>
           <div><label style={lS}>Key</label><input style={iS} value={form.key || ""} onChange={(e) => u("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} /></div>
           <div><label style={lS}>Label</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 11, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 13, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "6px 16px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "call_subject" && <>
           <div><label style={lS}>ชื่อหัวข้อ</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 11, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 13, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "supervisor" && <>
@@ -2093,8 +1813,8 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         </>}
       </div>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 24, paddingTop: 20, borderTop: "1px solid #f3f4f6" }}>
-        <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
-        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
+        <button onClick={() => setModal(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+        <button onClick={() => onSave(table, form, modal.mode)} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{modal.mode === "add" ? "เพิ่ม" : "บันทึก"}</button>
       </div>
     </div>
   );
