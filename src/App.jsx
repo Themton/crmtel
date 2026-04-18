@@ -410,7 +410,14 @@ function CRMApp({ currentUser, onLogout }) {
         newEmps.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee", active: true });
       });
       if (newEmps.length > 0) { try { await supabase.from("crm_employees").insert(newEmps); } catch {} }
-      const allEmp = [...syncedEmp, ...newEmps];
+      // ลบพนักงานซ้ำ (เก็บแค่รายการแรกต่อ email)
+      const seenEmail = new Set();
+      const allEmp = [...syncedEmp, ...newEmps].filter(emp => {
+        const key = (emp.email || emp.username || emp.name || "").toLowerCase().trim();
+        if (!key || seenEmail.has(key)) return false;
+        seenEmail.add(key);
+        return true;
+      });
 
       // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย
       const empNickMap = {};
