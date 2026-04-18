@@ -412,23 +412,7 @@ function CRMApp({ currentUser, onLogout }) {
       if (newEmps.length > 0) { try { await supabase.from("crm_employees").insert(newEmps); } catch {} }
       const allEmp = [...syncedEmp, ...newEmps];
 
-      // ชื่อเล่นลูกค้า = display_name CRM2 ของพนักงานที่มอบหมาย
-      const empNickMap = {};
-      allEmp.forEach(emp => {
-        if (emp.name) empNickMap[emp.name] = emp.nickname || emp.name;
-        if (emp.nickname && emp.nickname !== emp.name) empNickMap[emp.nickname] = emp.nickname;
-      });
-      const enrichedCust = c.map((cust) => {
-        if (!cust.assigned_to) return cust;
-        const nick = empNickMap[cust.assigned_to];
-        return nick ? { ...cust, nickname: nick } : cust;
-      });
-
-      console.log("empNickMap:", empNickMap);
-      console.log("sample assigned_to:", c.slice(0, 5).map(x => x.assigned_to));
-      console.log("sample nickname:", enrichedCust.slice(0, 5).map(x => x.nickname));
-
-      setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      setCustomers(c); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
