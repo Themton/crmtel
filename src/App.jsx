@@ -419,7 +419,21 @@ function CRMApp({ currentUser, onLogout }) {
       // เก็บพนักงานที่มีเฉพาะใน CRM Tel (ไม่ลบ)
       Object.values(empByEmail).forEach(emp => syncedEmp.push(emp));
 
-      setCustomers(c); setEmployees(syncedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // สร้าง map ชื่อพนักงาน CRM Tel → display_name CRM2
+      const empNameMap = {};
+      syncedEmp.forEach(emp => {
+        if (emp.name) empNameMap[emp.name] = emp.nickname || emp.name;
+        if (emp.nickname) empNameMap[emp.nickname] = emp.nickname;
+      });
+      // ชื่อเล่น = ชื่อพนักงาน CRM2 (display_name) ที่มอบหมายให้ลูกค้า
+      const enrichedCust = c.map((cust) => {
+        const assigned = cust.assigned_to;
+        if (!assigned) return cust;
+        const empNick = empNameMap[assigned];
+        return empNick ? { ...cust, nickname: empNick } : cust;
+      });
+
+      setCustomers(enrichedCust); setEmployees(syncedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
