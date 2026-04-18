@@ -387,36 +387,39 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr, acc, ord, ups] = await Promise.all([
+      const [c, e, s, cs, sv, tr, acc] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
-        safeFetch("accounts"), safeFetch("orders"), safeFetch("upsell"),
+        safeFetch("accounts"),
       ]);
-      // ดึงชื่อเล่นพนักงานจาก CRM2 accounts.display_name
-      const accMap = {};
-      (acc || []).forEach((a) => {
-        if (a.email && a.display_name) accMap[a.email.toLowerCase()] = a.display_name;
-      });
-      const enrichedEmp = e.map((emp) => {
-        if (emp.nickname) return emp;
-        const dn = accMap[(emp.username || emp.email || "").toLowerCase()];
-        return dn ? { ...emp, nickname: dn } : emp;
-      });
-      // ดึงชื่อพนักงาน (sales_person) จาก CRM2 orders/upsell → ใส่เป็นชื่อเล่นลูกค้า
-      const spMap = {};
-      (ord || []).concat(ups || []).forEach((o) => {
-        if (o.mobile_no && o.sales_person) {
-          const ph = normalizePhone(o.mobile_no);
-          if (!spMap[ph]) spMap[ph] = o.sales_person;
+      // Sync พนักงานจาก CRM2 accounts → crm_employees
+      const activeAcc = (acc || []).filter(a => a.active);
+      const empByEmail = {};
+      (e || []).forEach(emp => { if (emp.email || emp.username) empByEmail[(emp.email || emp.username).toLowerCase()] = emp; });
+      const syncedEmp = [];
+      for (const a of activeAcc) {
+        const key = (a.email || "").toLowerCase();
+        const existing = empByEmail[key];
+        if (existing) {
+          // อัปเดต nickname จาก display_name ถ้าเปลี่ยน
+          if (existing.nickname !== a.display_name || existing.name !== a.display_name) {
+            try { await supabase.from("crm_employees").update({ nickname: a.display_name, name: a.display_name }).eq("id", existing.id); } catch {}
+          }
+          syncedEmp.push({ ...existing, nickname: a.display_name, name: a.display_name });
+        } else {
+          // เพิ่มพนักงานใหม่จาก CRM2
+          try {
+            const res = await supabase.from("crm_employees").insert({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, password: String(a.password || "1234"), role: a.role === "admin" ? "admin" : "employee", active: true });
+            if (res.data && res.data[0]) syncedEmp.push(res.data[0]);
+            else syncedEmp.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee" });
+          } catch { syncedEmp.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee" }); }
         }
-      });
-      const enrichedCust = c.map((cust) => {
-        if (cust.nickname) return cust;
-        const ph = normalizePhone(cust.phone);
-        const sp = spMap[ph];
-        return sp ? { ...cust, nickname: sp } : cust;
-      });
-      setCustomers(enrichedCust); setEmployees(enrichedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+        delete empByEmail[key];
+      }
+      // เก็บพนักงานที่มีเฉพาะใน CRM Tel (ไม่ลบ)
+      Object.values(empByEmail).forEach(emp => syncedEmp.push(emp));
+
+      setCustomers(c); setEmployees(syncedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
