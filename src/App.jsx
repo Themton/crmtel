@@ -1340,7 +1340,7 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
                 <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
                 <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => c2.assigned_to === e2.name).length} ลูกค้า</span>
+                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => c2.assigned_to === e2.name || c2.assigned_to === e2.nickname).length} ลูกค้า</span>
               </div>))}
             </div>
           </div>}
