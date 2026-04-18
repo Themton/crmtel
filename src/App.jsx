@@ -442,6 +442,15 @@ function CRMApp({ currentUser, onLogout }) {
         return fullName ? { ...cust, nickname: fullName } : cust;
       });
 
+      // DEBUG: แสดงค่า assigned_to ที่จับคู่ไม่ได้
+      const unmatchedMap = {};
+      c.forEach(cust => {
+        const a = cust.assigned_to;
+        if (a && !empNickMap[a]) unmatchedMap[a] = (unmatchedMap[a] || 0) + 1;
+      });
+      console.log("empNickMap keys:", Object.keys(empNickMap));
+      console.log("assigned_to ที่จับคู่ไม่ได้:", unmatchedMap);
+
       setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
