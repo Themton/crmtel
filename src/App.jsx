@@ -413,9 +413,26 @@ function CRMApp({ currentUser, onLogout }) {
       const allEmp = [...syncedEmp, ...newEmps];
 
       // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย
+      const empNickMap = {};
+      allEmp.forEach(emp => {
+        const n = (emp.name || "").trim();
+        if (n) {
+          empNickMap[n] = n;
+          // ดึงชื่อย่อจากวงเล็บ เช่น "กนกพร (เค้ก)" → key "เค้ก"
+          const m = n.match(/\(([^)]+)\)/);
+          if (m) empNickMap[m[1].trim()] = n;
+        }
+        const nick = (emp.nickname || "").trim();
+        if (nick && nick !== n) {
+          empNickMap[nick] = n || nick;
+          const m2 = nick.match(/\(([^)]+)\)/);
+          if (m2) empNickMap[m2[1].trim()] = n || nick;
+        }
+      });
       const enrichedCust = c.map((cust) => {
         if (!cust.assigned_to) return cust;
-        return { ...cust, nickname: cust.assigned_to };
+        const fullName = empNickMap[cust.assigned_to];
+        return fullName ? { ...cust, nickname: fullName } : cust;
       });
 
       setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
