@@ -387,10 +387,10 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr, acc] = await Promise.all([
+      const [c, e, s, cs, sv, tr, acc, ord, ups] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
-        safeFetch("accounts"),
+        safeFetch("accounts"), safeFetch("orders"), safeFetch("upsell"),
       ]);
       // ดึงชื่อเล่นพนักงานจาก CRM2 accounts.display_name
       const accMap = {};
@@ -402,7 +402,21 @@ function CRMApp({ currentUser, onLogout }) {
         const dn = accMap[(emp.username || emp.email || "").toLowerCase()];
         return dn ? { ...emp, nickname: dn } : emp;
       });
-      setCustomers(c); setEmployees(enrichedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      // ดึงชื่อพนักงาน (sales_person) จาก CRM2 orders/upsell → ใส่เป็นชื่อเล่นลูกค้า
+      const spMap = {};
+      (ord || []).concat(ups || []).forEach((o) => {
+        if (o.mobile_no && o.sales_person) {
+          const ph = normalizePhone(o.mobile_no);
+          if (!spMap[ph]) spMap[ph] = o.sales_person;
+        }
+      });
+      const enrichedCust = c.map((cust) => {
+        if (cust.nickname) return cust;
+        const ph = normalizePhone(cust.phone);
+        const sp = spMap[ph];
+        return sp ? { ...cust, nickname: sp } : cust;
+      });
+      setCustomers(enrichedCust); setEmployees(enrichedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
