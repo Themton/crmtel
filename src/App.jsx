@@ -392,36 +392,29 @@ function CRMApp({ currentUser, onLogout }) {
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
         safeFetch("accounts"),
       ]);
-      // Sync พนักงานจาก CRM2 accounts → crm_employees
-      const activeAcc = (acc || []).filter(a => a.active);
-      const empByEmail = {};
-      (e || []).forEach(emp => { if (emp.email || emp.username) empByEmail[(emp.email || emp.username).toLowerCase()] = emp; });
-      const syncedEmp = [];
-      for (const a of activeAcc) {
-        const key = (a.email || "").toLowerCase();
-        const existing = empByEmail[key];
-        if (existing) {
-          // อัปเดต nickname จาก display_name ถ้าเปลี่ยน
-          if (existing.nickname !== a.display_name || existing.name !== a.display_name) {
-            try { await supabase.from("crm_employees").update({ nickname: a.display_name, name: a.display_name }).eq("id", existing.id); } catch {}
-          }
-          syncedEmp.push({ ...existing, nickname: a.display_name, name: a.display_name });
-        } else {
-          // เพิ่มพนักงานใหม่จาก CRM2
-          try {
-            const res = await supabase.from("crm_employees").insert({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, password: String(a.password || "1234"), role: a.role === "admin" ? "admin" : "employee", active: true });
-            if (res.data && res.data[0]) syncedEmp.push(res.data[0]);
-            else syncedEmp.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee" });
-          } catch { syncedEmp.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee" }); }
-        }
-        delete empByEmail[key];
-      }
-      // เก็บพนักงานที่มีเฉพาะใน CRM Tel (ไม่ลบ)
-      Object.values(empByEmail).forEach(emp => syncedEmp.push(emp));
+      // สร้าง map display_name จาก CRM2 accounts (เทียบ email)
+      const accDisplayMap = {};
+      (acc || []).filter(a => a.active).forEach(a => {
+        if (a.email) accDisplayMap[a.email.toLowerCase()] = a.display_name || a.email;
+      });
+      // เติม nickname ให้พนักงาน (ในหน่วยความจำ ไม่ยิง DB)
+      const syncedEmp = (e || []).map(emp => {
+        const key = (emp.email || emp.username || "").toLowerCase();
+        const dn = accDisplayMap[key];
+        return dn ? { ...emp, nickname: dn } : emp;
+      });
+      // เพิ่มพนักงานใหม่จาก CRM2 ที่ยังไม่มีใน crm_employees
+      const existingEmails = new Set(syncedEmp.map(emp => (emp.email || emp.username || "").toLowerCase()));
+      const newEmps = [];
+      (acc || []).filter(a => a.active && a.email && !existingEmails.has(a.email.toLowerCase())).forEach(a => {
+        newEmps.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee", active: true });
+      });
+      if (newEmps.length > 0) { try { await supabase.from("crm_employees").insert(newEmps); } catch {} }
+      const allEmp = [...syncedEmp, ...newEmps];
 
-      // ชื่อเล่นลูกค้า = display_name พนักงานที่มอบหมาย (จาก CRM2)
+      // ชื่อเล่นลูกค้า = display_name CRM2 ของพนักงานที่มอบหมาย
       const empNickMap = {};
-      syncedEmp.forEach(emp => {
+      allEmp.forEach(emp => {
         if (emp.name) empNickMap[emp.name] = emp.nickname || emp.name;
         if (emp.nickname && emp.nickname !== emp.name) empNickMap[emp.nickname] = emp.nickname;
       });
@@ -431,7 +424,11 @@ function CRMApp({ currentUser, onLogout }) {
         return nick ? { ...cust, nickname: nick } : cust;
       });
 
-      setCustomers(enrichedCust); setEmployees(syncedEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      console.log("empNickMap:", empNickMap);
+      console.log("sample assigned_to:", c.slice(0, 5).map(x => x.assigned_to));
+      console.log("sample nickname:", enrichedCust.slice(0, 5).map(x => x.nickname));
+
+      setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
