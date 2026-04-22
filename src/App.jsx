@@ -407,22 +407,6 @@ function CRMApp({ currentUser, onLogout }) {
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
       ]);
-      // One-time migration: โคลนข้อมูลจาก accounts → crm_employees (ถ้ายังไม่มี)
-      if (!sessionStorage.getItem("crm_migrated")) {
-        try {
-          const acc = await safeFetch("accounts");
-          const existEmails = new Set((e || []).map(emp => (emp.email || emp.username || "").toLowerCase()));
-          const missing = (acc || []).filter(a => a.active && a.email && !existEmails.has(a.email.toLowerCase()));
-          if (missing.length > 0) {
-            const toInsert = missing.map(a => ({ name: a.display_name || a.email, nickname: a.display_name || "", username: a.email, email: a.email, password: String(a.password || "1234"), role: a.role === "admin" ? "admin" : "employee", active: true }));
-            await supabase.from("crm_employees").insert(toInsert);
-            // refetch employees หลัง migrate
-            const refreshed = await safeFetch("crm_employees");
-            e.length = 0; refreshed.forEach(r => e.push(r));
-          }
-          sessionStorage.setItem("crm_migrated", "1");
-        } catch (err) { console.log("Migration skip:", err); }
-      }
       // ลบพนักงานซ้ำ (เก็บแค่รายการแรกต่อ email)
       const seenEmail = new Set();
       const allEmp = (e || []).filter(emp => {
