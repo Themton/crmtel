@@ -469,6 +469,21 @@ function CRMApp({ currentUser, onLogout }) {
       console.log("empNickMap keys:", Object.keys(empNickMap));
       console.log("assigned_to ที่จับคู่ไม่ได้:", unmatchedMap);
 
+      // One-time sync: เขียน assigned_email ลง DB สำหรับลูกค้าที่ยังไม่มี
+      if (!sessionStorage.getItem("crm_email_synced") && currentUser?.role === "admin") {
+        const needSync = enrichedCust.filter(cust => cust.assigned_to && cust.assigned_email && !c.find(orig => orig.id === cust.id)?.assigned_email);
+        if (needSync.length > 0) {
+          console.log("Syncing assigned_email for", needSync.length, "customers...");
+          const BATCH = 50;
+          for (let i = 0; i < needSync.length; i += BATCH) {
+            const batch = needSync.slice(i, i + BATCH);
+            await Promise.all(batch.map(cust => supabase.from("crm_customers").update({ assigned_email: cust.assigned_email }).eq("id", cust.id)));
+          }
+          console.log("assigned_email sync done ✅");
+        }
+        sessionStorage.setItem("crm_email_synced", "1");
+      }
+
       setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
