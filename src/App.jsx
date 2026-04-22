@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
@@ -370,15 +370,23 @@ function CRMApp({ currentUser, onLogout }) {
   const PAGE_SIZE = pageSize;
   const [lastChecked, setLastChecked] = useState(null);
 
-  // Helper: จับคู่พนักงานด้วย name, nickname, หรือ email/username
+  // Helper: จับคู่พนักงานด้วย name, nickname, ชื่อในวงเล็บ, หรือ email/username
+  const myNames = useMemo(() => {
+    if (!currentUser) return new Set();
+    const s = new Set();
+    [currentUser.name, currentUser.nickname, currentUser.username, currentUser.email].forEach(v => {
+      if (!v) return;
+      s.add(v.toLowerCase().trim());
+      // ดึงชื่อในวงเล็บ เช่น "ธนากานต์ (ปอนด์)" → "ปอนด์"
+      const m = v.match(/\(([^)]+)\)/);
+      if (m) s.add(m[1].toLowerCase().trim());
+    });
+    return s;
+  }, [currentUser]);
   const isMe = useCallback((val) => {
     if (!val || !currentUser) return false;
-    const v = val.toLowerCase().trim();
-    return v === (currentUser.name || "").toLowerCase().trim() ||
-           v === (currentUser.nickname || "").toLowerCase().trim() ||
-           v === (currentUser.username || "").toLowerCase().trim() ||
-           v === (currentUser.email || "").toLowerCase().trim();
-  }, [currentUser]);
+    return myNames.has(val.toLowerCase().trim());
+  }, [currentUser, myNames]);
 
   // ---- EFFECTS ----
   useEffect(() => { setPage(1); }, [search, promoFilter]);
