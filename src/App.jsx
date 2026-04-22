@@ -432,27 +432,32 @@ function CRMApp({ currentUser, onLogout }) {
         return true;
       });
 
-      // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย
+      // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย + map ชื่อ→อีเมล
       const empNickMap = {};
+      const empNameToEmail = {};
       allEmp.forEach(emp => {
         const n = (emp.name || "").trim();
+        const empEmail = (emp.email || emp.username || "").toLowerCase().trim();
         if (n) {
           empNickMap[n] = n;
-          // ดึงชื่อย่อจากวงเล็บ เช่น "กนกพร (เค้ก)" → key "เค้ก"
+          if (empEmail) empNameToEmail[n] = empEmail;
           const m = n.match(/\(([^)]+)\)/);
-          if (m) empNickMap[m[1].trim()] = n;
+          if (m) { empNickMap[m[1].trim()] = n; if (empEmail) empNameToEmail[m[1].trim()] = empEmail; }
         }
         const nick = (emp.nickname || "").trim();
         if (nick && nick !== n) {
           empNickMap[nick] = n || nick;
+          if (empEmail) empNameToEmail[nick] = empEmail;
           const m2 = nick.match(/\(([^)]+)\)/);
-          if (m2) empNickMap[m2[1].trim()] = n || nick;
+          if (m2) { empNickMap[m2[1].trim()] = n || nick; if (empEmail) empNameToEmail[m2[1].trim()] = empEmail; }
         }
       });
       const enrichedCust = c.map((cust) => {
         if (!cust.assigned_to) return cust;
         const fullName = empNickMap[cust.assigned_to];
-        return fullName ? { ...cust, nickname: fullName } : cust;
+        // เติม assigned_email จากชื่อพนักงาน (ถ้ายังไม่มี)
+        const assignedEmail = cust.assigned_email || empNameToEmail[cust.assigned_to] || "";
+        return { ...cust, nickname: fullName || cust.nickname, assigned_email: assignedEmail };
       });
 
       // DEBUG: แสดงค่า assigned_to ที่จับคู่ไม่ได้
@@ -749,7 +754,7 @@ function CRMApp({ currentUser, onLogout }) {
       const BATCH = 100;
       for (let b = 0; b < Math.ceil(chunks[i].length / BATCH); b++) {
         const batch = chunks[i].slice(b * BATCH, (b + 1) * BATCH);
-        await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], supervisor: selectedSupervisor?.name || "" }).in("id", batch);
+        await supabase.from("crm_customers").update({ assigned_to: assignEmployees[i], assigned_email: (employees.find(em => em.name === assignEmployees[i]) || {}).email || (employees.find(em => em.name === assignEmployees[i]) || {}).username || "", supervisor: selectedSupervisor?.name || "" }).in("id", batch);
         done += batch.length;
         setProgress({ current: done, total, label: "กำลังมอบหมาย..." });
       }
@@ -792,8 +797,8 @@ function CRMApp({ currentUser, onLogout }) {
   const extractPromoPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
   const fc = (() => {
     let result = customers.filter((c) => {
-      if (currentUser?.role === "employee" && !isMe(c.assigned_to)) return false;
-      if (currentUser?.role === "supervisor" && !isMe(c.supervisor) && !isMe(c.assigned_to)) return false;
+      if (currentUser?.role === "employee" && !isMe(c.assigned_to) && !isMe(c.assigned_email)) return false;
+      if (currentUser?.role === "supervisor" && !isMe(c.supervisor) && !isMe(c.assigned_to) && !isMe(c.assigned_email)) return false;
       // Promo filter
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
@@ -828,7 +833,7 @@ function CRMApp({ currentUser, onLogout }) {
     return result;
   })();
 
-  const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => isMe(c.assigned_to)) : currentUser?.role === "supervisor" ? customers.filter((c) => isMe(c.supervisor) || isMe(c.assigned_to)) : customers;
+  const myCustomers = currentUser?.role === "employee" ? customers.filter((c) => isMe(c.assigned_to) || isMe(c.assigned_email)) : currentUser?.role === "supervisor" ? customers.filter((c) => isMe(c.supervisor) || isMe(c.assigned_to) || isMe(c.assigned_email)) : customers;
   const totalPages = Math.max(1, Math.ceil(fc.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pagedFc = fc.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
@@ -1040,7 +1045,7 @@ function CRMApp({ currentUser, onLogout }) {
               {/* PROMO PRICE QUICK FILTER */}
               {(() => {
                 const extractPrice = (promo) => { const m = String(promo || "").match(/\((\d+)\)/); return m ? m[1] : null; };
-                const myC = currentUser?.role === "employee" ? customers.filter((c) => isMe(c.assigned_to)) : currentUser?.role === "supervisor" ? customers.filter((c) => isMe(c.supervisor) || isMe(c.assigned_to)) : customers;
+                const myC = currentUser?.role === "employee" ? customers.filter((c) => isMe(c.assigned_to) || isMe(c.assigned_email)) : currentUser?.role === "supervisor" ? customers.filter((c) => isMe(c.supervisor) || isMe(c.assigned_to) || isMe(c.assigned_email)) : customers;
                 const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
                 if (allPrices.length === 0) return null;
                 return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
@@ -1618,7 +1623,7 @@ function CRMApp({ currentUser, onLogout }) {
                     const BATCH = 100;
                     for (let b = 0; b < Math.ceil(ids.length / BATCH); b++) {
                       const batch = ids.slice(b * BATCH, (b + 1) * BATCH);
-                      if (emp) await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).in("id", batch);
+                      if (emp) { const empObj = employees.find(em => em.name === emp); await supabase.from("crm_customers").update({ ...u2, assigned_to: emp, assigned_email: empObj ? (empObj.email || empObj.username || "") : "" }).in("id", batch); }
                       else await supabase.from("crm_customers").update(u2).in("id", batch);
                       done += batch.length;
                       setProgress({ current: done, total, label: "กำลังอัปเดตข้อมูล..." });
@@ -1638,13 +1643,14 @@ function CRMApp({ currentUser, onLogout }) {
                     const BATCH = 100;
                     for (let b = 0; b < Math.ceil(ids.length / BATCH); b++) {
                       const batch = ids.slice(b * BATCH, (b + 1) * BATCH);
-                      await supabase.from("crm_customers").update({ ...u2, assigned_to: emp }).in("id", batch);
+                      const empObj2 = employees.find(em => em.name === emp); await supabase.from("crm_customers").update({ ...u2, assigned_to: emp, assigned_email: empObj2 ? (empObj2.email || empObj2.username || "") : "" }).in("id", batch);
                       done += batch.length;
                       setProgress({ current: done, total, label: "กำลังอัปเดตข้อมูล..." });
                     }
                   }
                 } else {
                   const u2 = {}; quickUpdate.fields.forEach((f) => { const v = quickUpdate.fieldValues[f]; u2[f] = f === "received_product" ? v === "true" : f === "product_price" ? Number(v) || 0 : f === "customer_relation" ? Number(v) || 0 : f === "assigned_to" ? (assignList[0] || v || "") : (v || ""); });
+                  if (u2.assigned_to) { const empObj3 = employees.find(em => em.name === u2.assigned_to); u2.assigned_email = empObj3 ? (empObj3.email || empObj3.username || "") : ""; }
                   const BATCH = 100;
                   for (let b = 0; b < Math.ceil(total / BATCH); b++) {
                     const batch = selectedRows.slice(b * BATCH, (b + 1) * BATCH);
@@ -1824,7 +1830,7 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
           <div><label style={lS}>โปรก่อนหน้า</label><input style={iS} value={form.previous_promo || ""} onChange={(e) => u("previous_promo", e.target.value)} /></div>
           <div><label style={lS}>วันที่สั่งซื้อ</label><input type="datetime-local" style={iS} value={form.order_date || ""} onChange={(e) => u("order_date", e.target.value)} /></div>
           <div><label style={lS}>หัวหน้า</label><select style={iS} value={form.supervisor || ""} onChange={(e) => u("supervisor", e.target.value)}><option value="">—</option>{supervisors.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}</select></div>
-          <div><label style={lS}>มอบหมาย</label><select style={iS} value={form.assigned_to || ""} onChange={(e) => u("assigned_to", e.target.value)}><option value="">—</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select></div>
+          <div><label style={lS}>มอบหมาย</label><select style={iS} value={form.assigned_to || ""} onChange={(e) => { u("assigned_to", e.target.value); const emp = employees.find(em => em.name === e.target.value); u("assigned_email", emp ? (emp.email || emp.username || "") : ""); }}><option value="">—</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select></div>
         </>}
         {modal.type === "employee" && <>
           <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
