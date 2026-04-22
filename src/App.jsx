@@ -583,6 +583,25 @@ function CRMApp({ currentUser, onLogout }) {
       else showToast("เกิดข้อผิดพลาด", "warning");
     } else {
       const { id, ...rest } = data;
+      // ถ้าแก้ชื่อพนักงาน → อัปเดต assigned_to ในลูกค้าทั้งหมดของคนนั้น
+      if (table === "crm_employees") {
+        const oldEmp = employees.find(em => em.id === id);
+        if (oldEmp && rest.name && rest.name !== oldEmp.name) {
+          const empEmail = oldEmp.email || oldEmp.username || "";
+          // อัปเดตลูกค้าที่ assigned_email ตรงกัน
+          if (empEmail) {
+            await supabase.from("crm_customers").update({ assigned_to: rest.name }).eq("assigned_email", empEmail);
+          }
+          // อัปเดตลูกค้าที่ assigned_to = ชื่อเก่า (กรณียังไม่มี assigned_email)
+          await supabase.from("crm_customers").update({ assigned_to: rest.name, assigned_email: empEmail }).eq("assigned_to", oldEmp.name);
+          // อัปเดตชื่อเล่นเก่าด้วย (เช่น "ปอนด์")
+          const oldNick = oldEmp.name.match(/\(([^)]+)\)/);
+          if (oldNick) {
+            await supabase.from("crm_customers").update({ assigned_to: rest.name, assigned_email: empEmail }).eq("assigned_to", oldNick[1].trim());
+          }
+          showToast("อัปเดตชื่อในลูกค้าทั้งหมดแล้ว ✓");
+        }
+      }
       await supabase.from(table).update(rest).eq("id", id);
       showToast("บันทึกแล้ว");
     }
