@@ -238,7 +238,7 @@ function LoginScreen({ onLogin }) {
     // ใช้ crm_employees สำหรับ login (standalone)
     supabase.from("crm_employees").select().then((res) => {
       if (res.data) {
-        const empUsers = res.data.filter(a=>a.active !== false).map((a) => ({ username: a.username || a.email, password: String(a.password || "1234"), name: a.nickname || a.name || a.email, role: a.role==="admin"?"admin":"employee" }));
+        const empUsers = res.data.filter(a=>a.active !== false).map((a) => ({ username: a.username || a.email, password: String(a.password || "1234"), name: a.name || a.nickname || a.email, role: a.role==="admin"?"admin":"employee" }));
         setAllUsers(empUsers);
       }
     });
