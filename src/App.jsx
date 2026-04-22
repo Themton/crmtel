@@ -1392,7 +1392,8 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
               {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
                 <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
-                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 4 }}>{e2.name}</div>
+                <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 2 }}>{e2.name}</div>
+                {e2.nickname && e2.nickname !== e2.name && <div style={{ fontSize: 14, color: "#92400e", marginBottom: 4 }}>({e2.nickname})</div>}
                 <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
                 <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => { const a = c2.assigned_to; if (!a) return false; if (a === e2.name || a === e2.nickname) return true; const m = (e2.name || "").match(/\(([^)]+)\)/); if (m && a === m[1].trim()) return true; const m2 = (e2.nickname || "").match(/\(([^)]+)\)/); return m2 && a === m2[1].trim(); }).length} ลูกค้า</span>
               </div>))}
@@ -1702,12 +1703,12 @@ function CRMApp({ currentUser, onLogout }) {
           <div style={{ padding: 24 }}>
             {/* Header */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
-              <span>ชื่อ</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
+              <span>ชื่อจริง</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
             </div>
             {/* Rows */}
             {multiAddEmp.map((emp, idx) => (
               <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อพนักงาน" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อจริง" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
                 <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
@@ -1851,7 +1852,7 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
           <div><label style={lS}>มอบหมาย</label><select style={iS} value={form.assigned_to || ""} onChange={(e) => { u("assigned_to", e.target.value); const emp = employees.find(em => em.name === e.target.value); u("assigned_email", emp ? (emp.email || emp.username || "") : ""); }}><option value="">—</option>{employees.map((e2) => <option key={e2.id} value={e2.name}>{e2.name}</option>)}</select></div>
         </>}
         {modal.type === "employee" && <>
-          <div style={{ gridColumn: "1/3" }}><label style={lS}>ชื่อ</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} /></div>
+          <div><label style={lS}>ชื่อจริง</label><input style={iS} value={form.name || ""} onChange={(e) => u("name", e.target.value)} placeholder="ชื่อ-นามสกุล" /></div>
           <div><label style={lS}>ชื่อเล่น</label><input style={iS} value={form.nickname || ""} onChange={(e) => u("nickname", e.target.value)} placeholder="ชื่อเล่น" /></div>
           <div><label style={lS}>ชื่อผู้ใช้ (Login)</label><input style={iS} value={form.username || ""} onChange={(e) => u("username", e.target.value)} placeholder="username" /></div>
           <div><label style={lS}>รหัสผ่าน</label><input style={iS} value={form.password || ""} onChange={(e) => u("password", e.target.value)} placeholder="password" /></div>
