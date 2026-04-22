@@ -235,11 +235,11 @@ function LoginScreen({ onLogin }) {
   const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
-    // ใช้ accounts ตัวเดียวกับ crm-themt2
-    supabase.from("accounts").select().then((res) => {
+    // ใช้ crm_employees สำหรับ login (standalone)
+    supabase.from("crm_employees").select().then((res) => {
       if (res.data) {
-        const accUsers = res.data.filter(a=>a.active).map((a) => ({ username: a.email, password: String(a.password), name: a.display_name||a.email, role: a.role==="admin"?"admin":"employee" }));
-        setAllUsers(accUsers);
+        const empUsers = res.data.filter(a=>a.active !== false).map((a) => ({ username: a.username || a.email, password: String(a.password || "1234"), name: a.nickname || a.name || a.email, role: a.role==="admin"?"admin":"employee" }));
+        setAllUsers(empUsers);
       }
     });
   }, []);
@@ -316,12 +316,10 @@ function LoginScreen({ onLogin }) {
 export default function AppWrapper() {
   const [user, setUser] = useState(() => {
     try { const s = sessionStorage.getItem("crm_user"); if(s) return JSON.parse(s); } catch {}
-    // Shared login — เช็คจาก crm-themt2
-    try { const p = localStorage.getItem("ps_user"); if(p){ var u=JSON.parse(p); return {username:u.username,name:u.displayName||u.username,role:u.role==="admin"?"admin":"employee",password:""}; } } catch {}
     return null;
   });
-  const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); localStorage.setItem("ps_user", JSON.stringify({username:u.username,displayName:u.name,role:u.role==="admin"?"admin":"user",active:true})); };
-  const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); localStorage.removeItem("ps_user"); };
+  const handleLogin = (u) => { setUser(u); sessionStorage.setItem("crm_user", JSON.stringify(u)); };
+  const handleLogout = () => { setUser(null); sessionStorage.removeItem("crm_user"); };
   if (!user) return <LoginScreen onLogin={handleLogin} />;
   return <CRMApp currentUser={user} onLogout={handleLogout} />;
 }
@@ -387,32 +385,13 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
-      const [c, e, s, cs, sv, tr, acc] = await Promise.all([
+      const [c, e, s, cs, sv, tr] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
         safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
-        safeFetch("accounts"),
       ]);
-      // สร้าง map display_name จาก CRM2 accounts (เทียบ email)
-      const accDisplayMap = {};
-      (acc || []).filter(a => a.active).forEach(a => {
-        if (a.email) accDisplayMap[a.email.toLowerCase()] = a.display_name || a.email;
-      });
-      // เติม nickname ให้พนักงาน (ในหน่วยความจำ ไม่ยิง DB)
-      const syncedEmp = (e || []).map(emp => {
-        const key = (emp.email || emp.username || "").toLowerCase();
-        const dn = accDisplayMap[key];
-        return dn ? { ...emp, nickname: dn } : emp;
-      });
-      // เพิ่มพนักงานใหม่จาก CRM2 ที่ยังไม่มีใน crm_employees
-      const existingEmails = new Set(syncedEmp.map(emp => (emp.email || emp.username || "").toLowerCase()));
-      const newEmps = [];
-      (acc || []).filter(a => a.active && a.email && !existingEmails.has(a.email.toLowerCase())).forEach(a => {
-        newEmps.push({ name: a.display_name, nickname: a.display_name, username: a.email, email: a.email, role: a.role === "admin" ? "admin" : "employee", active: true });
-      });
-      if (newEmps.length > 0) { try { await supabase.from("crm_employees").insert(newEmps); } catch {} }
       // ลบพนักงานซ้ำ (เก็บแค่รายการแรกต่อ email)
       const seenEmail = new Set();
-      const allEmp = [...syncedEmp, ...newEmps].filter(emp => {
+      const allEmp = (e || []).filter(emp => {
         const key = (emp.email || emp.username || emp.name || "").toLowerCase().trim();
         if (!key || seenEmail.has(key)) return false;
         seenEmail.add(key);
@@ -548,18 +527,10 @@ function CRMApp({ currentUser, onLogout }) {
       const res = await supabase.from(table).insert(rest);
       if (res.data) showToast("เพิ่มสำเร็จ");
       else showToast("เกิดข้อผิดพลาด", "warning");
-      // Sync พนักงาน → accounts (shared login)
-      if (table === "crm_employees" && rest.username) {
-        await supabase.from("accounts").insert({ email: rest.username, password: rest.password || "1234", display_name: rest.name, role: "user", active: true });
-      }
     } else {
       const { id, ...rest } = data;
       await supabase.from(table).update(rest).eq("id", id);
       showToast("บันทึกแล้ว");
-      // Sync แก้ไขพนักงาน → accounts
-      if (table === "crm_employees" && rest.username) {
-        await supabase.from("accounts").update({ password: rest.password || "1234", display_name: rest.name }).eq("email", rest.username);
-      }
     }
     setModal(null);
     await fetchAll(); broadcastChange();
@@ -577,11 +548,6 @@ function CRMApp({ currentUser, onLogout }) {
       }
     }
     setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
-    // ลบพนักงาน → ปิด accounts ด้วย
-    if (table === "crm_employees") {
-      const emp = employees.find((e) => e.id === id);
-      if (emp && emp.username) await supabase.from("accounts").update({ active: false }).eq("email", emp.username);
-    }
     await supabase.from(table).delete().eq("id", id);
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
@@ -911,10 +877,6 @@ function CRMApp({ currentUser, onLogout }) {
               style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: tab === item.key ? "linear-gradient(90deg, #fffbeb, #fef3c7)" : "transparent", color: tab === item.key ? "#92400e" : "#6b7280", fontWeight: tab === item.key ? 600 : 400, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: tab === item.key ? "3px solid #d4a017" : "3px solid transparent", whiteSpace: "nowrap" }}>
               <span style={{ flexShrink: 0 }}>{item.icon}</span> {sidebarOpen && item.label}
             </button>))}
-          {/* ลิงก์ไป Telesale */}
-          <a href="https://themton.github.io/crm-themt2/" style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: sidebarOpen ? "12px 24px" : "12px 18px", border: "none", background: "linear-gradient(90deg, #eff6ff, #dbeafe)", color: "#1d4ed8", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "left", borderRight: "3px solid #3b82f6", whiteSpace: "nowrap", textDecoration: "none", boxSizing: "border-box", marginTop: 8 }}>
-            <span style={{ flexShrink: 0 }}>📋</span> {sidebarOpen && "ระบบ Telesale →"}
-          </a>
         </nav>
         <main style={{ flex: 1, padding: 28, overflowY: tab === "customers" ? "hidden" : "auto", overflowX: "hidden" }}>
 
@@ -1715,7 +1677,7 @@ function CRMApp({ currentUser, onLogout }) {
                 let ok = 0;
                 for (const emp of valid) {
                   const res = await supabase.from("crm_employees").insert({ name: emp.name, nickname: emp.nickname || "", username: emp.username || emp.name, password: emp.password || "1234", email: emp.email, role: emp.role || "employee" });
-                  if (!res.error) { ok++; await supabase.from("accounts").insert({ email: emp.username || emp.name, password: emp.password || "1234", display_name: emp.name, role: "user", active: true }); }
+                  if (!res.error) { ok++; }
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
                 setProgress(null);
