@@ -362,6 +362,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [promoFilter, setPromoFilter] = useState(() => sessionStorage.getItem("crm_promoFilter") || "");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
   const [multiEditEmp, setMultiEditEmp] = useState(null);
+  const [quickAddRows, setQuickAddRows] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
   const [colOrderLoaded, setColOrderLoaded] = useState(false);
@@ -1056,6 +1057,7 @@ function CRMApp({ currentUser, onLogout }) {
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
                 <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
+                <button onClick={() => setQuickAddRows([{ name: "", phone: "", note: "", previous_promo: "", assigned_to: "" }])} style={{ ...bp, background: "linear-gradient(135deg, #059669, #047857)" }}><I.Plus /> เพิ่มด่วน</button>
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
               </div>
             </div>
@@ -1761,6 +1763,59 @@ function CRMApp({ currentUser, onLogout }) {
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {/* QUICK ADD CUSTOMERS */}
+      {quickAddRows && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2500, padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 800, maxHeight: "85vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#3d2a0a" }}>เพิ่มลูกค้าด่วน ({quickAddRows.length} คน)</h3>
+            <button onClick={() => setQuickAddRows(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>✕</button>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 140px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+              <span>ชื่อ</span><span>เบอร์โทร</span><span>ที่อยู่/โน้ต</span><span>โปรก่อนหน้า</span><span>มอบหมาย</span><span></span>
+            </div>
+            {quickAddRows.map((row, idx) => (
+              <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 140px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                <input value={row.name} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], name: e.target.value }; setQuickAddRows(n); }} placeholder="ชื่อลูกค้า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={row.phone} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], phone: e.target.value }; setQuickAddRows(n); }} placeholder="0812345678" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={row.note} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], note: e.target.value }; setQuickAddRows(n); }} placeholder="ที่อยู่ / โน้ต" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={row.previous_promo} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], previous_promo: e.target.value }; setQuickAddRows(n); }} placeholder="โปร" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <select value={row.assigned_to} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], assigned_to: e.target.value }; setQuickAddRows(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                  <option value="">— ยังไม่มอบหมาย —</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.nickname || em.name}</option>)}
+                </select>
+                <button onClick={() => { if (quickAddRows.length > 1) setQuickAddRows(quickAddRows.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
+              </div>
+            ))}
+            <button onClick={() => setQuickAddRows([...quickAddRows, { name: "", phone: "", note: "", previous_promo: "", assigned_to: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+              + เพิ่มอีกคน
+            </button>
+          </div>
+          <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>รวม {quickAddRows.filter((r) => r.name.trim() || r.phone.trim()).length} คน</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setQuickAddRows(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+              <button onClick={async () => {
+                const valid = quickAddRows.filter((r) => r.name.trim() || r.phone.trim());
+                if (!valid.length) { showToast("กรุณากรอกข้อมูลอย่างน้อย 1 คน", "warning"); return; }
+                setProgress({ current: 0, total: valid.length, label: "กำลังเพิ่มลูกค้า..." });
+                let ok = 0;
+                for (const row of valid) {
+                  const emp = employees.find(em => em.name === row.assigned_to);
+                  const data = { name: row.name, phone: row.phone, note: row.note, previous_promo: row.previous_promo, assigned_to: row.assigned_to, assigned_email: emp ? (emp.email || emp.username || "") : "", status: "not_called", created_at: new Date().toISOString() };
+                  const res = await supabase.from("crm_customers").insert(data);
+                  if (!res.error) ok++;
+                  setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มลูกค้า..." });
+                }
+                setProgress(null);
+                await fetchAll(); broadcastChange();
+                showToast("เพิ่ม " + ok + " ลูกค้าสำเร็จ ✓");
+                setQuickAddRows(null);
+              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #059669, #047857)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({quickAddRows.filter((r) => r.name.trim() || r.phone.trim()).length})</button>
             </div>
           </div>
         </div>
