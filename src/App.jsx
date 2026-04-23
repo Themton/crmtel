@@ -348,6 +348,8 @@ function CRMApp({ currentUser, onLogout }) {
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
   const [colWidths, setColWidths] = useState({});
+  const [colStats, setColStats] = useState(null);
+  const [footerStats, setFooterStats] = useState({});
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(null);
@@ -1297,7 +1299,7 @@ function CRMApp({ currentUser, onLogout }) {
                         </select>
                       </div>
                     </th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10 }}>
+                    {TH.map((h, i) => <th key={i} onContextMenu={(e) => { e.preventDefault(); const key = activeColOrder[i]; const values = fc.map((c) => String(c[key] ?? "")); const total = values.length; const filled = values.filter((v) => v && v !== "0" && v !== "false").length; const empty = total - filled; const unique = new Set(values.filter(Boolean)).size; const counts = {}; values.forEach((v) => { const k = v || "(ว่าง)"; counts[k] = (counts[k] || 0) + 1; }); const top5 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8); setColStats({ x: e.clientX, y: e.clientY, label: h, key, total, filled, empty, unique, fillRate: total ? Math.round(filled / total * 100) : 0, top5 }); }} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10, cursor: "context-menu" }}>
                       {h}
                       <div onMouseDown={(e) => { e.preventDefault(); const startX = e.clientX; const th = e.target.parentElement; const startW = th.offsetWidth; const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(40, startW + diff) })); }; const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }; document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); }} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 4, cursor: "col-resize", background: "transparent" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#d4a01740")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")} />
                     </th>)}
@@ -1312,22 +1314,30 @@ function CRMApp({ currentUser, onLogout }) {
                     ))}
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
+                  <tfoot><tr style={{ background: "#fafaf8", borderTop: "2px solid #e5e7eb" }}>
+                    <td colSpan={2} style={{ padding: "3px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
+                    {activeColOrder.map((key) => {
+                      const values = fc.map((c) => String(c[key] ?? ""));
+                      const total = values.length || 1;
+                      const counts = {};
+                      values.forEach((v) => { const k = v || ""; if (k) counts[k] = (counts[k] || 0) + 1; });
+                      const top5 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+                      const fs = footerStats[key];
+                      const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6"];
+                      if (fs === "count") return <td key={key} style={{ padding: "2px 4px", fontSize: 9, color: "#6b7280", fontWeight: 700 }}>นับ {values.length}</td>;
+                      if (fs === "empty") return <td key={key} style={{ padding: "2px 4px", fontSize: 9, color: "#6b7280", fontWeight: 700 }}>ว่าง {values.filter(v => !v).length}</td>;
+                      if (fs === "filled") return <td key={key} style={{ padding: "2px 4px", fontSize: 9, color: "#6b7280", fontWeight: 700 }}>เต็ม {values.filter(v => v).length}</td>;
+                      if (fs === "unique") return <td key={key} style={{ padding: "2px 4px", fontSize: 9, color: "#6b7280", fontWeight: 700 }}>เฉพาะ {new Set(values.filter(Boolean)).size}</td>;
+                      return <td key={key} style={{ padding: "2px 2px" }}>
+                        <div style={{ display: "flex", height: 10, borderRadius: 4, overflow: "hidden", background: "#f3f4f6", cursor: "pointer" }} onClick={() => setFooterStats(p => ({ ...p, [key]: "count" }))}>
+                          {top5.map(([label, cnt], ti) => <div key={ti} title={label + ": " + cnt} style={{ width: (cnt / total * 100) + "%", height: "100%", background: colors[ti % colors.length] }} />)}
+                        </div>
+                      </td>;
+                    })}
+                  </tr></tfoot>
                 </table>
               </div>
             </div>
-            {/* Employee Histogram Bar */}
-            {currentUser?.role === "admin" && <div style={{ position: "sticky", bottom: 0, background: "#fff", borderTop: "2px solid #e5e7eb", padding: "8px 12px", display: "flex", gap: 8, overflowX: "auto", zIndex: 10 }}>
-              {employees.map((em, ei) => {
-                const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#ec4899", "#0891b2", "#f59e0b", "#6366f1", "#14b8a6"];
-                const cnt = customers.filter((c2) => { const a = c2.assigned_to; const ae = c2.assigned_email; if (!a && !ae) return false; if (a === em.name || a === em.nickname || ae === em.email || ae === em.username) return true; const m = (em.name || "").match(/\(([^)]+)\)/); if (m && a === m[1].trim()) return true; const m2 = (em.nickname || "").match(/\(([^)]+)\)/); return m2 && a === m2[1].trim(); }).length;
-                const bg = colors[ei % colors.length];
-                return <div key={em.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 80, padding: "4px 8px", borderRadius: 8, background: cnt > 0 ? bg + "15" : "#f9fafb", border: cnt > 0 ? "1px solid " + bg + "40" : "1px solid #e5e7eb", cursor: "pointer" }} title={em.name + " · " + (em.email || "")}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: bg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{em.nickname || em.name}</div>
-                  <div style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{em.email || ""}</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: cnt > 0 ? bg : "#d1d5db" }}>{cnt}</div>
-                </div>;
-              })}
-            </div>}
           </div>}
 
           {/* SUPERVISOR */}
@@ -1898,6 +1908,31 @@ function CRMApp({ currentUser, onLogout }) {
         </div>
       </div>}
 
+      {/* Column Stats Popup */}
+      {colStats && <>
+        <div onClick={() => setColStats(null)} style={{ position: "fixed", inset: 0, zIndex: 2999 }} />
+        <div style={{ position: "fixed", left: Math.min(colStats.x, window.innerWidth - 220), top: Math.min(colStats.y, window.innerHeight - 300), background: "#fff", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", zIndex: 3000, width: 210, overflow: "hidden", fontSize: 12 }}>
+          <div style={{ padding: "10px 14px", borderBottom: "1px solid #e5e7eb", fontWeight: 700, color: "#3d2a0a" }}>{colStats.label}</div>
+          <div style={{ padding: "6px 0" }}>
+            {[["count", "📊 นับทั้งหมด", colStats.total], ["filled", "📬 นับที่เต็ม", colStats.filled], ["empty", "📭 นับที่ว่าง", colStats.empty], ["unique", "🔢 นับเฉพาะ", colStats.unique]].map(([k, l, v]) => (
+              <div key={k} onClick={() => { setFooterStats(p => ({ ...p, [colStats.key]: p[colStats.key] === k ? null : k })); setColStats(null); }} style={{ display: "flex", justifyContent: "space-between", padding: "6px 14px", cursor: "pointer", color: footerStats[colStats.key] === k ? "#d4a017" : "#374151", fontWeight: footerStats[colStats.key] === k ? 700 : 400 }} onMouseEnter={(e) => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                <span>{l}</span><span style={{ fontWeight: 700 }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "6px 14px", borderTop: "1px solid #e5e7eb" }}>
+            <div style={{ fontWeight: 600, marginBottom: 6, color: "#6b7280" }}>Histogram</div>
+            {colStats.top5.map(([label, cnt], ti) => {
+              const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#ec4899", "#0891b2", "#6b7280"];
+              return <div key={ti} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                <div style={{ width: 70, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</div>
+                <div style={{ flex: 1, height: 10, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}><div style={{ width: (cnt / colStats.total * 100) + "%", height: "100%", background: colors[ti % colors.length], borderRadius: 5 }} /></div>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", minWidth: 20, textAlign: "right" }}>{cnt}</span>
+              </div>;
+            })}
+          </div>
+        </div>
+      </>}
       {toast && <div style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "warning" ? "#fef3c7" : "#d1fae5", color: toast.type === "warning" ? "#92400e" : "#065f46", padding: "14px 24px", borderRadius: 12, fontWeight: 600, fontSize: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", zIndex: 2000, animation: "slideUp .3s", display: "flex", alignItems: "center", gap: 8 }}>{toast.type === "warning" ? "⚠️" : "✓"} {toast.msg}</div>}
 
       {/* PROGRESS BAR */}
