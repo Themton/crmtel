@@ -361,6 +361,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [assignEmployees, setAssignEmployees] = useState([]);
   const [promoFilter, setPromoFilter] = useState(() => sessionStorage.getItem("crm_promoFilter") || "");
   const [multiAddEmp, setMultiAddEmp] = useState(null);
+  const [multiEditEmp, setMultiEditEmp] = useState(null);
   const [colOrder, setColOrder] = useState([]);
   const [dragCol, setDragCol] = useState(null);
   const [colOrderLoaded, setColOrderLoaded] = useState(false);
@@ -1385,9 +1386,12 @@ function CRMApp({ currentUser, onLogout }) {
 
           {/* EMPLOYEES */}
           {tab === "employees" && <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>พนักงาน ({employees.length})</h2>
-              <button onClick={() => setMultiAddEmp([{ name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setMultiEditEmp(employees.map(e2 => ({ ...e2 })))} style={{ ...bp, background: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff" }}><I.Edit /> แก้ไขทั้งหมด</button>
+                <button onClick={() => setMultiAddEmp([{ name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={bp}><I.Plus /> เพิ่มพนักงาน</button>
+              </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
               {employees.map((e2) => (<div key={e2.id} style={{ background: "#fff", borderRadius: 14, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", position: "relative" }}>
@@ -1744,6 +1748,69 @@ function CRMApp({ currentUser, onLogout }) {
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {/* MULTI EDIT EMPLOYEES */}
+      {multiEditEmp && <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2500, padding: 20 }}>
+        <div style={{ background: "#fff", borderRadius: 16, width: "100%", maxWidth: 900, maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div style={{ padding: "20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#3d2a0a" }}>แก้ไขพนักงานทั้งหมด ({multiEditEmp.length} คน)</h3>
+            <button onClick={() => setMultiEditEmp(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>✕</button>
+          </div>
+          <div style={{ padding: 24, overflowX: "auto" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 100px 140px 80px 140px 100px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280", minWidth: 700 }}>
+              <span>#</span><span>ชื่อจริง</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span>
+            </div>
+            {multiEditEmp.map((emp, idx) => (
+              <div key={emp.id} style={{ display: "grid", gridTemplateColumns: "40px 1fr 100px 140px 80px 140px 100px", gap: 8, marginBottom: 6, alignItems: "center", minWidth: 700 }}>
+                <span style={{ fontSize: 12, color: "#9ca3af" }}>{idx + 1}</span>
+                <input value={emp.name || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], name: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], nickname: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.username || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], username: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.password || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], password: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <input value={emp.email || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], email: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
+                <select value={emp.role || "employee"} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], role: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                  <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option><option value="admin">ผู้ดูแล</option>
+                </select>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
+            <span style={{ fontSize: 13, color: "#9ca3af" }}>แก้ไขแล้วกดบันทึก</span>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setMultiEditEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
+              <button onClick={async () => {
+                const changed = multiEditEmp.filter((emp, idx) => {
+                  const orig = employees.find(e2 => e2.id === emp.id);
+                  if (!orig) return false;
+                  return emp.name !== orig.name || emp.nickname !== orig.nickname || emp.username !== orig.username || emp.password !== orig.password || emp.email !== orig.email || emp.role !== orig.role;
+                });
+                if (!changed.length) { showToast("ไม่มีข้อมูลที่เปลี่ยนแปลง"); setMultiEditEmp(null); return; }
+                setProgress({ current: 0, total: changed.length, label: "กำลังบันทึก..." });
+                let ok = 0;
+                for (const emp of changed) {
+                  const orig = employees.find(e2 => e2.id === emp.id);
+                  // อัปเดตพนักงาน
+                  await supabase.from("crm_employees").update({ name: emp.name, nickname: emp.nickname, username: emp.username, password: emp.password, email: emp.email, role: emp.role }).eq("id", emp.id);
+                  // ถ้าเปลี่ยนชื่อ → อัปเดต assigned_to ในลูกค้า
+                  if (orig && emp.name !== orig.name) {
+                    const empEmail = orig.email || orig.username || "";
+                    if (empEmail) await supabase.from("crm_customers").update({ assigned_to: emp.name }).eq("assigned_email", empEmail);
+                    await supabase.from("crm_customers").update({ assigned_to: emp.name, assigned_email: empEmail }).eq("assigned_to", orig.name);
+                    const oldNick = orig.name.match(/\(([^)]+)\)/);
+                    if (oldNick) await supabase.from("crm_customers").update({ assigned_to: emp.name, assigned_email: empEmail }).eq("assigned_to", oldNick[1].trim());
+                  }
+                  ok++;
+                  setProgress({ current: ok, total: changed.length, label: "กำลังบันทึก..." });
+                }
+                setProgress(null);
+                await fetchAll(); broadcastChange();
+                showToast("บันทึก " + ok + " พนักงานสำเร็จ ✓");
+                setMultiEditEmp(null);
+              }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด</button>
             </div>
           </div>
         </div>
