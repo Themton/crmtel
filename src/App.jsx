@@ -824,8 +824,21 @@ function CRMApp({ currentUser, onLogout }) {
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
       if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
-      // Employee filter
-      if (empFilter.length > 0 && !empFilter.includes(c.assigned_to)) return false;
+      // Employee filter — เทียบทั้งชื่อ, ชื่อเล่น, อีเมล
+      if (empFilter.length > 0) {
+        const matchAny = empFilter.some(empName => {
+          const emp = employees.find(em => em.name === empName);
+          if (!emp) return c.assigned_to === empName;
+          const a = (c.assigned_to || "").toLowerCase();
+          const ae = (c.assigned_email || "").toLowerCase();
+          if (a === emp.name.toLowerCase() || a === (emp.nickname || "").toLowerCase()) return true;
+          if (ae && (ae === (emp.email || "").toLowerCase() || ae === (emp.username || "").toLowerCase())) return true;
+          const m = emp.name.match(/\(([^)]+)\)/);
+          if (m && a === m[1].trim().toLowerCase()) return true;
+          return false;
+        });
+        if (!matchAny) return false;
+      }
       // Advanced filters
       for (const af of advFilters) {
         if (!af.field || !af.value) continue;
@@ -833,6 +846,19 @@ function CRMApp({ currentUser, onLogout }) {
           if (af.op === "eq" && c.assigned_to) return false;
           if (af.op === "neq" && !c.assigned_to) return false;
           continue;
+        }
+        // กรอง assigned_to ให้เทียบด้วย email + nickname ด้วย
+        if (af.field === "assigned_to" && af.value !== "__unassigned__") {
+          const emp = employees.find(em => em.name === af.value);
+          if (emp) {
+            const a = (c.assigned_to || "").toLowerCase();
+            const ae = (c.assigned_email || "").toLowerCase();
+            const matched = a === emp.name.toLowerCase() || a === (emp.nickname || "").toLowerCase() || (ae && (ae === (emp.email || "").toLowerCase() || ae === (emp.username || "").toLowerCase())) || (() => { const m = emp.name.match(/\(([^)]+)\)/); return m && a === m[1].trim().toLowerCase(); })();
+            if (af.op === "eq" && !matched) return false;
+            if (af.op === "neq" && matched) return false;
+            if (af.op === "contains" && !matched) return false;
+            continue;
+          }
         }
         let cv;
         cv = String(c[af.field] || "").toLowerCase();
