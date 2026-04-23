@@ -202,7 +202,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   const [val, setVal] = useState(value || "");
   const ref = useRef(null);
   useEffect(() => { setVal(value || ""); }, [value]);
-  useEffect(() => { if (editing && ref.current) ref.current.focus(); }, [editing]);
+  useEffect(() => { if (editing && ref.current) { ref.current.focus(); if ((type === "date" || type === "datetime") && ref.current.showPicker) { try { ref.current.showPicker(); } catch {} } } }, [editing]);
   const save = () => { setEditing(false); if (val !== (value || "")) onSave(val); };
   const inputType = type === "datetime" ? "datetime-local" : type === "date" ? "date" : "text";
   if (editing) {
@@ -210,7 +210,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
       <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
         style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
     ) : (
-      <input ref={ref} type={inputType} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
+      <input ref={ref} type={inputType} value={val} onChange={(e) => { setVal(e.target.value); if (type === "date" || type === "datetime") { setEditing(false); if (e.target.value !== (value || "")) onSave(e.target.value); } }} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
         style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
     );
   }
@@ -840,6 +840,8 @@ function CRMApp({ currentUser, onLogout }) {
         if (af.op === "contains" && !cv.includes(fv)) return false;
         if (af.op === "eq" && cv !== fv) return false;
         if (af.op === "neq" && cv === fv) return false;
+        if (af.op === "gte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d < af.value) return false; }
+        if (af.op === "lte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d > af.value) return false; }
       }
       return true;
     });
@@ -1123,6 +1125,7 @@ function CRMApp({ currentUser, onLogout }) {
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
+                            {(af.field === "call_date" || af.field === "next_follow" || af.field === "order_date") && <><option value="gte">ตั้งแต่วันที่</option><option value="lte">ถึงวันที่</option></>}
                           </select>
                           {af.field === "status" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
@@ -1144,6 +1147,8 @@ function CRMApp({ currentUser, onLogout }) {
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                               <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
                             </select>
+                          ) : (af.field === "call_date" || af.field === "next_follow" || af.field === "order_date") ? (
+                            <input type="date" value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
                           ) : (
                             (() => {
                               const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
