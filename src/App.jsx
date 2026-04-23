@@ -1313,6 +1313,19 @@ function CRMApp({ currentUser, onLogout }) {
                 </table>
               </div>
             </div>
+            {/* Employee Histogram Bar */}
+            {currentUser?.role === "admin" && <div style={{ position: "sticky", bottom: 0, background: "#fff", borderTop: "2px solid #e5e7eb", padding: "8px 12px", display: "flex", gap: 8, overflowX: "auto", zIndex: 10 }}>
+              {employees.map((em, ei) => {
+                const colors = ["#d4a017", "#3b82f6", "#059669", "#ef4444", "#8b5cf6", "#ec4899", "#0891b2", "#f59e0b", "#6366f1", "#14b8a6"];
+                const cnt = customers.filter((c2) => { const a = c2.assigned_to; const ae = c2.assigned_email; if (!a && !ae) return false; if (a === em.name || a === em.nickname || ae === em.email || ae === em.username) return true; const m = (em.name || "").match(/\(([^)]+)\)/); if (m && a === m[1].trim()) return true; const m2 = (em.nickname || "").match(/\(([^)]+)\)/); return m2 && a === m2[1].trim(); }).length;
+                const bg = colors[ei % colors.length];
+                return <div key={em.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 80, padding: "4px 8px", borderRadius: 8, background: cnt > 0 ? bg + "15" : "#f9fafb", border: cnt > 0 ? "1px solid " + bg + "40" : "1px solid #e5e7eb", cursor: "pointer" }} title={em.name + " · " + (em.email || "")}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: bg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{em.nickname || em.name}</div>
+                  <div style={{ fontSize: 9, color: "#9ca3af", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{em.email || ""}</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: cnt > 0 ? bg : "#d1d5db" }}>{cnt}</div>
+                </div>;
+              })}
+            </div>}
           </div>}
 
           {/* SUPERVISOR */}
