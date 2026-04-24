@@ -1163,7 +1163,7 @@ function CRMApp({ currentUser, onLogout }) {
                         return (<>
                         {idx > 0 && <div style={{ textAlign: "center", margin: "-4px 0", fontSize: 15, fontWeight: 700, color: sameField ? "#059669" : "#d4a017" }}>{sameField ? "หรือ" : "และ"}</div>}
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "center" }}>
-                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; nf[idx].op = (e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date") ? "range" : "contains"; setAdvFilters(nf); }}
+                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; const isDate = e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date"; if (isDate) { const today = new Date().toISOString().slice(0, 10); nf[idx].op = "range"; nf[idx].value = today; nf[idx].value2 = today; } else { nf[idx].op = "contains"; } setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
                             {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
