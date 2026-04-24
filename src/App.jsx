@@ -823,7 +823,7 @@ function CRMApp({ currentUser, onLogout }) {
       // Promo filter
       if (promoFilter && extractPromoPrice(c.previous_promo) !== promoFilter) return false;
       // Search
-      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price || ""), String(c.customer_relation || "")].some((v) => v?.toLowerCase().includes(q))) return false; }
+      if (search) { const q = search.toLowerCase(); if (![c.name, c.phone, c.note, c.previous_promo, c.order_date, c.assigned_to, c.supervisor, c.call_date, c.call_subject, c.call_note, c.nickname, c.created_at, String(c.product_price ?? ""), String(c.customer_relation ?? "")].some((v) => v?.toLowerCase().includes(q))) return false; }
       // Employee filter — เทียบทั้งชื่อ, ชื่อเล่น, อีเมล
       if (empFilter.length > 0) {
         const matchAny = empFilter.some(empName => {
@@ -1209,7 +1209,7 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                           ) : (
                             (() => {
-                              const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
+                              const vals = [...new Set(customers.map((c2) => { const v = c2[af.field]; return String(v !== null && v !== undefined ? v : ""); }).filter(Boolean))].sort();
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
