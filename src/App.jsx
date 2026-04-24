@@ -93,13 +93,13 @@ function PillDropdown({ label, value, options, onChange, color = "#2563eb" }) {
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
       <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: `2px solid ${color}`, background: value !== "all" ? `${color}15` : "#fff", color, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
+        {sel?.badge ? <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 14, fontWeight: 700, color: "#fff", background: sel.badge }}>{sel.label}</span> : (sel?.label || label)}
         {open ? <I.ChevUp /> : <I.ChevDown />}
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", padding: 8, zIndex: 200, minWidth: 200, maxHeight: 360, overflowY: "auto", animation: "fadeIn .15s" }}>
         {options.map((o) => (<button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 10, cursor: "pointer", fontSize: 14, fontWeight: value === o.value ? 700 : 400, color: "#1e293b", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
-          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
+          {o.badge ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 14, fontWeight: 700, color: "#fff", background: o.badge }}>{o.label}</span> : o.label}
           {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -114,11 +114,11 @@ function InlineStatusDropdown({ value, statuses, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{cur?.label || "—"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 170, animation: "fadeIn .15s" }}>
         {statuses.map((s) => (<button key={s.id} onClick={() => { onChange(s.key); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.key ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.key) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.key) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 14, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.key && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -133,11 +133,11 @@ function SubjectDropdown({ value, subjects, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "2px 8px", borderRadius: 6, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 180, maxHeight: 320, overflowY: "auto", animation: "fadeIn .15s" }}>
         {subjects.map((s) => (<button key={s.id} onClick={() => { onChange(s.label); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "7px 10px", border: "none", background: value === s.label ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
           onMouseEnter={(e) => { if (value !== s.label) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== s.label) e.currentTarget.style.background = "transparent"; }}>
-          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
+          <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 14, fontWeight: 700, color: "#fff", background: s.color }}>{s.label}</span>
           {value === s.label && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
         </button>))}
       </div>}
@@ -156,16 +156,16 @@ function OfferDropdown({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
+      <button onClick={() => setOpen(!open)} style={{ padding: "4px 12px", borderRadius: 8, border: "none", background: cur?.color || "#9ca3af", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>{value || "เลือก"} <I.ChevDown /></button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
-        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 12, color: "#6b7280" }}
+        <button onClick={() => { onChange(""); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: !value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", fontSize: 14, color: "#6b7280" }}
           onMouseEnter={(e) => { if (value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value) e.currentTarget.style.background = "transparent"; }}>
           — ว่าง —
         </button>
         {OFFER_OPTIONS.map((o) => (
           <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", border: "none", background: value === o.value ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left" }}
             onMouseEnter={(e) => { if (value !== o.value) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== o.value) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
+            <span style={{ padding: "3px 10px", borderRadius: 6, fontSize: 15, fontWeight: 700, color: "#fff", background: o.color }}>{o.value}</span>
             {value === o.value && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
         ))}
@@ -180,14 +180,14 @@ function RatingSelector({ value, onChange }) {
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+      <button onClick={() => setOpen(!open)} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5, minWidth: 36, height: 30, borderRadius: 8, border: "none", background: RATING_COLORS[value] || "#e5e7eb", color: value !== null && value !== undefined ? "#fff" : "#9ca3af", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
         {value !== null && value !== undefined ? value : "—"} <I.ChevDown />
       </button>
       {open && <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", padding: 6, zIndex: 200, minWidth: 140, animation: "fadeIn .15s" }}>
         {[0,1,2,3,4,5].map((n) => (
-          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 13 }}
+          <button key={n} onClick={() => { onChange(n); setOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 12px", border: "none", background: value === n ? "#fffbeb" : "transparent", borderRadius: 8, cursor: "pointer", textAlign: "left", fontSize: 15 }}
             onMouseEnter={(e) => { if (value !== n) e.currentTarget.style.background = "#f8fafc"; }} onMouseLeave={(e) => { if (value !== n) e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
+            <span style={{ width: 28, height: 28, borderRadius: 8, background: RATING_COLORS[n], color: "#fff", fontWeight: 700, fontSize: 15, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{n}</span>
             <span style={{ color: "#374151" }}>{{ 0: "ยังไม่ประเมิน", 1: "น้อยมาก", 2: "น้อย", 3: "ปานกลาง", 4: "ดี", 5: "ดีมาก" }[n]}</span>
             {value === n && <span style={{ marginLeft: "auto", color: "#d4a017" }}><I.Check /></span>}
           </button>
@@ -208,10 +208,10 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
   if (editing) {
     return type === "textarea" ? (
       <textarea ref={ref} value={val} onChange={(e) => setVal(e.target.value)} onBlur={save} onKeyDown={(e) => { if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: 140, minHeight: 50, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 14, fontWeight: 600, outline: "none", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit" }} />
     ) : (
       <input ref={ref} type={inputType} value={val} onChange={(e) => { setVal(e.target.value); if (type === "date" || type === "datetime") { setEditing(false); if (e.target.value !== (value || "")) onSave(e.target.value); } }} onBlur={save} onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setVal(value || ""); setEditing(false); } }}
-        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 12, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+        style={{ width: "100%", minWidth: type === "date" || type === "datetime" ? 140 : 80, padding: "5px 8px", borderRadius: 8, border: "2px solid #d4a017", fontSize: 14, fontWeight: 600, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
     );
   }
   let display = value || "—";
@@ -221,7 +221,7 @@ function EditableCell({ value, onSave, type = "text", style: sx = {} }) {
     <div onClick={() => setEditing(true)} style={{ cursor: "pointer", padding: "2px 4px", borderRadius: 4, border: "1px solid transparent", minHeight: 18, ...sx }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#fde68a"; e.currentTarget.style.background = "#fffbeb"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.background = "transparent"; }}>
-      <span style={{ fontSize: 10, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
+      <span style={{ fontSize: 14, color: value ? "#1e293b" : "#c0c0c0", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{display}</span>
     </div>
   );
 }
@@ -905,11 +905,11 @@ function CRMApp({ currentUser, onLogout }) {
   const unC = customers.filter((c) => !c.supervisor && !c.assigned_to);
 
   const bp = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", boxShadow: "0 2px 8px rgba(212,160,23,0.3)" };
-  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+  const bd = { display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, border: "none", background: "#fee2e2", color: "#dc2626", fontWeight: 600, fontSize: 15, cursor: "pointer" };
   const bi = (d) => ({ padding: "6px 8px", borderRadius: 8, border: "1px solid " + (d ? "#fee2e2" : "#e5e7eb"), background: "#fff", cursor: "pointer", color: d ? "#ef4444" : "#6b7280", display: "flex", alignItems: "center" });
   const bo = { display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, border: "2px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer" };
   const iS = { width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" };
-  const lS = { display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 };
+  const lS = { display: "block", fontSize: 15, fontWeight: 600, color: "#374151", marginBottom: 6 };
 
   // Column definitions - key, label, render function
   const COL_DEFS = {
@@ -940,35 +940,35 @@ function CRMApp({ currentUser, onLogout }) {
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}><I.Menu /></button>
         <img src={import.meta.env.BASE_URL + "logo.png"} alt="Logo" style={{ height: 36, objectFit: "contain" }} />
         <span style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>CRM THE MT</span>
-        {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 11, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
+        {USE_DEMO && <span style={{ background: "#fbbf24", color: "#78350f", fontSize: 15, padding: "2px 10px", borderRadius: 12, fontWeight: 600 }}>DEMO</span>}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{currentUser?.name} ({({ admin: "ผู้ดูแล", employee: "พนักงาน", supervisor: "หัวหน้า" }[currentUser?.role]) || currentUser?.role})</span>
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowNotif(!showNotif)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", padding: 6, position: "relative", fontSize: 20 }} className={notifications.length > 0 ? "bell-shake" : ""}>
               🔔
-              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
+              {notifications.length > 0 && <span style={{ position: "absolute", top: 0, right: 0, background: "#ef4444", color: "#fff", fontSize: 14, fontWeight: 700, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center" }}>{notifications.length}</span>}
             </button>
             {showNotif && <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 14, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", border: "1px solid #e5e7eb", width: 340, zIndex: 200, animation: "fadeIn .15s" }}>
               <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>🔔 แจ้งเตือน ({notifications.length})</span>
-                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 12, cursor: "pointer" }}>อ่านทั้งหมด</button>}
+                {notifications.length > 0 && <button onClick={async () => { for (const n of notifications) { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); } setNotifications([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 14, cursor: "pointer" }}>อ่านทั้งหมด</button>}
               </div>
               <div style={{ maxHeight: 320, overflowY: "auto" }}>
                 {notifications.length === 0 ? (
-                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>ไม่มีแจ้งเตือน</div>
+                  <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 15 }}>ไม่มีแจ้งเตือน</div>
                 ) : notifications.map((n) => (
                   <div key={n.id} style={{ padding: "12px 16px", borderBottom: "1px solid #f3f4f6", background: "#fffbeb" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#3d2a0a", marginBottom: 4 }}>{n.message}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 11, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
-                      <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 11, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
+                      <span style={{ fontSize: 15, color: "#9ca3af" }}>จาก {n.from_user} • {(() => { try { return new Date(n.created_at).toLocaleString("th-TH", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }); } catch { return ""; } })()}</span>
+                      <button onClick={async () => { await supabase.from("crm_notifications").update({ read: true }).eq("id", n.id); setNotifications(notifications.filter((x) => x.id !== n.id)); }} style={{ background: "none", border: "none", color: "#d4a017", fontSize: 15, cursor: "pointer", fontWeight: 600 }}>✓ อ่านแล้ว</button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>}
           </div>
-          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
+          <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
       <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
@@ -1008,13 +1008,13 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>แดชบอร์ด</h2>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
-                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>🔄 รีเฟรช</button>
+                <span style={{ fontSize: 15, color: "#22c55e", fontWeight: 600 }}>⚡ เรียลทาม</span>
+                <button onClick={() => fetchAll()} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", color: "#d4a017", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>🔄 รีเฟรช</button>
               </div>
             </div>
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14, marginBottom: 28 }}>
-              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 12, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
+              {stats.map((s, i) => <div key={i} style={{ background: "#fff", borderRadius: 14, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid " + s.c }}><div style={{ fontSize: 14, color: "#6b7280", marginBottom: 6 }}>{s.l}</div><div style={{ fontSize: 28, fontWeight: 700, color: s.c }}>{s.v}</div></div>)}
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
@@ -1028,7 +1028,7 @@ function CRMApp({ currentUser, onLogout }) {
                       <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 16, fontWeight: 700, color: s.c }}>{s.v}</span>
                         <div style={{ width: "100%", maxWidth: 50, borderRadius: "8px 8px 0 0", background: s.c, height: `${Math.max(pct, 5)}%`, transition: "height 0.5s ease", minHeight: 8 }} />
-                        <span style={{ fontSize: 10, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
+                        <span style={{ fontSize: 14, color: "#6b7280", textAlign: "center", fontWeight: 600, lineHeight: 1.2 }}>{s.l}</span>
                       </div>
                     );
                   })}
@@ -1063,7 +1063,7 @@ function CRMApp({ currentUser, onLogout }) {
             {dailyKeys.length > 0 && <div style={{ background: "#fff", borderRadius: 14, padding: 28, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: "#3d2a0a", marginBottom: 16 }}>สรุปรายวัน</h3>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15 }}>
                   <thead><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
                     <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 700, color: "#374151" }}>วันที่โทร</th>
                     <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017" }}>โทรแล้ว</th>
@@ -1074,10 +1074,10 @@ function CRMApp({ currentUser, onLogout }) {
                     {[...dailyKeys].reverse().map((d, idx) => {
                       const dateStr = (() => { try { return new Date(d + "T00:00:00").toLocaleDateString("th-TH", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }); } catch { return d; } })();
                       return <tr key={d} style={{ borderBottom: "1px solid #f3f4f6", background: idx === 0 ? "#fffbeb" : "transparent" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
+                        <td style={{ padding: "10px 14px", fontWeight: idx === 0 ? 700 : 400, color: idx === 0 ? "#1e40af" : "#374151" }}>{dateStr} {idx === 0 && <span style={{ background: "#d4a017", color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 14, fontWeight: 700, marginLeft: 6 }}>ล่าสุด</span>}</td>
                         <td style={{ padding: "10px 14px", textAlign: "center", fontWeight: 700, color: "#d4a017", fontSize: 16 }}>{dailyCalls[d].total}</td>
-                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
-                        <td style={{ padding: "10px 14px", fontSize: 12 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 11, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
+                        {statuses.filter((s) => s.key !== "not_called").map((s) => <td key={s.id} style={{ padding: "10px 14px", textAlign: "center" }}>{dailyCalls[d][s.label] ? <span style={{ padding: "3px 10px", borderRadius: 8, fontSize: 14, fontWeight: 700, color: "#fff", background: s.color }}>{dailyCalls[d][s.label]}</span> : <span style={{ color: "#d1d5db" }}>—</span>}</td>)}
+                        <td style={{ padding: "10px 14px", fontSize: 14 }}>{Object.entries(dailyCalls[d].byEmp || {}).sort((a, b) => b[1] - a[1]).map(([name, cnt]) => <span key={name} style={{ display: "inline-block", padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 15, marginRight: 4, marginBottom: 2 }}>{name} ({cnt})</span>)}</td>
                       </tr>;
                     })}
                   </tbody>
@@ -1098,7 +1098,7 @@ function CRMApp({ currentUser, onLogout }) {
                 </>}
                 <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
-                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 13, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
+                <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 15, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
                 <button onClick={() => setQuickAddRows([{ name: "", phone: "", note: "", previous_promo: "", assigned_to: "" }])} style={{ ...bp, background: "linear-gradient(135deg, #059669, #047857)" }}><I.Plus /> เพิ่มด่วน</button>
                 <button onClick={() => setModal({ type: "customer", mode: "add", data: { status: "not_called" } })} style={bp}><I.Plus /> เพิ่มลูกค้า</button>
@@ -1113,11 +1113,11 @@ function CRMApp({ currentUser, onLogout }) {
                 const allPrices = [...new Set(myC.map((c) => extractPrice(c.previous_promo)).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
                 if (allPrices.length === 0) return null;
                 return <div style={{ display: "flex", gap: 8, padding: "10px 20px", borderBottom: "1px solid #e5e7eb", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
-                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#6b7280" }}>โปร:</span>
+                  <button onClick={() => setPromoFilter("")} style={{ padding: "4px 14px", borderRadius: 8, border: !promoFilter ? "2px solid #ea580c" : "1px solid #e5e7eb", background: !promoFilter ? "#fff7ed" : "#fff", color: !promoFilter ? "#ea580c" : "#6b7280", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด ({myC.length})</button>
                   {allPrices.map((p) => {
                     const count = myC.filter((c) => extractPrice(c.previous_promo) === p).length;
-                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                    return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 14px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 15 }}>({count})</span></button>;
                   })}
                 </div>;
               })()}
@@ -1128,7 +1128,7 @@ function CRMApp({ currentUser, onLogout }) {
                   ...(currentUser?.role === "admin" || currentUser?.role === "supervisor" ? [{ key: "columns", label: "สลับคอลัมน์", icon: "⇄" }] : []),
                 ].map((t) => (
                   <button key={t.key} onClick={() => setToolbarTab(toolbarTab === t.key ? null : t.key)}
-                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
+                    style={{ padding: "10px 20px", border: "none", background: toolbarTab === t.key ? "#d4a017" : "transparent", color: toolbarTab === t.key ? "#fff" : "#6b7280", fontWeight: 600, fontSize: 15, cursor: "pointer", whiteSpace: "nowrap", borderRadius: toolbarTab === t.key ? "8px 8px 0 0" : 0, display: "flex", alignItems: "center", gap: 6 }}>
                     {t.icon} {t.label}
                   </button>
                 ))}
@@ -1136,7 +1136,7 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ padding: "6px 12px", display: "flex", alignItems: "center" }}>
                   <div style={{ position: "relative" }}>
                     <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ padding: "7px 12px 7px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", width: 180 }} />
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหา..." style={{ padding: "7px 12px 7px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 15, outline: "none", width: 180 }} />
                   </div>
                 </div>
               </div>
@@ -1149,7 +1149,7 @@ function CRMApp({ currentUser, onLogout }) {
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>กรอง</span>
-                          <span style={{ fontSize: 13, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
+                          <span style={{ fontSize: 15, color: "#9ca3af" }}>ตรงตามเงื่อนไขทั้งหมด ▾</span>
                         </div>
                         <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
                       </div>
@@ -1160,63 +1160,63 @@ function CRMApp({ currentUser, onLogout }) {
                         const prevAf = idx > 0 ? advFilters[idx - 1] : null;
                         const sameField = prevAf && prevAf.field && af.field && prevAf.field === af.field;
                         return (<>
-                        {idx > 0 && <div style={{ textAlign: "center", margin: "-4px 0", fontSize: 11, fontWeight: 700, color: sameField ? "#059669" : "#d4a017" }}>{sameField ? "หรือ" : "และ"}</div>}
+                        {idx > 0 && <div style={{ textAlign: "center", margin: "-4px 0", fontSize: 15, fontWeight: 700, color: sameField ? "#059669" : "#d4a017" }}>{sameField ? "หรือ" : "และ"}</div>}
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "center" }}>
                           <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; nf[idx].op = (e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date") ? "range" : "contains"; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
                             {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                           </select>
                           {isDateField ? (<>
                             <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
-                              style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 100, color: "#9ca3af", background: "#fff" }}>
+                              style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 100, color: "#9ca3af", background: "#fff" }}>
                               <option value="range">ระยะเวลา</option><option value="eq">เท่ากับ</option><option value="gte">ตั้งแต่</option><option value="lte">ถึง</option>
                             </select>
                             {af.op === "range" ? (
                               <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff" }}>
-                                <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 12, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
-                                <span style={{ color: "#9ca3af", fontSize: 12 }}>→</span>
-                                <input type="date" value={af.value2 || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value2 = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 12, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
+                                <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
+                                <span style={{ color: "#9ca3af", fontSize: 14 }}>→</span>
+                                <input type="date" value={af.value2 || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value2 = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
                                 <span style={{ fontSize: 14, color: "#9ca3af" }}>📅</span>
                               </div>
                             ) : (
-                              <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                              <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1, outline: "none" }} />
                             )}
                           </>) : (<>
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
+                            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
                           </select>
                           {af.field === "status" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                               <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
                             </select>
                           ) : af.field === "call_subject" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                               <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
                             </select>
                           ) : af.field === "received_product" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                               <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
                             </select>
                           ) : af.field === "customer_relation" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                               <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
                             </select>
                           ) : af.field === "assigned_to" ? (
-                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                            <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                               <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
                             </select>
                           ) : (
                             (() => {
                               const vals = [...new Set(customers.map((c2) => { const v = c2[af.field]; return String(v !== null && v !== undefined ? v : ""); }).filter(Boolean))].sort();
                               return vals.length > 0 && vals.length <= 500 ? (
-                                <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
+                                <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
                                   {vals.map((v) => <option key={v} value={v}>{v.length > 40 ? v.slice(0, 40) + "..." : v}</option>)}
                                 </select>
                               ) : (
-                                <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                                <input value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} placeholder="ค่า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1, outline: "none" }} />
                               );
                             })()
                           )}
@@ -1224,11 +1224,11 @@ function CRMApp({ currentUser, onLogout }) {
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
                       </>);})}
-                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "", value2: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
+                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "", value2: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 15, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <span style={{ fontSize: 13, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
+                      <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 15, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <span style={{ fontSize: 15, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
@@ -1246,7 +1246,7 @@ function CRMApp({ currentUser, onLogout }) {
                       </div>
                       <div style={{ position: "relative" }}>
                         <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 14 }}>🔍</span>
-                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                        <input value={empSearch} onChange={(e) => setEmpSearch(e.target.value)} placeholder="ค้นหาพนักงาน" style={{ width: "100%", padding: "8px 12px 8px 34px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
                       </div>
                     </div>
                     <div style={{ maxHeight: 320, overflowY: "auto", padding: "4px 0" }}>
@@ -1254,8 +1254,8 @@ function CRMApp({ currentUser, onLogout }) {
                         style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: empFilter.length === 0 ? "#eff6ff" : "transparent" }}
                         onMouseEnter={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "#f8fafc")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = empFilter.length === 0 ? "#eff6ff" : "transparent")}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
-                        <span style={{ fontSize: 13, color: "#374151" }}>บันทึกไม่มีคน</span>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>👤</div>
+                        <span style={{ fontSize: 15, color: "#374151" }}>บันทึกไม่มีคน</span>
                       </div>
                       {employees.filter((em) => !empSearch || em.name.toLowerCase().includes(empSearch.toLowerCase()) || (em.nickname || "").toLowerCase().includes(empSearch.toLowerCase())).map((em, ei) => {
                         const colors = ["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#3b82f6","#8b5cf6","#ec4899"];
@@ -1264,15 +1264,15 @@ function CRMApp({ currentUser, onLogout }) {
                           style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 16px", cursor: "pointer", background: isSelected ? "#eff6ff" : "transparent" }}
                           onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "#f8fafc")}
                           onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#eff6ff" : "transparent")}>
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
-                          <span style={{ flex: 1, fontSize: 13, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: colors[ei % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: "#fff" }}>{(em.nickname || em.name).slice(0, 1).toUpperCase()}</div>
+                          <span style={{ flex: 1, fontSize: 15, color: "#374151", fontWeight: isSelected ? 600 : 400 }}>{em.nickname || em.name}</span>
                           {isSelected && <span style={{ color: "#3b82f6", fontSize: 16 }}>✓✓</span>}
                         </div>;
                       })}
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
-                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
-                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
+                      <button onClick={() => { setEmpFilter([]); }} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 15, cursor: "pointer" }}>ลบทั้งหมด</button>
+                      <button onClick={() => setToolbarTab(null)} style={{ background: "none", border: "none", color: "#3b82f6", fontSize: 15, cursor: "pointer", fontWeight: 600 }}>บันทึกเป็นมุมมองใหม่</button>
                     </div>
                   </div>
                   <div style={{ height: 8 }}></div>
@@ -1286,7 +1286,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
                     {activeColOrder.map((key, idx) => (
                       <div key={key}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 13, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 10, background: dragCol === idx ? "linear-gradient(135deg, #d4a017, #b8860b)" : "#fff", border: dragCol === idx ? "2px solid #b8860b" : "2px solid #e5e7eb", fontSize: 15, fontWeight: 700, color: dragCol === idx ? "#fff" : "#3d2a0a", cursor: "grab", transition: "all 0.15s", boxShadow: dragCol === idx ? "0 4px 12px rgba(212,160,23,0.3)" : "none", transform: dragCol === idx ? "scale(1.05)" : "scale(1)" }}
                         draggable
                         onDragStart={(e) => { setDragCol(idx); e.dataTransfer.effectAllowed = "move"; }}
                         onDragEnd={() => setDragCol(null)}
@@ -1307,21 +1307,21 @@ function CRMApp({ currentUser, onLogout }) {
                         }}
                         onMouseEnter={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#d4a017"; e.currentTarget.style.background = "#fffbeb"; } }}
                         onMouseLeave={(e) => { if (dragCol === null) { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fff"; } }}>
-                        <span style={{ cursor: "grab", fontSize: 12, opacity: 0.5 }}>☰</span>
+                        <span style={{ cursor: "grab", fontSize: 14, opacity: 0.5 }}>☰</span>
                         <button onClick={() => { if (idx > 0) { const n = [...activeColOrder]; [n[idx - 1], n[idx]] = [n[idx], n[idx - 1]]; setColOrder(n); setDragCol(idx - 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx > 0 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>◀</button>
-                        <span style={{ fontSize: 12 }}>{COL_DEFS[key].label}</span>
+                        <span style={{ fontSize: 14 }}>{COL_DEFS[key].label}</span>
                         <button onClick={() => { if (idx < activeColOrder.length - 1) { const n = [...activeColOrder]; [n[idx], n[idx + 1]] = [n[idx + 1], n[idx]]; setColOrder(n); setDragCol(idx + 1); setTimeout(() => setDragCol(null), 400); } }} style={{ background: "none", border: "none", cursor: "pointer", color: dragCol === idx ? "#fff" : (idx < activeColOrder.length - 1 ? "#d4a017" : "#e5e7eb"), fontSize: 16, padding: "2px 4px", fontWeight: 900, transition: "transform 0.1s" }}>▶</button>
                       </div>
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
+                    <button onClick={() => setColOrder(DEFAULT_COL_ORDER)} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.background = "#f3f4f6"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#fff"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "2px solid #e5e7eb", background: "#fff", color: "#6b7280", fontSize: 15, fontWeight: 600, cursor: "pointer", transition: "all 0.1s" }}>รีเซ็ต</button>
                     <button onClick={async () => {
                       const settingKey = "col_order_" + (currentUser?.name || "default");
                       await supabase.from("crm_settings").delete().eq("key", settingKey);
                       await supabase.from("crm_settings").insert({ key: settingKey, value: JSON.stringify(activeColOrder) });
                       showToast("บันทึกลำดับคอลัมน์สำเร็จ ✓ (พนักงานในทีมจะเห็นเหมือนกัน)");
-                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
+                    }} onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.95)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(212,160,23,0.4)"; }} onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }} style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "all 0.1s" }}>💾 บันทึก (มีผลกับพนักงาน)</button>
                   </div>
                 </div>
               )}
@@ -1329,28 +1329,28 @@ function CRMApp({ currentUser, onLogout }) {
             {/* PAGINATION TOP */}
             {<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", background: "#fff", borderRadius: "0 0 0 0", borderBottom: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", flexWrap: "wrap", gap: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>แสดง</span>
-                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 13, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
+                <span style={{ fontSize: 15, color: "#6b7280" }}>แสดง</span>
+                <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 15, color: "#3d2a0a", fontWeight: 600, cursor: "pointer" }}>
                   <option value={100}>100</option><option value={300}>300</option><option value={500}>500</option>
                 </select>
-                <span style={{ fontSize: 13, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
+                <span style={{ fontSize: 15, color: "#6b7280" }}>| {((safePage - 1) * PAGE_SIZE) + 1}–{Math.min(safePage * PAGE_SIZE, fc.length)} จาก <span style={{ color: "#d4a017", fontWeight: 700 }}>{fc.length}</span> รายการ</span>
               </div>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
-                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
+                <button onClick={() => setPage(1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
+                <button onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: safePage <= 1 ? "default" : "pointer", color: safePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2).map((p, idx, arr) => (
-                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 12 }}>...</span>}
-                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 13, cursor: "pointer" }}>{p}</button></span>
+                  <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 14 }}>...</span>}
+                  <button onClick={() => setPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === safePage ? "2px solid #d4a017" : "1px solid #d1d5db", background: p === safePage ? "#d4a017" : "#fff", color: p === safePage ? "#fff" : "#374151", fontWeight: p === safePage ? 700 : 400, fontSize: 15, cursor: "pointer" }}>{p}</button></span>
                 ))}
-                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
-                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 12, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
+                <button onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>›</button>
+                <button onClick={() => setPage(totalPages)} disabled={safePage >= totalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: safePage >= totalPages ? "default" : "pointer", color: safePage >= totalPages ? "#d1d5db" : "#374151" }}>»</button>
               </div>
             </div>}
             <div style={{ background: "#fff", borderRadius: "0 0 14px 14px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <div className="crm-scroll" style={{ overflowX: "scroll", overflowY: "auto", height: "calc(100vh - 260px)" }}>
-                <table style={{ borderCollapse: "collapse", fontSize: 10, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
+                <table style={{ borderCollapse: "collapse", fontSize: 14, tableLayout: "fixed", width: "max-content", minWidth: "100%" }} className="crm-table">
                   <thead style={{ position: "sticky", top: 0, zIndex: 5 }}><tr style={{ background: "#f8fafc", borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "4px 6px", width: 30, fontSize: 10, fontWeight: 700, color: "#9ca3af" }}>#</th>
+                    <th style={{ padding: "4px 6px", width: 30, fontSize: 14, fontWeight: 700, color: "#9ca3af" }}>#</th>
                     <th style={{ padding: "4px 6px", width: 40 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <input type="checkbox" checked={selectedRows.length > 0} onChange={(e) => setSelectedRows(e.target.checked ? pagedFc.map((c) => c.id) : [])} style={{ accentColor: "#d4a017", width: 13, height: 13 }} />
@@ -1362,7 +1362,7 @@ function CRMApp({ currentUser, onLogout }) {
                         </select>
                       </div>
                     </th>
-                    {TH.map((h, i) => <th key={i} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 10 }}>
+                    {TH.map((h, i) => <th key={i} style={{ padding: "4px 5px", textAlign: "left", fontWeight: 700, color: "#374151", whiteSpace: "nowrap", width: colWidths[i] || "auto", minWidth: 40, position: "relative", userSelect: "none", fontSize: 14 }}>
                       {h}
                       <div onMouseDown={(e) => { e.preventDefault(); const startX = e.clientX; const th = e.target.parentElement; const startW = th.offsetWidth; const onMove = (ev) => { const diff = ev.clientX - startX; setColWidths((p) => ({ ...p, [i]: Math.max(40, startW + diff) })); }; const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); }; document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); }} style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 4, cursor: "col-resize", background: "transparent" }} onMouseEnter={(e) => (e.currentTarget.style.background = "#d4a01740")} onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")} />
                     </th>)}
@@ -1378,7 +1378,7 @@ function CRMApp({ currentUser, onLogout }) {
                     {fc.length === 0 && <tr><td colSpan={TH.length + 3} style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</td></tr>}
                   </tbody>
                   <tfoot><tr style={{ background: "#fafaf8", borderTop: "2px solid #e5e7eb" }}>
-                    <td colSpan={2} style={{ padding: "3px 4px", fontSize: 8, color: "#9ca3af", textAlign: "center" }}>📊</td>
+                    <td colSpan={2} style={{ padding: "3px 4px", fontSize: 9, color: "#9ca3af", textAlign: "center" }}>📊</td>
                     {activeColOrder.map((key) => {
                       const values = fc.map((c) => String(c[key] ?? ""));
                       const total = values.length || 1;
@@ -1396,16 +1396,16 @@ function CRMApp({ currentUser, onLogout }) {
                         </div> : <div style={{ display: "flex", height: 10, borderRadius: 4, overflow: "hidden", background: "#f3f4f6", cursor: "pointer" }} onClick={() => setFooterStats(p => ({ ...p, [key]: "count" }))}>
                           {top5.map(([label, cnt], ti) => <div key={ti} style={{ width: (cnt / total * 100) + "%", height: "100%", background: colors[ti % colors.length] }} />)}
                         </div>}
-                        <div className="hist-popup" style={{ display: "none", position: "absolute", bottom: "100%", left: 0, background: "#fff", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", zIndex: 100, width: 200, overflow: "hidden", fontSize: 12, marginBottom: 4 }}>
-                          <div style={{ padding: "8px 12px", borderBottom: "1px solid #e5e7eb", fontWeight: 700, color: "#3d2a0a", fontSize: 11 }}>
+                        <div className="hist-popup" style={{ display: "none", position: "absolute", bottom: "100%", left: 0, background: "#fff", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.2)", zIndex: 100, width: 200, overflow: "hidden", fontSize: 14, marginBottom: 4 }}>
+                          <div style={{ padding: "8px 12px", borderBottom: "1px solid #e5e7eb", fontWeight: 700, color: "#3d2a0a", fontSize: 15 }}>
                             📊 นับ {values.length} · เต็ม {filled} · ว่าง {values.length - filled}
                           </div>
                           <div style={{ padding: "6px 12px" }}>
                             {top5.map(([label, cnt], ti) => (
                               <div key={ti} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                                <div style={{ width: 65, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</div>
+                                <div style={{ width: 65, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "#374151" }}>{label}</div>
                                 <div style={{ flex: 1, height: 10, background: "#f3f4f6", borderRadius: 5, overflow: "hidden" }}><div style={{ width: (cnt / total * 100) + "%", height: "100%", background: colors[ti % colors.length], borderRadius: 5 }} /></div>
-                                <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", minWidth: 24, textAlign: "right" }}>{cnt}</span>
+                                <span style={{ fontSize: 14, fontWeight: 600, color: "#374151", minWidth: 24, textAlign: "right" }}>{cnt}</span>
                               </div>
                             ))}
                           </div>
@@ -1431,7 +1431,7 @@ function CRMApp({ currentUser, onLogout }) {
               {supervisors.map((sv) => { const is2 = selectedSupervisor?.id === sv.id; return (
                 <button key={sv.id} onClick={() => { setSelectedSupervisor(is2 ? null : sv); setAssignSelected([]); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 20px", borderRadius: 14, border: is2 ? "2px solid #d4a017" : "2px solid #e5e7eb", background: is2 ? "#fffbeb" : "#fff", cursor: "pointer" }}>
                   <div style={{ width: 42, height: 42, borderRadius: "50%", background: is2 ? "#2563eb" : "#fde68a", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: is2 ? "#fff" : "#92400e" }}>{sv.name?.charAt(0)}</div>
-                  <div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, fontSize: 14 }}>{sv.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{sv.department} · {customers.filter((c2) => c2.supervisor === sv.name).length}</div></div>
+                  <div style={{ textAlign: "left" }}><div style={{ fontWeight: 700, fontSize: 14 }}>{sv.name}</div><div style={{ fontSize: 14, color: "#6b7280" }}>{sv.department} · {customers.filter((c2) => c2.supervisor === sv.name).length}</div></div>
                 </button>); })}
             </div>
             {selectedSupervisor ? (
@@ -1439,22 +1439,22 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                   <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                      <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 12, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
-                      <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...promoFilteredSvC, ...promoFilteredUnC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 12, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
+                      <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>ลูกค้า — {selectedSupervisor.name}</h3><span style={{ fontSize: 14, color: "#9ca3af" }}>เลือก {assignSelected.length}</span></div>
+                      <button onClick={() => setAssignSelected(assignSelected.length ? [] : [...promoFilteredSvC, ...promoFilteredUnC].map((c2) => c2.id))} style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>{assignSelected.length ? "ยกเลิก" : "เลือกทั้งหมด"}</button>
                     </div>
                     {/* Promo filter */}
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#6b7280" }}>กรองโปร:</span>
-                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #d4a017" : "1px solid #e5e7eb", background: !promoFilter ? "#fffbeb" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "#6b7280" }}>กรองโปร:</span>
+                      <button onClick={() => setPromoFilter("")} style={{ padding: "4px 12px", borderRadius: 8, border: !promoFilter ? "2px solid #d4a017" : "1px solid #e5e7eb", background: !promoFilter ? "#fffbeb" : "#fff", color: !promoFilter ? "#2563eb" : "#6b7280", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>ทั้งหมด</button>
                       {allPrices.map((p) => {
                         const count = [...(selectedSupervisor ? svC : []), ...unC].filter((c) => extractPrice(c.previous_promo) === p).length;
-                        return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 12px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 11 }}>({count})</span></button>;
+                        return <button key={p} onClick={() => setPromoFilter(promoFilter === p ? "" : p)} style={{ padding: "4px 12px", borderRadius: 8, border: promoFilter === p ? "2px solid #ea580c" : "1px solid #e5e7eb", background: promoFilter === p ? "#fff7ed" : "#fff", color: promoFilter === p ? "#ea580c" : "#6b7280", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{p} <span style={{ color: "#9ca3af", fontSize: 15 }}>({count})</span></button>;
                       })}
                     </div>
                   </div>
                   <div style={{ maxHeight: 500, overflowY: "auto" }}>
-                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 12, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 11, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
-                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 12, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 12, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
+                    {promoFilteredSvC.length > 0 && <><div style={{ padding: "8px 20px", background: "#f0fdf4", fontSize: 14, fontWeight: 600, color: "#059669" }}>มอบหมายแล้ว ({promoFilteredSvC.length})</div>{promoFilteredSvC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 14, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 14, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div>{c2.assigned_to && <span style={{ fontSize: 15, background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>{c2.assigned_to}</span>}</label>))}</>}
+                    {promoFilteredUnC.length > 0 && <><div style={{ padding: "8px 20px", background: "#fef3c7", fontSize: 14, fontWeight: 600, color: "#92400e" }}>ยังไม่มอบหมาย ({promoFilteredUnC.length})</div>{promoFilteredUnC.map((c2) => (<label key={c2.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 20px", borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}><input type="checkbox" checked={assignSelected.includes(c2.id)} onChange={(e2) => setAssignSelected(e2.target.checked ? [...assignSelected, c2.id] : assignSelected.filter((r) => r !== c2.id))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} /><div style={{ flex: 1 }}><div style={{ fontWeight: 600, fontSize: 14 }}>{c2.name}</div><div style={{ fontSize: 14, color: "#6b7280" }}>{c2.phone} {c2.previous_promo && <span style={{ background: "#fef3c7", color: "#92400e", padding: "1px 6px", borderRadius: 4, fontSize: 14, fontWeight: 600, marginLeft: 4 }}>{extractPrice(c2.previous_promo)}</span>}</div></div></label>))}</>}
                     {promoFilteredSvC.length === 0 && promoFilteredUnC.length === 0 && <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>ไม่พบข้อมูล</div>}
                   </div>
                 </div>
@@ -1466,13 +1466,13 @@ function CRMApp({ currentUser, onLogout }) {
                         <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
                           onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                           <input type="checkbox" checked={assignEmployees.includes(em.name)} onChange={(e2) => setAssignEmployees(e2.target.checked ? [...assignEmployees, em.name] : assignEmployees.filter((n) => n !== em.name))} style={{ accentColor: "#d4a017", width: 18, height: 18 }} />
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#92400e" }}>{em.name.slice(0, 1)}</div>
                           <span style={{ fontSize: 14 }}>{em.name}</span>
                         </label>
                       ))}
                     </div>
                     {assignEmployees.length > 1 && assignSelected.length > 0 && (
-                      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 12, color: "#92400e" }}>
+                      <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px", marginBottom: 14, fontSize: 14, color: "#92400e" }}>
                         กระจายเท่ากัน: {assignEmployees.map((name) => name + " (" + Math.floor(assignSelected.length / assignEmployees.length) + (assignEmployees.indexOf(name) < assignSelected.length % assignEmployees.length ? "+1" : "") + ")").join(", ")}
                       </div>
                     )}
@@ -1501,8 +1501,8 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "employee", mode: "edit", data: { ...e2 } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_employees", e2.id)} style={bi(true)}><I.Trash /></button></div>
                 <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 2 }}>{e2.name}</div>
                 {e2.nickname && e2.nickname !== e2.name && <div style={{ fontSize: 14, color: "#92400e", marginBottom: 4 }}>({e2.nickname})</div>}
-                <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
-                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => { const a = c2.assigned_to; if (!a) return false; if (a === e2.name || a === e2.nickname) return true; const m = (e2.name || "").match(/\(([^)]+)\)/); if (m && a === m[1].trim()) return true; const m2 = (e2.nickname || "").match(/\(([^)]+)\)/); return m2 && a === m2[1].trim(); }).length} ลูกค้า</span>
+                <div style={{ fontSize: 15, color: "#6b7280", marginBottom: 8 }}>{e2.role} · {e2.email}</div>
+                <span style={{ padding: "4px 12px", borderRadius: 20, fontSize: 14, fontWeight: 600, background: "#fef3c7", color: "#92400e" }}>{customers.filter((c2) => { const a = c2.assigned_to; if (!a) return false; if (a === e2.name || a === e2.nickname) return true; const m = (e2.name || "").match(/\(([^)]+)\)/); if (m && a === m[1].trim()) return true; const m2 = (e2.nickname || "").match(/\(([^)]+)\)/); return m2 && a === m2[1].trim(); }).length} ลูกค้า</span>
               </div>))}
             </div>
           </div>}
@@ -1526,7 +1526,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 24 }}><h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>หัวหน้า</h3><button onClick={() => setModal({ type: "supervisor", mode: "add", data: {} })} style={bp}><I.Plus /> เพิ่ม</button></div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{supervisors.map((sv) => (<div key={sv.id} style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: 20, position: "relative" }}>
                 <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}><button onClick={() => setModal({ type: "supervisor", mode: "edit", data: { ...sv } })} style={bi(false)}><I.Edit /></button><button onClick={() => handleDelete("crm_supervisors", sv.id)} style={bi(true)}><I.Trash /></button></div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 13, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
+                <div style={{ fontWeight: 700, fontSize: 16 }}>{sv.name}</div><div style={{ fontSize: 15, color: "#6b7280" }}>{sv.department} · {sv.email}</div>
               </div>))}</div>
             </div>}
           </div>}
@@ -1541,7 +1541,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                 <div style={{ position: "relative" }}>
                   <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }}><I.Search /></span>
-                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 13, outline: "none", width: 220 }} />
+                  <input value={trashSearch} onChange={(e) => setTrashSearch(e.target.value)} placeholder="ค้นหาเบอร์โทร / ชื่อ..." style={{ padding: "8px 12px 8px 34px", borderRadius: 10, border: "2px solid #e5e7eb", fontSize: 15, outline: "none", width: 220 }} />
                 </div>
                 {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
               </div>
@@ -1554,7 +1554,7 @@ function CRMApp({ currentUser, onLogout }) {
             ) : (
               <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15 }}>
                     <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
                       {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
@@ -1566,14 +1566,14 @@ function CRMApp({ currentUser, onLogout }) {
                             <td style={{ padding: "12px 14px", fontWeight: 600, color: "#3d2a0a" }}>{t.name}</td>
                             <td style={{ padding: "12px 14px" }}>{t.phone}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.note || "—"}</td>
-                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
+                            <td style={{ padding: "12px 14px" }}>{st ? <span style={{ padding: "4px 12px", borderRadius: 8, fontSize: 14, fontWeight: 700, color: "#fff", background: st.color }}>{st.label}</span> : (t.status || "—")}</td>
                             <td style={{ padding: "12px 14px", color: "#6b7280" }}>{t.assigned_to || "—"}</td>
                             <td style={{ padding: "12px 14px", color: "#4b5563", fontWeight: 500 }}>{t.deleted_by || "—"}</td>
-                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 12 }}>{t.deleted_at}</td>
+                            <td style={{ padding: "12px 14px", color: "#dc2626", fontSize: 14 }}>{t.deleted_at}</td>
                             <td style={{ padding: "12px 14px" }}>
                               <div style={{ display: "flex", gap: 8 }}>
-                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
-                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 12, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
+                                <button onClick={() => handleRestore(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #d1fae5", background: "#f0fdf4", color: "#059669", fontWeight: 600, fontSize: 14, cursor: "pointer" }}><I.Restore /> กู้คืน</button>
+                                {currentUser?.role === "admin" && <button onClick={() => handlePermanentDelete(t.id)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 14px", borderRadius: 8, border: "1px solid #fee2e2", background: "#fff", color: "#dc2626", fontWeight: 600, fontSize: 14, cursor: "pointer" }}><I.Trash /> ลบถาวร</button>}
                               </div>
                             </td>
                           </tr>
@@ -1612,7 +1612,7 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px", marginBottom: 24, fontSize: 14, color: "#92400e" }}>ℹ️ ฟิลด์ว่างจะถูกอัปเดตเป็นไม่มีค่า</div>
             <div style={{ marginBottom: 20 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>เลือกฟิลด์</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, padding: "12px 16px", borderRadius: 10, border: "1px solid #e5e7eb", minHeight: 48, alignItems: "center" }}>
-                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 13 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
+                {quickUpdate.fields.map((f) => (<span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: 15 }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}<button onClick={() => setQuickUpdate({ ...quickUpdate, fields: quickUpdate.fields.filter((x) => x !== f) })} style={{ background: "none", border: "none", cursor: "pointer", color: "#92400e", fontWeight: 700, padding: 0 }}>×</button></span>))}
                 <select value="" onChange={(e2) => { if (e2.target.value && !quickUpdate.fields.includes(e2.target.value)) setQuickUpdate({ ...quickUpdate, fields: [...quickUpdate.fields, e2.target.value] }); e2.target.value = ""; }} style={{ border: "none", background: "none", fontSize: 14, color: "#6b7280", cursor: "pointer", outline: "none", flex: 1, minWidth: 120 }}>
                   <option value="">+ เพิ่มฟิลด์...</option>
                   {[{ v: "assigned_to", l: "มอบหมาย" }, { v: "status", l: "สถานะ" }, { v: "supervisor", l: "หัวหน้า" }, { v: "previous_promo", l: "โปรก่อนหน้า" }, { v: "received_product", l: "ได้รับสินค้า" }, { v: "call_subject", l: "หัวข้อโทร" }, { v: "call_date", l: "วันที่โทร" }, { v: "call_note", l: "หมายเหตุ" }, { v: "customer_relation", l: "ความสัมพันธ์ลูกค้า" }, { v: "next_follow", l: "ครั้งถัดไป" }, { v: "product_price", l: "โปรสินค้า" }, { v: "order_date", l: "วันที่สั่งซื้อ" }, { v: "note", l: "ที่อยู่" }, { v: "name", l: "ชื่อ" }, { v: "phone", l: "เบอร์โทร" }].filter((o) => !quickUpdate.fields.includes(o.v)).map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
@@ -1621,7 +1621,7 @@ function CRMApp({ currentUser, onLogout }) {
             </div>
             {quickUpdate.fields.length > 0 && <div style={{ marginBottom: 24 }}><label style={{ ...lS, fontSize: 15, fontWeight: 700 }}>การตั้งค่า</label>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 13, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", background: "#f8fafc", padding: "12px 20px", fontWeight: 700, fontSize: 15, borderBottom: "1px solid #e5e7eb" }}><span>ฟิลด์</span><span></span><span>ค่า</span></div>
                 {quickUpdate.fields.map((f, idx) => (<div key={f} style={{ display: "grid", gridTemplateColumns: "1fr 40px 1fr", padding: "14px 20px", alignItems: "center", borderBottom: idx < quickUpdate.fields.length - 1 ? "1px solid #f3f4f6" : "none" }}>
                   <span style={{ fontSize: 14, color: "#d4a017" }}>{{ assigned_to: "มอบหมาย", status: "สถานะ", supervisor: "หัวหน้า", previous_promo: "โปรก่อนหน้า", received_product: "ได้รับสินค้า", call_subject: "หัวข้อโทร", call_date: "วันที่โทร", call_note: "หมายเหตุ", customer_relation: "ความสัมพันธ์ลูกค้า", next_follow: "ครั้งถัดไป", product_price: "โปรสินค้า", order_date: "วันที่สั่งซื้อ", note: "ที่อยู่", name: "ชื่อ", phone: "เบอร์โทร" }[f]}</span>
                   <span style={{ textAlign: "center", color: "#9ca3af" }}>→</span>
@@ -1637,7 +1637,7 @@ function CRMApp({ currentUser, onLogout }) {
                       const promoKeys = Object.keys(promoGroups).sort((a, b) => Number(a) - Number(b));
                       return <div>
                         {/* Employee selection */}
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกพนักงาน</div>
                         <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, maxHeight: 160, overflowY: "auto", marginBottom: 12 }}>
                           {employees.map((em) => (
                             <label key={em.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}>
@@ -1645,36 +1645,36 @@ function CRMApp({ currentUser, onLogout }) {
                                 const nv = e2.target.checked ? [...sel, em.name] : sel.filter((n) => n !== em.name);
                                 setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assigned_to_list: nv, assigned_to: nv[0] || "" } });
                               }} style={{ accentColor: "#d4a017" }} />
-                              <span style={{ fontSize: 13 }}>{em.name}</span>
+                              <span style={{ fontSize: 15 }}>{em.name}</span>
                             </label>
                           ))}
                         </div>
 
                         {/* Mode selection */}
                         {sel.length > 0 && <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>วิธีกระจาย</div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>กระจายเท่ากัน</button>
-                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "equal" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "equal" ? "2px solid #d4a017" : "1px solid #e5e7eb", background: assignMode === "equal" ? "#fffbeb" : "#fff", color: assignMode === "equal" ? "#2563eb" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>กระจายเท่ากัน</button>
+                            <button onClick={() => setQuickUpdate({ ...quickUpdate, fieldValues: { ...quickUpdate.fieldValues, assign_mode: "promo" } })} style={{ flex: 1, padding: "8px", borderRadius: 8, border: assignMode === "promo" ? "2px solid #ea580c" : "1px solid #e5e7eb", background: assignMode === "promo" ? "#fff7ed" : "#fff", color: assignMode === "promo" ? "#ea580c" : "#6b7280", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>ตามโปรก่อนหน้า</button>
                           </div>
                         </div>}
 
                         {/* Equal mode summary */}
-                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#fffbeb", borderRadius: 6, padding: "6px 10px", fontSize: 11, color: "#92400e" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
+                        {sel.length > 1 && assignMode === "equal" && <div style={{ background: "#fffbeb", borderRadius: 6, padding: "6px 10px", fontSize: 15, color: "#92400e" }}>กระจายเท่ากัน {selectedRows.length} ลูกค้า → {sel.length} คน</div>}
 
                         {/* Promo mode mapping */}
                         {sel.length > 0 && assignMode === "promo" && <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#6b7280", marginBottom: 6 }}>เลือกโปรให้พนักงาน (เลือกได้หลายคน กระจายเท่ากัน)</div>
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 12, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
+                            <div style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", background: "#f8fafc", padding: "8px 12px", fontWeight: 700, fontSize: 14, borderBottom: "1px solid #e5e7eb" }}><span>โปร (จำนวน)</span><span></span><span>พนักงาน</span></div>
                             {promoKeys.map((pk) => {
                               const pkSel = promoMap[pk] || [];
                               return <div key={pk} style={{ display: "grid", gridTemplateColumns: "140px 30px 1fr", padding: "10px 12px", alignItems: "start", borderBottom: "1px solid #f3f4f6" }}>
-                                <span style={{ fontSize: 13, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 12 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 11 }}>({promoGroups[pk]} คน)</span></span>
+                                <span style={{ fontSize: 15, paddingTop: 6 }}><span style={{ padding: "2px 8px", borderRadius: 6, background: "#fef3c7", color: "#92400e", fontWeight: 700, fontSize: 14 }}>{pk}</span> <span style={{ color: "#9ca3af", fontSize: 15 }}>({promoGroups[pk]} คน)</span></span>
                                 <span style={{ textAlign: "center", color: "#9ca3af", paddingTop: 6 }}>→</span>
                                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                   {sel.map((name) => (
-                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 12 }}
+                                    <label key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", cursor: "pointer", borderRadius: 6, fontSize: 14 }}
                                       onMouseEnter={(e2) => (e2.currentTarget.style.background = "#fffbeb")} onMouseLeave={(e2) => (e2.currentTarget.style.background = "transparent")}>
                                       <input type="checkbox" checked={pkSel.includes(name)} onChange={(e2) => {
                                         const nv = e2.target.checked ? [...pkSel, name] : pkSel.filter((n) => n !== name);
@@ -1683,12 +1683,12 @@ function CRMApp({ currentUser, onLogout }) {
                                       <span>{name}</span>
                                     </label>
                                   ))}
-                                  {pkSel.length > 1 && <div style={{ fontSize: 10, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
+                                  {pkSel.length > 1 && <div style={{ fontSize: 14, color: "#ea580c", padding: "2px 8px" }}>กระจาย {promoGroups[pk]} คน → {pkSel.length} คน ({Math.floor(promoGroups[pk] / pkSel.length)}-{Math.ceil(promoGroups[pk] / pkSel.length)} คน/คน)</div>}
                                 </div>
                               </div>;
                             })}
                           </div>
-                          {Object.values(promoMap).some((v) => v?.length > 0) && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 11, color: "#92400e" }}>
+                          {Object.values(promoMap).some((v) => v?.length > 0) && <div style={{ background: "#fff7ed", borderRadius: 6, padding: "8px 10px", marginTop: 8, fontSize: 15, color: "#92400e" }}>
                             สรุป: {sel.map((name) => {
                               let count = 0;
                               selCustomers.forEach((c) => { const m = String(c.previous_promo || "").match(/\((\d+)\)/); const p = m ? m[1] : "ไม่มีโปร"; const pkList = promoMap[p] || []; if (pkList.includes(name)) count += Math.ceil(promoGroups[p] / pkList.length); });
@@ -1711,9 +1711,9 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 12 }}>{selectedRows.length}</span></div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>ถูกเลือก <span style={{ background: "#16a34a", color: "#fff", padding: "2px 8px", borderRadius: "50%", fontSize: 14 }}>{selectedRows.length}</span></div>
               <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, maxHeight: 180, overflowY: "auto" }}>
-                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 12 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
+                {selectedRows.map((rid, idx) => { const cu = customers.find((c2) => c2.id === rid); return (<div key={rid} style={{ display: "flex", justifyContent: "space-between", padding: "10px 20px", borderBottom: idx < selectedRows.length - 1 ? "1px solid #f3f4f6" : "none" }}><span>{cu?.name} <span style={{ color: "#9ca3af", fontSize: 14 }}>{cu?.phone}</span></span><button onClick={() => setSelectedRows(selectedRows.filter((r) => r !== rid))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}>🗑</button></div>); })}
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -1809,31 +1809,31 @@ function CRMApp({ currentUser, onLogout }) {
           </div>
           <div style={{ padding: 24 }}>
             {/* Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, fontSize: 14, fontWeight: 700, color: "#6b7280" }}>
               <span>ชื่อจริง</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span><span></span>
             </div>
             {/* Rows */}
             {multiAddEmp.map((emp, idx) => (
               <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 100px 120px 100px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อจริง" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                <input value={emp.name} onChange={(e) => { const n = [...multiAddEmp]; n[idx].name = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อจริง" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiAddEmp]; n[idx].nickname = e.target.value; setMultiAddEmp(n); }} placeholder="ชื่อเล่น" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.username} onChange={(e) => { const n = [...multiAddEmp]; n[idx].username = e.target.value; setMultiAddEmp(n); }} placeholder="username" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.password} onChange={(e) => { const n = [...multiAddEmp]; n[idx].password = e.target.value; setMultiAddEmp(n); }} placeholder="1234" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.email} onChange={(e) => { const n = [...multiAddEmp]; n[idx].email = e.target.value; setMultiAddEmp(n); }} placeholder="email" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <select value={emp.role} onChange={(e) => { const n = [...multiAddEmp]; n[idx].role = e.target.value; setMultiAddEmp(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, outline: "none" }}>
                   <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option>
                 </select>
                 <button onClick={() => { if (multiAddEmp.length > 1) setMultiAddEmp(multiAddEmp.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
               </div>
             ))}
             {/* Add row button */}
-            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+            <button onClick={() => setMultiAddEmp([...multiAddEmp, { name: "", nickname: "", username: "", password: "1234", email: "", role: "employee" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 15, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
               + เพิ่มอีกคน
             </button>
           </div>
           {/* Footer */}
           <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
+            <span style={{ fontSize: 15, color: "#9ca3af" }}>รวม {multiAddEmp.filter((e) => e.name.trim()).length} คน</span>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setMultiAddEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
               <button onClick={async () => {
@@ -1864,27 +1864,27 @@ function CRMApp({ currentUser, onLogout }) {
             <button onClick={() => setQuickAddRows(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>✕</button>
           </div>
           <div style={{ padding: 24 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 140px 40px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 140px 40px", gap: 8, marginBottom: 8, fontSize: 14, fontWeight: 700, color: "#6b7280" }}>
               <span>ชื่อ</span><span>เบอร์โทร</span><span>ที่อยู่/โน้ต</span><span>โปรก่อนหน้า</span><span>มอบหมาย</span><span></span>
             </div>
             {quickAddRows.map((row, idx) => (
               <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 120px 1fr 120px 140px 40px", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                <input value={row.name} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], name: e.target.value }; setQuickAddRows(n); }} placeholder="ชื่อลูกค้า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={row.phone} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], phone: e.target.value }; setQuickAddRows(n); }} placeholder="0812345678" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={row.note} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], note: e.target.value }; setQuickAddRows(n); }} placeholder="ที่อยู่ / โน้ต" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={row.previous_promo} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], previous_promo: e.target.value }; setQuickAddRows(n); }} placeholder="โปร" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <select value={row.assigned_to} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], assigned_to: e.target.value }; setQuickAddRows(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                <input value={row.name} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], name: e.target.value }; setQuickAddRows(n); }} placeholder="ชื่อลูกค้า" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={row.phone} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], phone: e.target.value }; setQuickAddRows(n); }} placeholder="0812345678" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={row.note} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], note: e.target.value }; setQuickAddRows(n); }} placeholder="ที่อยู่ / โน้ต" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={row.previous_promo} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], previous_promo: e.target.value }; setQuickAddRows(n); }} placeholder="โปร" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <select value={row.assigned_to} onChange={(e) => { const n = [...quickAddRows]; n[idx] = { ...n[idx], assigned_to: e.target.value }; setQuickAddRows(n); }} style={{ padding: "8px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, outline: "none" }}>
                   <option value="">— ยังไม่มอบหมาย —</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.nickname || em.name}</option>)}
                 </select>
                 <button onClick={() => { if (quickAddRows.length > 1) setQuickAddRows(quickAddRows.filter((_, i) => i !== idx)); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, padding: 4 }} title="ลบ">✕</button>
               </div>
             ))}
-            <button onClick={() => setQuickAddRows([...quickAddRows, { name: "", phone: "", note: "", previous_promo: "", assigned_to: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 13, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
+            <button onClick={() => setQuickAddRows([...quickAddRows, { name: "", phone: "", note: "", previous_promo: "", assigned_to: "" }])} style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 600, fontSize: 15, cursor: "pointer", width: "100%", justifyContent: "center", marginTop: 8 }}>
               + เพิ่มอีกคน
             </button>
           </div>
           <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>รวม {quickAddRows.filter((r) => r.name.trim() || r.phone.trim()).length} คน</span>
+            <span style={{ fontSize: 15, color: "#9ca3af" }}>รวม {quickAddRows.filter((r) => r.name.trim() || r.phone.trim()).length} คน</span>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setQuickAddRows(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
               <button onClick={async () => {
@@ -1917,25 +1917,25 @@ function CRMApp({ currentUser, onLogout }) {
             <button onClick={() => setMultiEditEmp(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20 }}>✕</button>
           </div>
           <div style={{ padding: 24, overflowX: "auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 100px 140px 80px 140px 100px", gap: 8, marginBottom: 8, fontSize: 12, fontWeight: 700, color: "#6b7280", minWidth: 700 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 100px 140px 80px 140px 100px", gap: 8, marginBottom: 8, fontSize: 14, fontWeight: 700, color: "#6b7280", minWidth: 700 }}>
               <span>#</span><span>ชื่อจริง</span><span>ชื่อเล่น</span><span>Username</span><span>Password</span><span>อีเมล</span><span>ตำแหน่ง</span>
             </div>
             {multiEditEmp.map((emp, idx) => (
               <div key={emp.id} style={{ display: "grid", gridTemplateColumns: "40px 1fr 100px 140px 80px 140px 100px", gap: 8, marginBottom: 6, alignItems: "center", minWidth: 700 }}>
-                <span style={{ fontSize: 12, color: "#9ca3af" }}>{idx + 1}</span>
-                <input value={emp.name || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], name: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], nickname: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.username || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], username: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.password || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], password: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <input value={emp.email || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], email: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 13, outline: "none" }} />
-                <select value={emp.role || "employee"} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], role: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 12, outline: "none" }}>
+                <span style={{ fontSize: 14, color: "#9ca3af" }}>{idx + 1}</span>
+                <input value={emp.name || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], name: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.nickname || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], nickname: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.username || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], username: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.password || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], password: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <input value={emp.email || ""} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], email: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 15, outline: "none" }} />
+                <select value={emp.role || "employee"} onChange={(e) => { const n = [...multiEditEmp]; n[idx] = { ...n[idx], role: e.target.value }; setMultiEditEmp(n); }} style={{ padding: "7px 6px", borderRadius: 8, border: "1px solid #d1d5db", fontSize: 14, outline: "none" }}>
                   <option value="employee">พนักงาน</option><option value="supervisor">หัวหน้า</option><option value="admin">ผู้ดูแล</option>
                 </select>
               </div>
             ))}
           </div>
           <div style={{ padding: "16px 24px", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", bottom: 0, background: "#fff" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af" }}>แก้ไขแล้วกดบันทึก</span>
+            <span style={{ fontSize: 15, color: "#9ca3af" }}>แก้ไขแล้วกดบันทึก</span>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setMultiEditEmp(null)} style={{ padding: "10px 24px", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff", fontSize: 14, cursor: "pointer", color: "#6b7280" }}>ยกเลิก</button>
               <button onClick={async () => {
@@ -1979,7 +1979,7 @@ function CRMApp({ currentUser, onLogout }) {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 8 }}>อัพเดทสำเร็จ! {successModal.count} CRM THE MT</div>
-          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", fontSize: 15, color: "#065f46", marginBottom: 20, textAlign: "left" }}>
             {successModal.detail}
           </div>
           <button onClick={() => setSuccessModal(null)} style={{ padding: "10px 40px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>ตกลง</button>
@@ -1994,7 +1994,7 @@ function CRMApp({ currentUser, onLogout }) {
           <div style={{ fontSize: 16, fontWeight: 700, color: "#3d2a0a", marginBottom: 20 }}>{progress.label}</div>
           <div style={{ background: "#e5e7eb", borderRadius: 10, height: 24, overflow: "hidden", marginBottom: 12 }}>
             <div style={{ height: "100%", borderRadius: 10, background: "linear-gradient(90deg, #d4a017, #f59e0b)", width: Math.round((progress.current / progress.total) * 100) + "%", transition: "width 0.2s ease", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
+              <span style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>{Math.round((progress.current / progress.total) * 100)}%</span>
             </div>
           </div>
           <div style={{ fontSize: 14, color: "#6b7280" }}>{progress.current} / {progress.total}</div>
@@ -2013,11 +2013,11 @@ function CRMApp({ currentUser, onLogout }) {
             <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
               <div style={{ flex: 1, background: "#d1fae5", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#059669" }}>{importResult.success.length}</div>
-                <div style={{ fontSize: 13, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
+                <div style={{ fontSize: 15, color: "#065f46", fontWeight: 600 }}>นำเข้าสำเร็จ</div>
               </div>
               <div style={{ flex: 1, background: "#fef3c7", borderRadius: 12, padding: 16, textAlign: "center" }}>
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#d97706" }}>{importResult.dupes.length}</div>
-                <div style={{ fontSize: 13, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
+                <div style={{ fontSize: 15, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
               </div>
             </div>
 
@@ -2026,7 +2026,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: "#059669", marginBottom: 8 }}>✓ นำเข้าสำเร็จ ({importResult.success.length})</div>
               <div style={{ border: "1px solid #d1fae5", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.success.map((s, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.success.length - 1 ? "1px solid #f0fdf4" : "none", fontSize: 15, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#059669" }}>✓ {s.name}</span><span style={{ color: "#9ca3af" }}>{s.phone}</span>
                   </div>
                 ))}
@@ -2038,7 +2038,7 @@ function CRMApp({ currentUser, onLogout }) {
               <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
               <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
                 {importResult.dupes.map((d, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 13, display: "flex", justifyContent: "space-between" }}>
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 15, display: "flex", justifyContent: "space-between" }}>
                     <span style={{ color: "#92400e" }}>✗ {d.name}</span><span style={{ color: "#d97706" }}>{d.phone}</span>
                   </div>
                 ))}
@@ -2085,12 +2085,12 @@ function ModalForm({ modal, setModal, onSave, employees, statuses, supervisors, 
         {modal.type === "status" && <>
           <div><label style={lS}>Key</label><input style={iS} value={form.key || ""} onChange={(e) => u("key", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} /></div>
           <div><label style={lS}>Label</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 13, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div style={{ gridColumn: "1/3" }}><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 50, height: 50, borderRadius: 10, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 15, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "6px 16px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "call_subject" && <>
           <div><label style={lS}>ชื่อหัวข้อ</label><input style={iS} value={form.label || ""} onChange={(e) => u("label", e.target.value)} /></div>
-          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 13, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
+          <div><label style={lS}>สี</label><div style={{ display: "flex", alignItems: "center", gap: 12 }}><input type="color" value={form.color || "#2563eb"} onChange={(e) => u("color", e.target.value)} style={{ width: 44, height: 44, borderRadius: 8, border: "2px solid #e5e7eb", cursor: "pointer", padding: 2 }} /><span style={{ fontSize: 15, color: "#6b7280" }}>{form.color || "#2563eb"}</span></div></div>
           <div style={{ gridColumn: "1/3" }}><span style={{ padding: "5px 14px", borderRadius: 8, fontWeight: 700, color: "#fff", background: form.color || "#6b7280" }}>{form.label || "ตัวอย่าง"}</span></div>
         </>}
         {modal.type === "supervisor" && <>
