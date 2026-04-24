@@ -839,40 +839,47 @@ function CRMApp({ currentUser, onLogout }) {
         });
         if (!matchAny) return false;
       }
-      // Advanced filters
-      for (const af of advFilters) {
-        if (!af.field || !af.value) continue;
-        if (af.field === "assigned_to" && af.value === "__unassigned__") {
-          if (af.op === "eq" && c.assigned_to) return false;
-          if (af.op === "neq" && !c.assigned_to) return false;
-          continue;
-        }
-        // กรอง assigned_to ให้เทียบด้วย email + nickname ด้วย
-        if (af.field === "assigned_to" && af.value !== "__unassigned__") {
-          const emp = employees.find(em => em.name === af.value);
-          if (emp) {
-            const a = (c.assigned_to || "").toLowerCase();
-            const ae = (c.assigned_email || "").toLowerCase();
-            const matched = a === emp.name.toLowerCase() || a === (emp.nickname || "").toLowerCase() || (ae && (ae === (emp.email || "").toLowerCase() || ae === (emp.username || "").toLowerCase())) || (() => { const m = emp.name.match(/\(([^)]+)\)/); return m && a === m[1].trim().toLowerCase(); })();
-            if (af.op === "eq" && !matched) return false;
-            if (af.op === "neq" && matched) return false;
-            if (af.op === "contains" && !matched) return false;
-            continue;
-          }
-        }
-        let cv;
-        cv = String(c[af.field] || "").toLowerCase();
-        const fv = af.value.toLowerCase();
-        if (af.op === "contains" && !cv.includes(fv)) return false;
-        if (af.op === "eq" && cv !== fv) return false;
-        if (af.op === "neq" && cv === fv) return false;
-        if (af.op === "gte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d < af.value) return false; }
-        if (af.op === "lte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d > af.value) return false; }
-        if (af.op === "range") {
-          const d = String(c[af.field] || "").slice(0, 10);
-          if (!d) return false;
-          if (af.value && d < af.value) return false;
-          if (af.value2 && d > af.value2) return false;
+      // Advanced filters — ฟิลด์เดียวกัน = OR, ต่างฟิลด์ = AND
+      const activeFilters = advFilters.filter(af => af.field && (af.value || af.op === "range"));
+      if (activeFilters.length > 0) {
+        // จัดกลุ่มตามฟิลด์
+        const grouped = {};
+        activeFilters.forEach(af => { if (!grouped[af.field]) grouped[af.field] = []; grouped[af.field].push(af); });
+        for (const [field, filters] of Object.entries(grouped)) {
+          // OR ภายในกลุ่มเดียวกัน — ต้อง match อย่างน้อย 1 ตัว
+          const anyMatch = filters.some(af => {
+            if (af.field === "assigned_to" && af.value === "__unassigned__") {
+              if (af.op === "eq") return !c.assigned_to;
+              if (af.op === "neq") return !!c.assigned_to;
+              return false;
+            }
+            if (af.field === "assigned_to" && af.value !== "__unassigned__") {
+              const emp = employees.find(em => em.name === af.value);
+              if (emp) {
+                const a = (c.assigned_to || "").toLowerCase();
+                const ae = (c.assigned_email || "").toLowerCase();
+                const matched = a === emp.name.toLowerCase() || a === (emp.nickname || "").toLowerCase() || (ae && (ae === (emp.email || "").toLowerCase() || ae === (emp.username || "").toLowerCase())) || (() => { const m = emp.name.match(/\(([^)]+)\)/); return m && a === m[1].trim().toLowerCase(); })();
+                if (af.op === "eq" || af.op === "contains") return matched;
+                if (af.op === "neq") return !matched;
+              }
+            }
+            const cv = String(c[af.field] || "").toLowerCase();
+            const fv = (af.value || "").toLowerCase();
+            if (af.op === "contains") return cv.includes(fv);
+            if (af.op === "eq") return cv === fv;
+            if (af.op === "neq") return cv !== fv;
+            if (af.op === "gte") { const d = String(c[af.field] || "").slice(0, 10); return d && d >= af.value; }
+            if (af.op === "lte") { const d = String(c[af.field] || "").slice(0, 10); return d && d <= af.value; }
+            if (af.op === "range") {
+              const d = String(c[af.field] || "").slice(0, 10);
+              if (!d) return false;
+              if (af.value && d < af.value) return false;
+              if (af.value2 && d > af.value2) return false;
+              return true;
+            }
+            return true;
+          });
+          if (!anyMatch) return false;
         }
       }
       return true;
@@ -1149,8 +1156,11 @@ function CRMApp({ currentUser, onLogout }) {
                     <div style={{ padding: "12px 16px" }}>
                       {advFilters.map((af, idx) => {
                         const isDateField = af.field === "call_date" || af.field === "next_follow" || af.field === "order_date";
-                        return (
-                        <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                        const prevAf = idx > 0 ? advFilters[idx - 1] : null;
+                        const sameField = prevAf && prevAf.field && af.field && prevAf.field === af.field;
+                        return (<>
+                        {idx > 0 && <div style={{ textAlign: "center", margin: "-4px 0", fontSize: 11, fontWeight: 700, color: sameField ? "#059669" : "#d4a017" }}>{sameField ? "หรือ" : "และ"}</div>}
+                        <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "center" }}>
                           <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; nf[idx].op = (e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date") ? "range" : "contains"; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
@@ -1212,7 +1222,7 @@ function CRMApp({ currentUser, onLogout }) {
                           </>)}
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
-                      );})}
+                      </>);})}
                       <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "", value2: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
