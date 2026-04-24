@@ -868,6 +868,12 @@ function CRMApp({ currentUser, onLogout }) {
         if (af.op === "neq" && cv === fv) return false;
         if (af.op === "gte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d < af.value) return false; }
         if (af.op === "lte") { const d = String(c[af.field] || "").slice(0, 10); if (!d || d > af.value) return false; }
+        if (af.op === "range") {
+          const d = String(c[af.field] || "").slice(0, 10);
+          if (!d) return false;
+          if (af.value && d < af.value) return false;
+          if (af.value2 && d > af.value2) return false;
+        }
       }
       return true;
     });
@@ -1141,17 +1147,34 @@ function CRMApp({ currentUser, onLogout }) {
                       </div>
                     </div>
                     <div style={{ padding: "12px 16px" }}>
-                      {advFilters.map((af, idx) => (
+                      {advFilters.map((af, idx) => {
+                        const isDateField = af.field === "call_date" || af.field === "next_follow" || af.field === "order_date";
+                        return (
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
-                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; setAdvFilters(nf); }}
+                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; nf[idx].op = (e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date") ? "range" : "contains"; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
                             {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                           </select>
+                          {isDateField ? (<>
+                            <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
+                              style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 100, color: "#9ca3af", background: "#fff" }}>
+                              <option value="range">ระยะเวลา</option><option value="eq">เท่ากับ</option><option value="gte">ตั้งแต่</option><option value="lte">ถึง</option>
+                            </select>
+                            {af.op === "range" ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff" }}>
+                                <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 12, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
+                                <span style={{ color: "#9ca3af", fontSize: 12 }}>→</span>
+                                <input type="date" value={af.value2 || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value2 = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 12, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
+                                <span style={{ fontSize: 14, color: "#9ca3af" }}>📅</span>
+                              </div>
+                            ) : (
+                              <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
+                            )}
+                          </>) : (<>
                           <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, minWidth: 120, color: "#9ca3af", background: "#fff" }}>
                             <option value="contains">ประกอบด้วย</option><option value="eq">เท่ากับ</option><option value="neq">ไม่เท่ากับ</option>
-                            {(af.field === "call_date" || af.field === "next_follow" || af.field === "order_date") && <><option value="gte">ตั้งแต่วันที่</option><option value="lte">ถึงวันที่</option></>}
                           </select>
                           {af.field === "status" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
@@ -1173,8 +1196,6 @@ function CRMApp({ currentUser, onLogout }) {
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1 }}>
                               <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
                             </select>
-                          ) : (af.field === "call_date" || af.field === "next_follow" || af.field === "order_date") ? (
-                            <input type="date" value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12, flex: 1, outline: "none" }} />
                           ) : (
                             (() => {
                               const vals = [...new Set(customers.map((c2) => String(c2[af.field] || "")).filter(Boolean))].sort();
@@ -1188,10 +1209,11 @@ function CRMApp({ currentUser, onLogout }) {
                               );
                             })()
                           )}
+                          </>)}
                           <button onClick={() => setAdvFilters(advFilters.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: "0 4px" }}>×</button>
                         </div>
-                      ))}
-                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
+                      );})}
+                      <button onClick={() => setAdvFilters([...advFilters, { field: "", op: "contains", value: "", value2: "" }])} style={{ background: "none", border: "none", color: "#374151", fontSize: 13, cursor: "pointer", padding: "8px 0", display: "flex", alignItems: "center", gap: 4 }}>+ เพิ่มตัวกรอง</button>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderTop: "1px solid #f3f4f6" }}>
                       <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 13, cursor: "pointer" }}>ลบทั้งหมด</button>
