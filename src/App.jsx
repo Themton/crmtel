@@ -863,15 +863,16 @@ function CRMApp({ currentUser, onLogout }) {
                 if (af.op === "neq") return !matched;
               }
             }
-            const cv = String(c[af.field] || "").toLowerCase();
+            const raw = c[af.field];
+            const cv = String(raw !== null && raw !== undefined ? raw : "").toLowerCase();
             const fv = (af.value || "").toLowerCase();
             if (af.op === "contains") return cv.includes(fv);
             if (af.op === "eq") return cv === fv;
             if (af.op === "neq") return cv !== fv;
-            if (af.op === "gte") { const d = String(c[af.field] || "").slice(0, 10); return d && d >= af.value; }
-            if (af.op === "lte") { const d = String(c[af.field] || "").slice(0, 10); return d && d <= af.value; }
+            if (af.op === "gte") { const d = String(raw ?? "").slice(0, 10); return d && d >= af.value; }
+            if (af.op === "lte") { const d = String(raw ?? "").slice(0, 10); return d && d <= af.value; }
             if (af.op === "range") {
-              const d = String(c[af.field] || "").slice(0, 10);
+              const d = String(raw ?? "").slice(0, 10);
               if (!d) return false;
               if (af.value && d < af.value) return false;
               if (af.value2 && d > af.value2) return false;
