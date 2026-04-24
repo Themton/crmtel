@@ -719,6 +719,7 @@ function CRMApp({ currentUser, onLogout }) {
       const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
       const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
       const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
+      const cri = headers.findIndex((h) => h.includes("ความสัมพันธ์") || h.includes("customer_relation") || h.includes("relation"));
       if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
       const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
       const successList = []; const dupeList = [];
@@ -733,7 +734,7 @@ function CRMApp({ currentUser, onLogout }) {
         const orderDate = odi >= 0 ? v[odi] || "" : "";
         const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
         const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", status: "not_called" });
+        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", customer_relation: cri >= 0 ? (Number(v[cri]) || 0) : 0, status: "not_called" });
       }
       if (allRows.length) {
         const BATCH = 50;
