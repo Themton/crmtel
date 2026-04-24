@@ -1175,7 +1175,7 @@ function CRMApp({ currentUser, onLogout }) {
                             </select>
                             {af.op === "range" ? (
                               <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff" }}>
-                                <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
+                                <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; nf[idx].value2 = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
                                 <span style={{ color: "#9ca3af", fontSize: 14 }}>→</span>
                                 <input type="date" value={af.value2 || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value2 = e.target.value; setAdvFilters(nf); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
                                 <button onClick={() => { const nf = [...advFilters]; const today = new Date().toISOString().slice(0, 10); nf[idx].value = today; nf[idx].value2 = today; setAdvFilters(nf); }} style={{ padding: "3px 8px", borderRadius: 6, border: "1px solid #d4a017", background: "#fef3c7", color: "#92400e", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>วันนี้</button>
