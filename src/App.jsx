@@ -768,22 +768,39 @@ function CRMApp({ currentUser, onLogout }) {
           try { return new TextDecoder(enc, { fatal: false }).decode(buf); }
           catch { return null; }
         };
-        const parseCSVLine = (line) => {
-          const result = []; let cur = ""; let inQuote = false;
-          for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') inQuote = !inQuote;
-            else if (ch === "," && !inQuote) { result.push(cur.trim()); cur = ""; }
-            else cur += ch;
+        // ── Parser อ่านทีละตัวอักษร — รองรับ newline ในเครื่องหมายคำพูด + escaped quote ("") ──
+        const parseCSV = (text) => {
+          const rows = []; let row = []; let cur = ""; let inQuote = false;
+          for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (inQuote) {
+              if (ch === '"') {
+                if (text[i + 1] === '"') { cur += '"'; i++; }
+                else { inQuote = false; }
+              } else { cur += ch; }
+            } else {
+              if (ch === '"') inQuote = true;
+              else if (ch === ',') { row.push(cur); cur = ""; }
+              else if (ch === '\r') { /* skip */ }
+              else if (ch === '\n') {
+                row.push(cur);
+                if (row.some((c) => String(c).trim())) rows.push(row);
+                row = []; cur = "";
+              } else cur += ch;
+            }
           }
-          result.push(cur.trim());
-          return result.map((x) => x.replace(/^"|"$/g, ""));
+          if (cur || row.length > 0) {
+            row.push(cur);
+            if (row.some((c) => String(c).trim())) rows.push(row);
+          }
+          return rows;
         };
         const isHeaderUsable = (text) => {
           if (!text) return false;
           if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-          const firstLine = text.split(/\r?\n/)[0] || "";
-          const cells = parseCSVLine(firstLine).map((h) => h.toLowerCase());
+          const r = parseCSV(text);
+          if (!r.length) return false;
+          const cells = r[0].map((h) => String(h || "").toLowerCase());
           return cells.some((c) => c.includes("ชื่อ") || c.includes("name") || c.includes("เบอร์") || c.includes("โทร") || c.includes("phone"));
         };
         let text = tryDecode("utf-8");
@@ -797,8 +814,7 @@ function CRMApp({ currentUser, onLogout }) {
         }
         if (!text) { alert("อ่านไฟล์ไม่ได้ — รหัสอักขระไม่รองรับ"); e.target.value = ""; return; }
         if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-        const lines = text.split(/\r?\n/).filter((l) => l.trim());
-        rows = lines.map(parseCSVLine);
+        rows = parseCSV(text);
       }
     } catch (err) {
       console.error("File read error:", err);
