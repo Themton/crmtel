@@ -881,26 +881,62 @@ function CRMApp({ currentUser, onLogout }) {
       return;
     }
 
-    const BATCH = 50;
-    const totalBatches = Math.ceil(allRows.length / BATCH);
+    // ── INSERT แบบเร็ว: BATCH ใหญ่ + parallel + return=minimal ──
+    const BATCH = 500;
+    const CONCURRENT = 5;
+    const batches = [];
+    for (let i = 0; i < allRows.length; i += BATCH) batches.push(allRows.slice(i, i + BATCH));
+
+    const fastInsert = async (rows) => {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/crm_customers`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal", // ไม่ต้องส่งข้อมูลกลับ → เร็วขึ้นมาก
+          },
+          body: JSON.stringify(rows),
+        });
+        if (r.ok) return { ok: true };
+        const err = await r.json().catch(() => ({ message: r.statusText }));
+        return { ok: false, error: err };
+      } catch (err) { return { ok: false, error: { message: String(err) } }; }
+    };
+
+    const failed = [];
+    let completed = 0;
     setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-    const failed = []; // เก็บ row ที่ insert ไม่สำเร็จ + เหตุผล
-    for (let b = 0; b < totalBatches; b++) {
-      const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
-      const res = await supabase.from("crm_customers").insert(batch);
-      if (res?.error) {
-        // Fallback: insert ทีละแถว เพื่อระบุแถวที่มีปัญหา
-        for (const row of batch) {
-          const r2 = await supabase.from("crm_customers").insert(row);
-          if (r2?.error) failed.push({ name: row.name, phone: row.phone, reason: (r2.error?.message || JSON.stringify(r2.error)).slice(0, 120) });
-          else successList.push({ name: row.name, phone: row.phone });
+
+    // ยิง batch แบบ concurrent ทีละ CONCURRENT ชุด
+    for (let i = 0; i < batches.length; i += CONCURRENT) {
+      const chunk = batches.slice(i, i + CONCURRENT);
+      const results = await Promise.all(chunk.map((b) => fastInsert(b)));
+      for (let j = 0; j < chunk.length; j++) {
+        const batch = chunk[j];
+        const res = results[j];
+        if (res.ok) {
+          batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+        } else {
+          // batch fail → ค่อย insert ทีละแถวเพื่อหาแถวที่มีปัญหา
+          for (const row of batch) {
+            const r2 = await fastInsert([row]);
+            if (r2.ok) successList.push({ name: row.name, phone: row.phone });
+            else failed.push({ name: row.name, phone: row.phone, reason: (r2.error?.message || JSON.stringify(r2.error)).slice(0, 120) });
+          }
         }
-      } else {
-        batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+        completed += batch.length;
       }
-      setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+      setProgress({ current: Math.min(completed, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
     }
-    await fetchAll(); broadcastChange();
+
+    // Refresh เฉพาะตาราง customers (เร็วกว่า fetchAll ทั้งหมด)
+    try {
+      const fresh = await supabase.from("crm_customers").select();
+      if (fresh?.data) setCustomers(fresh.data);
+    } catch {}
+    broadcastChange();
     setProgress(null);
     setImportResult({ success: successList, dupes: dupeList, failed });
     e.target.value = "";
