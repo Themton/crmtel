@@ -597,14 +597,27 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   // ---- DELETE → MOVE TO TRASH ----
+  // คอลัมน์ที่มีอยู่จริงใน crm_trash (ไม่รวม id, ที่ระบบเติมเองภายหลัง)
+  const TRASH_COLS = ["name","phone","note","previous_promo","order_date","received_product","status","supervisor","assigned_to","created_at","call_date","call_subject","call_note","customer_relation","next_follow","offer","product_price"];
+  const buildTrashRow = (item) => {
+    const row = { original_id: item.id, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+    TRASH_COLS.forEach((k) => { if (item[k] !== undefined) row[k] = item[k]; });
+    return row;
+  };
+
   const handleDelete = async (table, id) => {
     if (!confirm("ต้องการลบ?")) return;
     setProgress({ current: 0, total: 2, label: "กำลังลบข้อมูล..." });
     if (table === "crm_customers") {
       const item = customers.find((c) => c.id === id);
       if (item) {
-        const { id: oid, ...rest } = item;
-        await supabase.from("crm_trash").insert({ ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" });
+        const res = await supabase.from("crm_trash").insert(buildTrashRow(item));
+        if (res?.error) {
+          setProgress(null);
+          console.error("Trash insert failed:", res.error);
+          alert("⚠️ ไม่สามารถย้ายไปถังขยะได้ จึงยกเลิกการลบเพื่อไม่ให้ข้อมูลหาย\n\n" + JSON.stringify(res.error));
+          return;
+        }
       }
     }
     setProgress({ current: 1, total: 2, label: "กำลังลบข้อมูล..." });
@@ -620,20 +633,32 @@ function CRMApp({ currentUser, onLogout }) {
     const total = selectedRows.length;
     const BATCH = 100;
     setProgress({ current: 0, total, label: "กำลังลบข้อมูล..." });
-    // Batch insert to trash
+    // เตรียม row สำหรับถังขยะ — กรองเฉพาะคอลัมน์ที่ crm_trash รองรับ
     const trashRows = selectedRows.map((rid) => {
       const item = customers.find((c) => c.id === rid);
-      if (!item) return null;
-      const { id: oid, ...rest } = item;
-      return { ...rest, original_id: oid, deleted_at: new Date().toISOString(), deleted_by: currentUser?.name || "admin" };
+      return item ? buildTrashRow(item) : null;
     }).filter(Boolean);
+
+    // Batch insert to trash — เช็ค error ทุกชุด ถ้าพังให้หยุดทันที (ไม่ลบข้อมูลต้นฉบับ)
+    const insertedIds = [];
     for (let b = 0; b < Math.ceil(trashRows.length / BATCH); b++) {
-      await supabase.from("crm_trash").insert(trashRows.slice(b * BATCH, (b + 1) * BATCH));
+      const slice = trashRows.slice(b * BATCH, (b + 1) * BATCH);
+      const res = await supabase.from("crm_trash").insert(slice);
+      if (res?.error) {
+        setProgress(null);
+        console.error("Trash insert failed at batch", b, res.error);
+        alert("⚠️ ย้ายไปถังขยะไม่สำเร็จ ที่ batch " + (b+1) + "\nระบบหยุดการลบเพื่อป้องกันข้อมูลหาย\n\nรายละเอียด: " + JSON.stringify(res.error).slice(0, 300));
+        await fetchAll();
+        return;
+      }
+      // เก็บ original_id ของชุดที่ insert สำเร็จแล้ว
+      slice.forEach(r => insertedIds.push(r.original_id));
       setProgress({ current: Math.min((b + 1) * BATCH, total) * 0.5, total, label: "กำลังย้ายไปถังขยะ..." });
     }
-    // Batch delete from customers
-    for (let b = 0; b < Math.ceil(selectedRows.length / BATCH); b++) {
-      const batch = selectedRows.slice(b * BATCH, (b + 1) * BATCH);
+
+    // Batch delete — ลบเฉพาะ id ที่ใส่ถังขยะสำเร็จแล้วเท่านั้น
+    for (let b = 0; b < Math.ceil(insertedIds.length / BATCH); b++) {
+      const batch = insertedIds.slice(b * BATCH, (b + 1) * BATCH);
       await supabase.from("crm_customers").delete().in("id", batch);
       setProgress({ current: Math.round(total * 0.5 + Math.min((b + 1) * BATCH, total) * 0.5), total, label: "กำลังลบข้อมูล..." });
     }
