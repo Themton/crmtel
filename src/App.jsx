@@ -762,9 +762,12 @@ function CRMApp({ currentUser, onLogout }) {
         rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
         rows = rows.filter((r) => r.some((c) => String(c || "").trim()));
       } else {
-        let text = await file.text();
-        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        // ลองอ่านเป็น UTF-8 ก่อน ถ้า header ภาษาไทยใช้ไม่ได้ ลอง Windows-874 (TIS-620)
+        const buf = await file.arrayBuffer();
+        const tryDecode = (enc) => {
+          try { return new TextDecoder(enc, { fatal: false }).decode(buf); }
+          catch { return null; }
+        };
         const parseCSVLine = (line) => {
           const result = []; let cur = ""; let inQuote = false;
           for (let i = 0; i < line.length; i++) {
@@ -776,6 +779,25 @@ function CRMApp({ currentUser, onLogout }) {
           result.push(cur.trim());
           return result.map((x) => x.replace(/^"|"$/g, ""));
         };
+        const isHeaderUsable = (text) => {
+          if (!text) return false;
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+          const firstLine = text.split(/\r?\n/)[0] || "";
+          const cells = parseCSVLine(firstLine).map((h) => h.toLowerCase());
+          return cells.some((c) => c.includes("ชื่อ") || c.includes("name") || c.includes("เบอร์") || c.includes("โทร") || c.includes("phone"));
+        };
+        let text = tryDecode("utf-8");
+        if (!isHeaderUsable(text)) {
+          const alt = tryDecode("windows-874");
+          if (isHeaderUsable(alt)) text = alt;
+          else {
+            const alt2 = tryDecode("tis-620");
+            if (isHeaderUsable(alt2)) text = alt2;
+          }
+        }
+        if (!text) { alert("อ่านไฟล์ไม่ได้ — รหัสอักขระไม่รองรับ"); e.target.value = ""; return; }
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
         rows = lines.map(parseCSVLine);
       }
     } catch (err) {
