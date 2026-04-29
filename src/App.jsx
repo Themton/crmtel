@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import * as XLSX from "xlsx";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
@@ -714,78 +715,173 @@ function CRMApp({ currentUser, onLogout }) {
   };
 
   // ---- IMPORT CSV ----
-  const handleImport = (e) => {
+  // ---- IMPORT CSV / XLSX ----
+  // แปลงค่าวันที่ให้เป็น ISO (YYYY-MM-DD) หรือ null ถ้าแปลงไม่ได้
+  const parseDate = (val) => {
+    if (val === null || val === undefined || val === "") return null;
+    // Excel serial date
+    if (typeof val === "number" && val > 25569 && val < 60000) {
+      const d = new Date((val - 25569) * 86400 * 1000);
+      if (!isNaN(d)) return d.toISOString().slice(0, 10);
+    }
+    let s = String(val).trim();
+    if (!s) return null;
+    // ลบเวลาที่นำหน้า เช่น "19:00 30/04/2026"
+    s = s.replace(/^\d{1,2}:\d{2}(:\d{2})?\s+/, "");
+    // YYYY-MM-DD หรือ YYYY/MM/DD
+    let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+    // DD/MM/YYYY หรือ DD-MM-YYYY (รองรับปี พ.ศ. 25xx → ลบ 543)
+    m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (m) {
+      let y = parseInt(m[3], 10);
+      if (y > 2400) y -= 543;
+      return `${y}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+    }
+    const d = new Date(s);
+    if (!isNaN(d)) return d.toISOString().slice(0, 10);
+    return null;
+  };
+  // ดึงเฉพาะตัวเลขออกจากค่า (สำหรับราคา)
+  const parseNum = (val) => {
+    if (val === null || val === undefined || val === "") return 0;
+    if (typeof val === "number") return val;
+    const m = String(val).match(/-?\d+(\.\d+)?/);
+    return m ? Number(m[0]) : 0;
+  };
+
+  const handleImport = async (e) => {
     const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      let text = ev.target.result;
-      // Strip BOM
-      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      const lines = text.split(/\r?\n/).filter((l) => l.trim());
-      if (lines.length < 2) { showToast("ไฟล์ว่าง", "warning"); return; }
-      // Parse CSV properly (handle commas inside quotes)
-      const parseCSVLine = (line) => {
-        const result = []; let cur = ""; let inQuote = false;
-        for (let i = 0; i < line.length; i++) {
-          const ch = line[i];
-          if (ch === '"') { inQuote = !inQuote; }
-          else if (ch === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
-          else { cur += ch; }
-        }
-        result.push(cur.trim());
-        return result;
-      };
-      const headers = parseCSVLine(lines[0]).map((h) => h.replace(/"/g, "").toLowerCase());
-      const ni = headers.findIndex((h) => h.includes("name") || h.includes("ชื่อ"));
-      const pi = headers.findIndex((h) => h.includes("phone") || h.includes("โทร"));
-      const noi = headers.findIndex((h) => h.includes("note") || h.includes("ที่อยู่") || h.includes("address"));
-      const pri = headers.findIndex((h) => h.includes("promo") || h.includes("โปร"));
-      const csi = headers.findIndex((h) => h.includes("หัวข้อโทร") || h.includes("call_subject") || h.includes("subject"));
-      const odi = headers.findIndex((h) => h.includes("วันที่สั่งซื้อ") || h.includes("order_date") || h.includes("สั่งซื้อ"));
-      const rpi = headers.findIndex((h) => h.includes("ได้รับสินค้า") || h.includes("received") || h.includes("รับสินค้า"));
-      const nni = headers.findIndex((h) => h.includes("ชื่อเล่น") || h.includes("nickname"));
-      const cri = headers.findIndex((h) => h.includes("ความสัมพันธ์") || h.includes("customer_relation") || h.includes("relation"));
-      if (ni === -1 && pi === -1) { showToast("ไม่พบ Name/Phone", "warning"); return; }
-      const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
-      const successList = []; const dupeList = [];
-      const allRows = [];
-      for (let i = 1; i < lines.length; i++) {
-        const v = parseCSVLine(lines[i]).map((x) => x.replace(/^"|"$/g, ""));
-        const name = ni >= 0 ? v[ni] || "" : ""; const phone = pi >= 0 ? v[pi] || "" : "";
-        if (!name && !phone) continue;
-        const cleanPhone = phone.replace(/\D/g, "");
-        if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
-        if (cleanPhone) existingPhones.add(cleanPhone);
-        const orderDate = odi >= 0 ? v[odi] || "" : "";
-        const rawSubject = csi >= 0 ? (v[csi] || "").trim() : "";
-        const matchedSubject = callSubjects.find((s) => s.label === rawSubject) || callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
-        allRows.push({ name, phone, note: noi >= 0 ? v[noi] || "" : "", previous_promo: pri >= 0 ? v[pri] || "" : "", call_subject: matchedSubject ? matchedSubject.label : rawSubject, order_date: orderDate || null, received_product: rpi >= 0 ? ((v[rpi] || "").includes("ได้รับ") || v[rpi] === "true" || v[rpi] === "1") : false, nickname: nni >= 0 ? v[nni] || "" : "", customer_relation: cri >= 0 ? (Number(v[cri]) || 0) : 0, status: "not_called" });
-      }
-      if (allRows.length) {
-        const BATCH = 50;
-        const totalBatches = Math.ceil(allRows.length / BATCH);
-        setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-        for (let b = 0; b < totalBatches; b++) {
-          const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
-          const res = await supabase.from("crm_customers").insert(batch);
-          if (res.error) {
-            // Fallback: insert one by one
-            for (const row of batch) {
-              const r2 = await supabase.from("crm_customers").insert(row);
-              if (!r2.error) successList.push({ name: row.name, phone: row.phone });
-            }
-          } else {
-            batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    let rows = []; // array of arrays — แถวแรกคือ headers
+    try {
+      if (ext === "xlsx" || ext === "xls") {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array", cellDates: false });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: true });
+        rows = rows.filter((r) => r.some((c) => String(c || "").trim()));
+      } else {
+        let text = await file.text();
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        const parseCSVLine = (line) => {
+          const result = []; let cur = ""; let inQuote = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') inQuote = !inQuote;
+            else if (ch === "," && !inQuote) { result.push(cur.trim()); cur = ""; }
+            else cur += ch;
           }
-          setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
-        }
-        await fetchAll(); broadcastChange();
-        setProgress(null);
+          result.push(cur.trim());
+          return result.map((x) => x.replace(/^"|"$/g, ""));
+        };
+        rows = lines.map(parseCSVLine);
       }
+    } catch (err) {
+      console.error("File read error:", err);
+      alert("อ่านไฟล์ไม่ได้: " + (err.message || err));
+      e.target.value = ""; return;
+    }
+    if (rows.length < 2) { showToast("ไฟล์ว่างหรือไม่มีข้อมูล", "warning"); e.target.value = ""; return; }
+
+    const headers = rows[0].map((h) => String(h || "").replace(/"/g, "").toLowerCase().trim());
+    const find = (...keys) => headers.findIndex((h) => keys.some((k) => h.includes(k)));
+    const idx = {
+      name: find("name", "ชื่อ"),
+      phone: find("phone", "เบอร์", "โทร"),
+      note: find("note", "ที่อยู่", "address"),
+      promo: find("promo", "โปรก่อน", "โปรเก่า"),
+      subject: find("หัวข้อโทร", "call_subject", "subject"),
+      orderDate: find("วันที่สั่ง", "order_date", "สั่งซื้อ"),
+      received: find("ได้รับสิน", "received", "รับสินค้า"),
+      nickname: find("ชื่อเล่น", "nickname"),
+      relation: find("ความสัมพันธ์", "customer_relation", "relation"),
+      status: find("สถานะ", "status"),
+      assigned: find("มอบหมาย", "assigned"),
+      supervisor: find("หัวหน้า", "supervisor"),
+      callDate: find("วันที่โทร", "call_date"),
+      callNote: find("หมายเหตุ", "call_note"),
+      nextFollow: find("ครั้งถัดไป", "next_follow", "ติดตาม"),
+      productPrice: find("โปรสินค้า", "product_price", "ราคา"),
+    };
+    if (idx.name === -1 && idx.phone === -1) {
+      alert("ไม่พบคอลัมน์ ชื่อ หรือ เบอร์โทร ในไฟล์\n\nคอลัมน์ที่พบในไฟล์:\n" + headers.join(", "));
+      e.target.value = ""; return;
+    }
+
+    const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
+    const successList = []; const dupeList = []; const allRows = [];
+    const get = (row, i) => i >= 0 ? row[i] : "";
+
+    for (let i = 1; i < rows.length; i++) {
+      const v = rows[i];
+      const name = String(get(v, idx.name) || "").trim();
+      const phone = String(get(v, idx.phone) || "").trim();
+      if (!name && !phone) continue;
+      const cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
+      if (cleanPhone) existingPhones.add(cleanPhone);
+
+      const rawSubject = String(get(v, idx.subject) || "").trim();
+      const matchedSubject = callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
+      const rawStatusText = String(get(v, idx.status) || "").trim();
+      const matchedStatus = statuses.find((s) => s.label === rawStatusText) || statuses.find((s) => s.label.toLowerCase() === rawStatusText.toLowerCase());
+      const receivedRaw = String(get(v, idx.received) || "").toLowerCase();
+      const received = receivedRaw.includes("ได้รับ") || receivedRaw === "true" || receivedRaw === "1" || receivedRaw === "yes";
+
+      // สร้าง row โดยใส่เฉพาะ field ที่มีค่า — ป้องกัน null/empty ทำให้ schema reject
+      const row = {
+        name: name || "(ไม่ระบุ)",
+        phone,
+        status: matchedStatus ? matchedStatus.key : "not_called",
+        received_product: received,
+      };
+      const note = String(get(v, idx.note) || "").trim(); if (note) row.note = note;
+      const promo = String(get(v, idx.promo) || "").trim(); if (promo) row.previous_promo = promo;
+      if (matchedSubject || rawSubject) row.call_subject = matchedSubject ? matchedSubject.label : rawSubject;
+      const orderDate = parseDate(get(v, idx.orderDate)); if (orderDate) row.order_date = orderDate;
+      const nickname = String(get(v, idx.nickname) || "").trim(); if (nickname) row.nickname = nickname;
+      const relation = idx.relation >= 0 ? parseNum(get(v, idx.relation)) : 0; row.customer_relation = relation;
+      const assigned = String(get(v, idx.assigned) || "").trim(); if (assigned) row.assigned_to = assigned;
+      const sv = String(get(v, idx.supervisor) || "").trim(); if (sv) row.supervisor = sv;
+      const callDate = parseDate(get(v, idx.callDate)); if (callDate) row.call_date = callDate;
+      const callNote = String(get(v, idx.callNote) || "").trim(); if (callNote) row.call_note = callNote;
+      const nextFollow = parseDate(get(v, idx.nextFollow)); if (nextFollow) row.next_follow = nextFollow;
+      const price = idx.productPrice >= 0 ? parseNum(get(v, idx.productPrice)) : 0; if (price > 0) row.product_price = price;
+
+      allRows.push(row);
+    }
+
+    if (!allRows.length) {
       setImportResult({ success: successList, dupes: dupeList });
       e.target.value = "";
-    };
-    reader.readAsText(file);
+      return;
+    }
+
+    const BATCH = 50;
+    const totalBatches = Math.ceil(allRows.length / BATCH);
+    setProgress({ current: 0, total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+    const failed = []; // เก็บ row ที่ insert ไม่สำเร็จ + เหตุผล
+    for (let b = 0; b < totalBatches; b++) {
+      const batch = allRows.slice(b * BATCH, (b + 1) * BATCH);
+      const res = await supabase.from("crm_customers").insert(batch);
+      if (res?.error) {
+        // Fallback: insert ทีละแถว เพื่อระบุแถวที่มีปัญหา
+        for (const row of batch) {
+          const r2 = await supabase.from("crm_customers").insert(row);
+          if (r2?.error) failed.push({ name: row.name, phone: row.phone, reason: (r2.error?.message || JSON.stringify(r2.error)).slice(0, 120) });
+          else successList.push({ name: row.name, phone: row.phone });
+        }
+      } else {
+        batch.forEach((r) => successList.push({ name: r.name, phone: r.phone }));
+      }
+      setProgress({ current: Math.min((b + 1) * BATCH, allRows.length), total: allRows.length, label: "กำลังนำเข้าข้อมูล..." });
+    }
+    await fetchAll(); broadcastChange();
+    setProgress(null);
+    setImportResult({ success: successList, dupes: dupeList, failed });
+    e.target.value = "";
   };
 
   // ---- SUPERVISOR ASSIGN ----
@@ -1122,7 +1218,7 @@ function CRMApp({ currentUser, onLogout }) {
                   <button onClick={() => setQuickUpdate({ fields: [], fieldValues: {} })} style={{ ...bo, border: "2px solid #d4a017", background: "#fffbeb", color: "#d4a017" }}><I.Edit /> อัปเดตด่วน ({selectedRows.length})</button>
                   <button onClick={handleBulkDelete} style={bd}><I.Trash /> ลบ {selectedRows.length}</button>
                 </>}
-                <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleImport} style={{ display: "none" }} />
+                <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx,.xls" onChange={handleImport} style={{ display: "none" }} />
                 <button onClick={() => fileRef.current?.click()} style={bo}><I.Upload /> Import</button>
                 <a href={import.meta.env.BASE_URL + "ตัวอย่าง_import_ลูกค้า.csv"} download style={{ display: "flex", alignItems: "center", gap: 6, padding: "10px 16px", borderRadius: 10, border: "2px dashed #d1d5db", background: "#fff", color: "#6b7280", fontWeight: 500, fontSize: 15, cursor: "pointer", textDecoration: "none" }}><I.FileDown /> ไฟล์ตัวอย่าง</a>
                 <button onClick={handleExport} style={bo}><I.Download /> Export</button>
@@ -2045,6 +2141,10 @@ function CRMApp({ currentUser, onLogout }) {
                 <div style={{ fontSize: 28, fontWeight: 700, color: "#d97706" }}>{importResult.dupes.length}</div>
                 <div style={{ fontSize: 15, color: "#92400e", fontWeight: 600 }}>เบอร์ซ้ำ (ข้าม)</div>
               </div>
+              {importResult.failed && importResult.failed.length > 0 && <div style={{ flex: 1, background: "#fee2e2", borderRadius: 12, padding: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "#dc2626" }}>{importResult.failed.length}</div>
+                <div style={{ fontSize: 15, color: "#991b1b", fontWeight: 600 }}>ผิดพลาด</div>
+              </div>}
             </div>
 
             {/* Success list */}
@@ -2071,7 +2171,22 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
 
-            {importResult.success.length === 0 && importResult.dupes.length === 0 && <div style={{ textAlign: "center", color: "#9ca3af", padding: 20 }}>ไม่พบข้อมูล</div>}
+            {/* Failed list — แสดงเหตุผลที่ insert ไม่สำเร็จ */}
+            {importResult.failed && importResult.failed.length > 0 && <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#dc2626", marginBottom: 8 }}>❌ ผิดพลาด — ไม่สามารถบันทึกได้ ({importResult.failed.length})</div>
+              <div style={{ border: "1px solid #fee2e2", borderRadius: 10, maxHeight: 200, overflowY: "auto" }}>
+                {importResult.failed.map((f, i) => (
+                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.failed.length - 1 ? "1px solid #fef2f2" : "none", fontSize: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#991b1b", fontWeight: 600 }}>✗ {f.name}</span><span style={{ color: "#dc2626" }}>{f.phone}</span>
+                    </div>
+                    <div style={{ color: "#7f1d1d", fontSize: 12, marginTop: 2, fontFamily: "monospace" }}>{f.reason}</div>
+                  </div>
+                ))}
+              </div>
+            </div>}
+
+            {importResult.success.length === 0 && importResult.dupes.length === 0 && (!importResult.failed || importResult.failed.length === 0) && <div style={{ textAlign: "center", color: "#9ca3af", padding: 20 }}>ไม่พบข้อมูล</div>}
 
             <button onClick={() => setImportResult(null)} style={{ ...bp, width: "100%", justifyContent: "center", marginTop: 8 }}>ตกลง</button>
           </div>
