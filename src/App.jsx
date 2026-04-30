@@ -1036,7 +1036,7 @@ function CRMApp({ currentUser, onLogout }) {
         if (!matchAny) return false;
       }
       // Advanced filters — ฟิลด์เดียวกัน = OR, ต่างฟิลด์ = AND
-      const activeFilters = advFilters.filter(af => af.field && (af.value || af.op === "range"));
+      const activeFilters = advFilters.filter(af => af.field && (af.value || af.value === "__empty__" || af.op === "range" || af.op === "empty"));
       if (activeFilters.length > 0) {
         // จัดกลุ่มตามฟิลด์
         const grouped = {};
@@ -1044,6 +1044,13 @@ function CRMApp({ currentUser, onLogout }) {
         for (const [field, filters] of Object.entries(grouped)) {
           // OR ภายในกลุ่มเดียวกัน — ต้อง match อย่างน้อย 1 ตัว
           const anyMatch = filters.some(af => {
+            // กรอง "ไม่มีค่า"
+            if (af.value === "__empty__" || af.op === "empty") {
+              const raw = c[af.field];
+              const isEmpty = raw === null || raw === undefined || String(raw).trim() === "";
+              if (af.op === "neq") return !isEmpty;
+              return isEmpty;
+            }
             if (af.field === "assigned_to" && af.value === "__unassigned__") {
               if (af.op === "eq") return !c.assigned_to;
               if (af.op === "neq") return !!c.assigned_to;
@@ -1367,9 +1374,11 @@ function CRMApp({ currentUser, onLogout }) {
                           {isDateField ? (<>
                             <select value={af.op} onChange={(e) => { const nf = [...advFilters]; nf[idx].op = e.target.value; setAdvFilters(nf); }}
                               style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 100, color: "#9ca3af", background: "#fff" }}>
-                              <option value="range">ระยะเวลา</option><option value="eq">เท่ากับ</option><option value="gte">ตั้งแต่</option><option value="lte">ถึง</option>
+                              <option value="range">ระยะเวลา</option><option value="eq">เท่ากับ</option><option value="gte">ตั้งแต่</option><option value="lte">ถึง</option><option value="empty">ไม่มีค่า</option>
                             </select>
-                            {af.op === "range" ? (
+                            {af.op === "empty" ? (
+                              <span style={{ padding: "8px 10px", fontSize: 14, color: "#9ca3af", flex: 1 }}>กรองเฉพาะที่ไม่มีวันที่</span>
+                            ) : af.op === "range" ? (
                               <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff" }}>
                                 <input type="date" value={af.value || ""} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value: v, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 14, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
                                 <span style={{ color: "#9ca3af", fontSize: 14 }}>→</span>
@@ -1386,23 +1395,23 @@ function CRMApp({ currentUser, onLogout }) {
                           </select>
                           {af.field === "status" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
-                              <option value="">เลือก</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
+                              <option value="">เลือก</option><option value="__empty__">— ไม่มีค่า —</option>{statuses.map((s) => <option key={s.id} value={s.key}>{s.label}</option>)}
                             </select>
                           ) : af.field === "call_subject" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
-                              <option value="">เลือก</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
+                              <option value="">เลือก</option><option value="__empty__">— ไม่มีค่า —</option>{callSubjects.map((s) => <option key={s.id} value={s.label}>{s.label}</option>)}
                             </select>
                           ) : af.field === "received_product" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
-                              <option value="">เลือก</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
+                              <option value="">เลือก</option><option value="__empty__">— ไม่มีค่า —</option><option value="true">ได้รับแล้ว</option><option value="false">รอส่ง</option>
                             </select>
                           ) : af.field === "customer_relation" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
-                              <option value="">เลือก</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
+                              <option value="">เลือก</option><option value="__empty__">— ไม่มีค่า —</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={String(n)}>{n}</option>)}
                             </select>
                           ) : af.field === "assigned_to" ? (
                             <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
-                              <option value="">เลือก</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
+                              <option value="">เลือก</option><option value="__empty__">— ไม่มีค่า —</option><option value="__unassigned__">ยังไม่มอบหมาย</option>{employees.map((em) => <option key={em.id} value={em.name}>{em.name}</option>)}
                             </select>
                           ) : (
                             (() => {
@@ -1410,6 +1419,7 @@ function CRMApp({ currentUser, onLogout }) {
                               return vals.length > 0 && vals.length <= 500 ? (
                                 <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, flex: 1 }}>
                                   <option value="">เลือก ({vals.length})</option>
+                                  <option value="__empty__">— ไม่มีค่า —</option>
                                   {vals.map((v) => <option key={v} value={v}>{v.length > 40 ? v.slice(0, 40) + "..." : v}</option>)}
                                 </select>
                               ) : (
