@@ -1131,8 +1131,9 @@ function CRMApp({ currentUser, onLogout }) {
     product_price: { label: "โปรสินค้า", render: (c) => <EditableCell value={c.product_price ? String(c.product_price) : ""} onSave={(v) => upd(c.id, "product_price", Number(v) || 0)} /> },
     assigned_to: { label: "มอบหมาย", render: (c) => <span style={{ fontSize: 9, color: c.assigned_to ? "#92400e" : "#d97706", fontWeight: 600, whiteSpace: "nowrap" }}>{c.assigned_to || "ยังไม่มอบหมาย"}</span> },
     nickname: { label: "ชื่อเล่น", render: (c) => <span style={{ fontSize: 12, color: "#6b7280" }}>{c.nickname || "—"}</span> },
+    created_at: { label: "วันที่สร้าง", render: (c) => <span style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{c.created_at ? (() => { try { const d = new Date(c.created_at); return d.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "2-digit" }); } catch { return c.created_at; } })() : "—"}</span> },
   };
-  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname"];
+  const DEFAULT_COL_ORDER = ["name","phone","note","previous_promo","order_date","received_product","status","call_subject","call_date","call_note","customer_relation","next_follow","product_price","assigned_to","nickname","created_at"];
   const activeColOrder = (colOrder.length ? colOrder : DEFAULT_COL_ORDER).filter((k) => COL_DEFS[k]);
   const TH = activeColOrder.map((k) => COL_DEFS[k].label);
 
@@ -1360,13 +1361,13 @@ function CRMApp({ currentUser, onLogout }) {
                     </div>
                     <div style={{ padding: "12px 16px" }}>
                       {advFilters.map((af, idx) => {
-                        const isDateField = af.field === "call_date" || af.field === "next_follow" || af.field === "order_date";
+                        const isDateField = af.field === "call_date" || af.field === "next_follow" || af.field === "order_date" || af.field === "created_at";
                         const prevAf = idx > 0 ? advFilters[idx - 1] : null;
                         const sameField = prevAf && prevAf.field && af.field && prevAf.field === af.field;
                         return (<>
                         {idx > 0 && <div style={{ textAlign: "center", margin: "-4px 0", fontSize: 15, fontWeight: 700, color: sameField ? "#059669" : "#d4a017" }}>{sameField ? "หรือ" : "และ"}</div>}
                         <div key={idx} style={{ display: "flex", gap: 8, marginBottom: 4, alignItems: "center" }}>
-                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; const isDate = e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date"; if (isDate) { const today = new Date().toISOString().slice(0, 10); nf[idx].op = "range"; nf[idx].value = today; nf[idx].value2 = today; } else { nf[idx].op = "contains"; } setAdvFilters(nf); }}
+                          <select value={af.field} onChange={(e) => { const nf = [...advFilters]; nf[idx].field = e.target.value; nf[idx].value = ""; nf[idx].value2 = ""; const isDate = e.target.value === "call_date" || e.target.value === "next_follow" || e.target.value === "order_date" || e.target.value === "created_at"; if (isDate) { const today = new Date().toISOString().slice(0, 10); nf[idx].op = "range"; nf[idx].value = today; nf[idx].value2 = today; } else { nf[idx].op = "contains"; } setAdvFilters(nf); }}
                             style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, minWidth: 120, color: af.field ? "#374151" : "#9ca3af", background: "#fff" }}>
                             <option value="">เลือกฟิลด์</option>
                             {Object.entries(COL_DEFS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
