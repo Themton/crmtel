@@ -359,6 +359,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [filterFieldOpen, setFilterFieldOpen] = useState(null);
   const [filterOpOpen, setFilterOpOpen] = useState(null);
   const [filterFieldSearch, setFilterFieldSearch] = useState("");
+  const [filterOpSearch, setFilterOpSearch] = useState("");
   const [empFilter, setEmpFilter] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_empFilter")) || []; } catch { return []; } });
   const [empSearch, setEmpSearch] = useState("");
   const [sortCol, setSortCol] = useState("");
@@ -1039,7 +1040,7 @@ function CRMApp({ currentUser, onLogout }) {
         if (!matchAny) return false;
       }
       // Advanced filters — ฟิลด์เดียวกัน = OR, ต่างฟิลด์ = AND
-      const activeFilters = advFilters.filter(af => af.field && (af.value || af.value === "__empty__" || af.op === "range" || af.op === "empty" || af.op === "has_value"));
+      const activeFilters = advFilters.filter(af => af.field && (af.value || af.value === "__empty__" || af.op === "range" || af.op === "not_range" || af.op === "empty" || af.op === "has_value"));
       if (activeFilters.length > 0) {
         // จัดกลุ่มตามฟิลด์
         const grouped = {};
@@ -1086,6 +1087,14 @@ function CRMApp({ currentUser, onLogout }) {
               if (!d) return false;
               if (af.value && d < af.value) return false;
               if (af.value2 && d > af.value2) return false;
+              return true;
+            }
+            if (af.op === "not_range") {
+              const d = String(raw ?? "").slice(0, 10);
+              if (!d) return true;
+              if (af.value && af.value2) return d < af.value || d > af.value2;
+              if (af.value) return d < af.value;
+              if (af.value2) return d > af.value2;
               return true;
             }
             return true;
@@ -1369,7 +1378,7 @@ function CRMApp({ currentUser, onLogout }) {
                     <div style={{ padding: "12px 16px" }}>
                       {(() => {
                         const FIELD_ICONS = { name: { icon: "T", bg: "#8b5cf6" }, phone: { icon: "📞", bg: "#3b82f6" }, note: { icon: "📍", bg: "#f59e0b" }, previous_promo: { icon: "🏷", bg: "#ec4899" }, order_date: { icon: "📅", bg: "#ef4444" }, received_product: { icon: "📦", bg: "#22c55e" }, status: { icon: "⚡", bg: "#f97316" }, call_subject: { icon: "📋", bg: "#06b6d4" }, call_date: { icon: "📅", bg: "#8b5cf6" }, call_note: { icon: "📝", bg: "#6366f1" }, customer_relation: { icon: "⭐", bg: "#eab308" }, next_follow: { icon: "📅", bg: "#14b8a6" }, product_price: { icon: "💰", bg: "#22c55e" }, assigned_to: { icon: "👤", bg: "#ef4444" }, nickname: { icon: "😊", bg: "#ec4899" }, created_at: { icon: "📅", bg: "#6366f1" } };
-                        const OP_LABELS = { contains: "เป็นของ", eq: "เป็นของ", neq: "ไม่เป็นของ", has_value: "มีค่า", empty: "ไม่มีค่า", range: "ระยะเวลา", gte: "ตั้งแต่", lte: "ถึง" };
+                        const OP_LABELS = { contains: "เป็นของ", eq: "คือ", neq: "ไม่ใช่", has_value: "มีค่า", empty: "ไม่มีค่า", range: "ระยะเวลา", not_range: "ไม่อยู่ในช่วงเวลา", gte: "ตั้งแต่", lte: "ถึง" };
                         const DATE_FIELDS = ["call_date", "next_follow", "order_date", "created_at"];
                         return advFilters.map((af, idx) => {
                           const isDateField = DATE_FIELDS.includes(af.field);
@@ -1425,24 +1434,33 @@ function CRMApp({ currentUser, onLogout }) {
                               {/* OPERATOR SELECTOR PILL */}
                               {af.field && (
                                 <div style={{ position: "relative" }}>
-                                  <button onClick={(e) => { e.stopPropagation(); setFilterOpOpen(filterOpOpen === idx ? null : idx); setFilterFieldOpen(null); }}
+                                  <button onClick={(e) => { e.stopPropagation(); setFilterOpOpen(filterOpOpen === idx ? null : idx); setFilterFieldOpen(null); setFilterOpSearch(""); }}
                                     style={{ display: "flex", alignItems: "center", gap: 4, padding: "7px 12px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", fontSize: 13, color: "#374151", whiteSpace: "nowrap" }}>
                                     {OP_LABELS[af.op] || af.op} <span style={{ fontSize: 10, color: "#9ca3af" }}>▼</span>
                                   </button>
                                   {filterOpOpen === idx && (<>
                                     <div onClick={() => setFilterOpOpen(null)} style={{ position: "fixed", inset: 0, zIndex: 109 }} />
-                                    <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 180, zIndex: 110 }}>
-                                      {(isDateField ? [
-                                        { v: "range", l: "ระยะเวลา" }, { v: "eq", l: "เท่ากับ" }, { v: "gte", l: "ตั้งแต่" }, { v: "lte", l: "ถึง" }, { v: "has_value", l: "มีค่า" }, { v: "empty", l: "ไม่มีค่า" }
-                                      ] : [
-                                        { v: "contains", l: "เป็นของ" }, { v: "neq", l: "ไม่เป็นของ" }, { v: "has_value", l: "มีค่า" }, { v: "empty", l: "ไม่มีค่า" }
-                                      ]).map((o) => (
-                                        <div key={o.v} onClick={() => { const nf = [...advFilters]; nf[idx].op = o.v; if (o.v === "has_value" || o.v === "empty") { nf[idx].value = ""; } setAdvFilters(nf); setFilterOpOpen(null); }}
-                                          style={{ padding: "10px 16px", cursor: "pointer", fontSize: 14, color: af.op === o.v ? "#1d4ed8" : "#374151", background: af.op === o.v ? "#e0f2fe" : "transparent", fontWeight: af.op === o.v ? 600 : 400 }}
-                                          onMouseEnter={(e) => { if (af.op !== o.v) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (af.op !== o.v) e.currentTarget.style.background = "transparent"; }}>
-                                          {o.l}
+                                    <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "#fff", borderRadius: 12, boxShadow: "0 8px 30px rgba(0,0,0,0.18)", border: "1px solid #e5e7eb", width: 220, zIndex: 110, overflow: "hidden" }}>
+                                      <div style={{ padding: "10px 12px 8px" }}>
+                                        <div style={{ position: "relative" }}>
+                                          <span style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: 14 }}>🔍</span>
+                                          <input value={filterOpSearch} onChange={(e) => setFilterOpSearch(e.target.value)} placeholder={OP_LABELS[af.op] || "ค้นหา..."} autoFocus
+                                            style={{ width: "100%", padding: "8px 10px 8px 30px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
                                         </div>
-                                      ))}
+                                      </div>
+                                      <div style={{ maxHeight: 240, overflowY: "auto", padding: "0 0 6px" }}>
+                                        {(isDateField ? [
+                                          { v: "range", l: "ระยะเวลา" }, { v: "not_range", l: "ไม่อยู่ในช่วงเวลา" }, { v: "eq", l: "คือ" }, { v: "neq", l: "ไม่ใช่" }, { v: "has_value", l: "มีค่า" }, { v: "empty", l: "ไม่มีค่า" }
+                                        ] : [
+                                          { v: "contains", l: "เป็นของ" }, { v: "neq", l: "ไม่เป็นของ" }, { v: "has_value", l: "มีค่า" }, { v: "empty", l: "ไม่มีค่า" }
+                                        ]).filter(o => !filterOpSearch || o.l.includes(filterOpSearch)).map((o) => (
+                                          <div key={o.v} onClick={() => { const nf = [...advFilters]; nf[idx].op = o.v; if (o.v === "has_value" || o.v === "empty") { nf[idx].value = ""; } if (o.v === "range" || o.v === "not_range") { if (!nf[idx].value) { const today = new Date().toISOString().slice(0, 10); nf[idx].value = today; nf[idx].value2 = today; } } setAdvFilters(nf); setFilterOpOpen(null); }}
+                                            style={{ padding: "10px 16px", cursor: "pointer", fontSize: 14, color: af.op === o.v ? "#1d4ed8" : "#374151", background: af.op === o.v ? "#e0f2fe" : "transparent", fontWeight: af.op === o.v ? 600 : 400 }}
+                                            onMouseEnter={(e) => { if (af.op !== o.v) e.currentTarget.style.background = "#f3f4f6"; }} onMouseLeave={(e) => { if (af.op !== o.v) e.currentTarget.style.background = "transparent"; }}>
+                                            {o.l}
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
                                   </>)}
                                 </div>
@@ -1451,11 +1469,12 @@ function CRMApp({ currentUser, onLogout }) {
                               {/* VALUE SELECTOR */}
                               {af.field && af.op !== "empty" && af.op !== "has_value" && (<>
                                 {isDateField ? (
-                                  af.op === "range" ? (
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 10px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#fff" }}>
-                                      <input type="date" value={af.value || ""} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value: v, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
+                                  (af.op === "range" || af.op === "not_range") ? (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 12px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#fff" }}>
+                                      <input type="date" value={af.value || ""} placeholder="วันเริ่มต้น" onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value ? "#374151" : "#9ca3af" }} />
                                       <span style={{ color: "#9ca3af", fontSize: 13 }}>→</span>
-                                      <input type="date" value={af.value2 || ""} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
+                                      <input type="date" value={af.value2 || ""} placeholder="วันสิ้นสุด" onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value2 ? "#374151" : "#9ca3af" }} />
+                                      <span style={{ color: "#9ca3af", fontSize: 16 }}>📅</span>
                                     </div>
                                   ) : (
                                     <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "7px 12px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 13, flex: 1, outline: "none" }} />
