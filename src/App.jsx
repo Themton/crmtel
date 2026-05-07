@@ -1528,6 +1528,9 @@ function CRMApp({ currentUser, onLogout }) {
                       <button onClick={() => setAdvFilters([])} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 15, cursor: "pointer" }}>ลบทั้งหมด</button>
                       <span style={{ fontSize: 15, color: "#d1d5db" }}>บันทึกเป็นมุมมองใหม่</span>
                     </div>
+                    {advFilters.length > 0 && <div style={{ padding: "6px 16px", background: "#fef3c7", fontSize: 11, color: "#92400e", borderTop: "1px solid #fde68a" }}>
+                      DEBUG: {advFilters.map((af, i) => `[${i}] field=${af.field} op=${af.op} value="${af.value}" value2="${af.value2}"`).join(" | ")} | ลูกค้าทั้งหมด={customers.length} | ผ่าน filter={fc.length} | มี next_follow={customers.filter(c => c.next_follow && String(c.next_follow).trim()).length}
+                    </div>}
                   </div>
                   <div style={{ height: 8 }}></div>
                 </div>
