@@ -1080,18 +1080,20 @@ function CRMApp({ currentUser, onLogout }) {
             if (af.op === "contains") return cv.includes(fv);
             if (af.op === "eq") return cv === fv;
             if (af.op === "neq") return cv !== fv;
-            if (af.op === "gte") { const d = String(raw ?? "").slice(0, 10); return d && d >= af.value; }
-            if (af.op === "lte") { const d = String(raw ?? "").slice(0, 10); return d && d <= af.value; }
+            if (af.op === "gte") { const d = (() => { const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10); })(); return d && d >= af.value; }
+            if (af.op === "lte") { const d = (() => { const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10); })(); return d && d <= af.value; }
             if (af.op === "range") {
-              const d = String(raw ?? "").slice(0, 10);
-              if (!d) return false;
+              const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+              const d = m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10);
+              if (!d || d.length < 10) return false;
               if (af.value && d < af.value) return false;
               if (af.value2 && d > af.value2) return false;
               return true;
             }
             if (af.op === "not_range") {
-              const d = String(raw ?? "").slice(0, 10);
-              if (!d) return true;
+              const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+              const d = m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10);
+              if (!d || d.length < 10) return true;
               if (af.value && af.value2) return d < af.value || d > af.value2;
               if (af.value) return d < af.value;
               if (af.value2) return d > af.value2;
@@ -1471,14 +1473,13 @@ function CRMApp({ currentUser, onLogout }) {
                                 {isDateField ? (
                                   (af.op === "range" || af.op === "not_range") ? (
                                     <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, padding: "6px 12px", borderRadius: 20, border: "1px solid #e5e7eb", background: "#fff" }}>
-                                      <input type={af.value ? "date" : "text"} value={af.value || ""} placeholder="วันเริ่มต้น" readOnly={!af.value} onFocus={(e) => { e.target.type = "date"; e.target.readOnly = false; }} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value ? "#374151" : "#9ca3af", cursor: "pointer", background: "transparent" }} />
+                                      <input type="date" value={af.value || ""} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value ? "#374151" : "#9ca3af", cursor: "pointer", background: "transparent" }} />
                                       <span style={{ color: "#9ca3af", fontSize: 13 }}>→</span>
-                                      <input type={af.value2 ? "date" : "text"} value={af.value2 || ""} placeholder="วันสิ้นสุด" readOnly={!af.value2} onFocus={(e) => { e.target.type = "date"; e.target.readOnly = false; }} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value2 ? "#374151" : "#9ca3af", cursor: "pointer", background: "transparent" }} />
-                                      <span style={{ color: "#9ca3af", fontSize: 16, cursor: "pointer" }} onClick={(e) => { const inp = e.currentTarget.parentElement.querySelector("input"); if (inp) { inp.type = "date"; inp.readOnly = false; inp.showPicker?.(); inp.focus(); } }}>📅</span>
+                                      <input type="date" value={af.value2 || ""} onChange={(e) => { const v = e.target.value; setAdvFilters(prev => prev.map((f, i) => i === idx ? { ...f, value2: v } : f)); }} style={{ border: "none", outline: "none", fontSize: 13, flex: 1, color: af.value2 ? "#374151" : "#9ca3af", cursor: "pointer", background: "transparent" }} />
                                       {(af.value || af.value2) && <button onClick={() => { const nf = [...advFilters]; nf[idx].value = ""; nf[idx].value2 = ""; setAdvFilters(nf); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 16, padding: 0 }}>×</button>}
                                     </div>
                                   ) : (
-                                    <input type={af.value ? "date" : "text"} value={af.value || ""} placeholder="เลือกวันที่" readOnly={!af.value} onFocus={(e) => { e.target.type = "date"; e.target.readOnly = false; }} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "7px 12px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 13, flex: 1, outline: "none", cursor: "pointer", color: af.value ? "#374151" : "#9ca3af" }} />
+                                    <input type="date" value={af.value || ""} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "7px 12px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 13, flex: 1, outline: "none", cursor: "pointer", color: af.value ? "#374151" : "#9ca3af" }} />
                                   )
                                 ) : af.field === "status" ? (
                                   <select value={af.value} onChange={(e) => { const nf = [...advFilters]; nf[idx].value = e.target.value; setAdvFilters(nf); }} style={{ padding: "7px 12px", borderRadius: 20, border: "1px solid #e5e7eb", fontSize: 13, flex: 1 }}>
