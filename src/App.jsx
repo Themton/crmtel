@@ -355,7 +355,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [progress, setProgress] = useState(null);
   const [importResult, setImportResult] = useState(null);
   const [toolbarTab, setToolbarTab] = useState(null);
-  const [advFilters, setAdvFilters] = useState(() => { try { return JSON.parse(sessionStorage.getItem("crm_advFilters")) || []; } catch { return []; } });
+  const [advFilters, setAdvFilters] = useState(() => { try { const raw = JSON.parse(sessionStorage.getItem("crm_advFilters")) || []; const DATE_F = ["call_date","next_follow","order_date","created_at"]; const normD = (s) => { if (!s) return s; let m = String(s).match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`; m = String(s).match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); if (m) { let y = parseInt(m[3],10); if (y > 2400) y -= 543; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; } return s; }; return raw.map(af => DATE_F.includes(af.field) ? { ...af, value: normD(af.value), value2: normD(af.value2) } : af); } catch { return []; } });
   const [filterFieldOpen, setFilterFieldOpen] = useState(null);
   const [filterOpOpen, setFilterOpOpen] = useState(null);
   const [filterFieldSearch, setFilterFieldSearch] = useState("");
@@ -1080,23 +1080,25 @@ function CRMApp({ currentUser, onLogout }) {
             if (af.op === "contains") return cv.includes(fv);
             if (af.op === "eq") return cv === fv;
             if (af.op === "neq") return cv !== fv;
-            if (af.op === "gte") { const d = (() => { const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10); })(); return d && d >= af.value; }
-            if (af.op === "lte") { const d = (() => { const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); return m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10); })(); return d && d <= af.value; }
+            // -- Date normalization helper: handles YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY --
+            const toISO = (s) => { const r = String(s ?? "").trim(); if (!r) return ""; let m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`; m = r.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); if (m) { let y = parseInt(m[3],10); if (y > 2400) y -= 543; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; } return r.slice(0,10); };
+            if (af.op === "gte") { const d = toISO(raw); const fv = toISO(af.value); return d.length >= 10 && d >= fv; }
+            if (af.op === "lte") { const d = toISO(raw); const fv = toISO(af.value); return d.length >= 10 && d <= fv; }
             if (af.op === "range") {
-              const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
-              const d = m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10);
+              const d = toISO(raw);
               if (!d || d.length < 10) return false;
-              if (af.value && d < af.value) return false;
-              if (af.value2 && d > af.value2) return false;
+              const fv1 = toISO(af.value); const fv2 = toISO(af.value2);
+              if (fv1 && d < fv1) return false;
+              if (fv2 && d > fv2) return false;
               return true;
             }
             if (af.op === "not_range") {
-              const r = String(raw ?? ""); const m = r.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
-              const d = m ? `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}` : r.slice(0,10);
+              const d = toISO(raw);
               if (!d || d.length < 10) return true;
-              if (af.value && af.value2) return d < af.value || d > af.value2;
-              if (af.value) return d < af.value;
-              if (af.value2) return d > af.value2;
+              const fv1 = toISO(af.value); const fv2 = toISO(af.value2);
+              if (fv1 && fv2) return d < fv1 || d > fv2;
+              if (fv1) return d < fv1;
+              if (fv2) return d > fv2;
               return true;
             }
             return true;
