@@ -852,7 +852,7 @@ function CRMApp({ currentUser, onLogout }) {
       e.target.value = ""; return;
     }
 
-    const existingPhones = new Set(customers.map((c) => c.phone?.replace(/\D/g, "")).filter(Boolean));
+    const existingPhoneMap = new Map(customers.filter(c => c.phone).map((c) => { const p = c.phone.replace(/\D/g, ""); return p ? [p, c.name || "(ไม่ระบุ)"] : null; }).filter(Boolean));
     const successList = []; const dupeList = []; const allRows = [];
     const get = (row, i) => i >= 0 ? row[i] : "";
 
@@ -862,8 +862,8 @@ function CRMApp({ currentUser, onLogout }) {
       const phone = String(get(v, idx.phone) || "").trim();
       if (!name && !phone) continue;
       const cleanPhone = phone.replace(/\D/g, "");
-      if (cleanPhone && existingPhones.has(cleanPhone)) { dupeList.push({ name, phone }); continue; }
-      if (cleanPhone) existingPhones.add(cleanPhone);
+      if (cleanPhone && existingPhoneMap.has(cleanPhone)) { dupeList.push({ name, phone, existingName: existingPhoneMap.get(cleanPhone) }); continue; }
+      if (cleanPhone) existingPhoneMap.set(cleanPhone, name);
 
       const rawSubject = String(get(v, idx.subject) || "").trim();
       const matchedSubject = callSubjects.find((s) => s.label.toLowerCase() === rawSubject.toLowerCase());
@@ -2341,11 +2341,27 @@ function CRMApp({ currentUser, onLogout }) {
 
             {/* Dupe list */}
             {importResult.dupes.length > 0 && <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706", marginBottom: 8 }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
-              <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 150, overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#d97706" }}>⚠️ เบอร์ซ้ำ — ข้ามไม่ได้นำเข้า ({importResult.dupes.length})</div>
+                <button onClick={() => {
+                  const bom = "\uFEFF";
+                  const header = "ชื่อในไฟล์,เบอร์โทร,ซ้ำกับ (ในระบบ)\n";
+                  const rows = importResult.dupes.map(d => `"${(d.name||"").replace(/"/g,'""')}","${d.phone||""}","${(d.existingName||"ซ้ำในไฟล์เดียวกัน").replace(/"/g,'""')}"`).join("\n");
+                  const blob = new Blob([bom + header + rows], { type: "text/csv;charset=utf-8" });
+                  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "รายชื่อซ้ำ_" + new Date().toISOString().slice(0,10) + ".csv"; a.click();
+                }} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 8, border: "1px solid #f59e0b", background: "#fffbeb", color: "#d97706", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                  <I.Download size={14} /> ดาวน์โหลด CSV
+                </button>
+              </div>
+              <div style={{ border: "1px solid #fef3c7", borderRadius: 10, maxHeight: 200, overflowY: "auto" }}>
+                <div style={{ display: "flex", padding: "6px 14px", background: "#fef9c3", fontSize: 12, fontWeight: 700, color: "#92400e", borderBottom: "1px solid #fde68a" }}>
+                  <span style={{ flex: 1 }}>ชื่อในไฟล์</span><span style={{ flex: 1 }}>เบอร์โทร</span><span style={{ flex: 1 }}>ซ้ำกับ (ในระบบ)</span>
+                </div>
                 {importResult.dupes.map((d, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 15, display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "#92400e" }}>✗ {d.name}</span><span style={{ color: "#d97706" }}>{d.phone}</span>
+                  <div key={i} style={{ display: "flex", padding: "8px 14px", borderBottom: i < importResult.dupes.length - 1 ? "1px solid #fefce8" : "none", fontSize: 14 }}>
+                    <span style={{ flex: 1, color: "#92400e" }}>{d.name}</span>
+                    <span style={{ flex: 1, color: "#d97706" }}>{d.phone}</span>
+                    <span style={{ flex: 1, color: "#b45309", fontWeight: 600 }}>{d.existingName || "ซ้ำในไฟล์เดียวกัน"}</span>
                   </div>
                 ))}
               </div>
