@@ -481,6 +481,18 @@ function CRMApp({ currentUser, onLogout }) {
     setLoading(false);
   }, []);
 
+  // Throttle fetchAll: max once per 10 seconds
+  const fetchAllTimer = useRef(null);
+  const fetchAllPending = useRef(false);
+  const throttledFetchAll = useCallback(() => {
+    if (fetchAllTimer.current) { fetchAllPending.current = true; return; }
+    fetchAll();
+    fetchAllTimer.current = setTimeout(() => {
+      fetchAllTimer.current = null;
+      if (fetchAllPending.current) { fetchAllPending.current = false; fetchAll(); }
+    }, 10000);
+  }, [fetchAll]);
+
   // Load column order + employee polls for supervisor/admin changes
   useEffect(() => {
     const loadColOrder = async () => {
@@ -514,7 +526,7 @@ function CRMApp({ currentUser, onLogout }) {
     loadColOrder();
     // Employee polls every 5 seconds
     if (currentUser?.role === "employee") {
-      const interval = setInterval(loadColOrder, 3000);
+      const interval = setInterval(loadColOrder, 30000);
       return () => clearInterval(interval);
     }
   }, [currentUser?.name, customers.length]);
@@ -531,11 +543,11 @@ function CRMApp({ currentUser, onLogout }) {
         const ts = settings.find((s) => s.key === "last_updated");
         if (ts && ts.value !== lastKnownUpdate) {
           setLastKnownUpdate(ts.value);
-          fetchAll();
+          throttledFetchAll();
         }
       } catch {}
     };
-    const interval = setInterval(checkForChanges, 2000);
+    const interval = setInterval(checkForChanges, 30000);
     return () => clearInterval(interval);
   }, [lastKnownUpdate, fetchAll]);
 
@@ -559,7 +571,7 @@ function CRMApp({ currentUser, onLogout }) {
       } catch {}
     };
     pollNotifications();
-    const interval = setInterval(pollNotifications, 3000);
+    const interval = setInterval(pollNotifications, 30000);
     return () => clearInterval(interval);
   }, [currentUser?.name]);
 
@@ -598,7 +610,7 @@ function CRMApp({ currentUser, onLogout }) {
       showToast("บันทึกแล้ว");
     }
     setModal(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
   };
 
   // ---- DELETE → MOVE TO TRASH ----
@@ -629,7 +641,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from(table).delete().eq("id", id);
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("ลบสำเร็จ ✓");
   };
 
@@ -653,7 +665,7 @@ function CRMApp({ currentUser, onLogout }) {
         setProgress(null);
         console.error("Trash insert failed at batch", b, res.error);
         alert("⚠️ ย้ายไปถังขยะไม่สำเร็จ ที่ batch " + (b+1) + "\nระบบหยุดการลบเพื่อป้องกันข้อมูลหาย\n\nรายละเอียด: " + JSON.stringify(res.error).slice(0, 300));
-        await fetchAll();
+        throttledFetchAll();
         return;
       }
       // เก็บ original_id ของชุดที่ insert สำเร็จแล้ว
@@ -669,7 +681,7 @@ function CRMApp({ currentUser, onLogout }) {
     }
     setProgress(null);
     setSelectedRows([]);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -684,7 +696,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", tid);
     setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("กู้คืนสำเร็จ ✓");
   };
 
@@ -694,7 +706,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", id);
     setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("ลบถาวรสำเร็จ ✓");
   };
 
@@ -704,7 +716,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 0, total: 1, label: "กำลังล้างถังขยะ..." });
     await supabase.from("crm_trash").delete().gte("id", 0);
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("ล้างถังขยะ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -981,7 +993,7 @@ function CRMApp({ currentUser, onLogout }) {
       }
     }
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     const summary = assignEmployees.map((name, i) => name + " (" + chunks[i].length + ")").join(", ");
     // Send notifications to assigned employees
     for (let i = 0; i < assignEmployees.length; i++) {
@@ -1003,7 +1015,7 @@ function CRMApp({ currentUser, onLogout }) {
       setProgress({ current: Math.min((b + 1) * BATCH, assignSelected.length), total: assignSelected.length, label: "กำลังถอนสิทธิ์..." });
     }
     setProgress(null);
-    await fetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange();
     showToast("ถอนสิทธิ์แล้ว", "warning");
     setAssignSelected([]);
   };
@@ -2087,7 +2099,7 @@ function CRMApp({ currentUser, onLogout }) {
                   }
                 }
                 setProgress(null);
-                await fetchAll(); broadcastChange();
+                throttledFetchAll(); broadcastChange();
                 // Send notifications if assigned_to was updated
                 if (quickUpdate.fields.includes("assigned_to")) {
                   const assignList2 = quickUpdate.fieldValues.assigned_to_list || [];
@@ -2149,7 +2161,7 @@ function CRMApp({ currentUser, onLogout }) {
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มพนักงาน..." });
                 }
                 setProgress(null);
-                await fetchAll(); broadcastChange();
+                throttledFetchAll(); broadcastChange();
                 showToast("เพิ่ม " + ok + " พนักงานสำเร็จ ✓");
                 setMultiAddEmp(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({multiAddEmp.filter((e) => e.name.trim()).length})</button>
@@ -2202,7 +2214,7 @@ function CRMApp({ currentUser, onLogout }) {
                   setProgress({ current: ok, total: valid.length, label: "กำลังเพิ่มลูกค้า..." });
                 }
                 setProgress(null);
-                await fetchAll(); broadcastChange();
+                throttledFetchAll(); broadcastChange();
                 showToast("เพิ่ม " + ok + " ลูกค้าสำเร็จ ✓");
                 setQuickAddRows(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #059669, #047857)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด ({quickAddRows.filter((r) => r.name.trim() || r.phone.trim()).length})</button>
@@ -2265,7 +2277,7 @@ function CRMApp({ currentUser, onLogout }) {
                   setProgress({ current: ok, total: changed.length, label: "กำลังบันทึก..." });
                 }
                 setProgress(null);
-                await fetchAll(); broadcastChange();
+                throttledFetchAll(); broadcastChange();
                 showToast("บันทึก " + ok + " พนักงานสำเร็จ ✓");
                 setMultiEditEmp(null);
               }} style={{ padding: "10px 28px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #d4a017, #b8860b)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>บันทึกทั้งหมด</button>
