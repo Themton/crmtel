@@ -6,6 +6,65 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const USE_DEMO = false;
 const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; if (o.mf) u += `?${o.mf}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; const fetchAll = async () => { let all = []; let offset = 0; const PAGE = 1000; while (true) { const u = `${SUPABASE_URL}/rest/v1/${t}?limit=${PAGE}&offset=${offset}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }; try { const r = await fetch(u, { headers: h }); const d = await r.json().catch(() => []); if (!Array.isArray(d) || d.length === 0) break; all = all.concat(d); if (d.length < PAGE) break; offset += PAGE; } catch { break; } } return { data: all }; }; return { select: () => ({ order: () => ({ then: (r, j) => fetchAll().then(r).catch(j) }), then: (r, j) => fetchAll().then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("DELETE", { mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }), gte: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=gte.${val}` }).then(r).catch(j) }) }) }; } };
 
+// ---- Lightweight filtered query (paginated) for incremental sync ----
+const sbQuery = async (table, mf) => {
+  let all = []; let offset = 0; const PAGE = 1000;
+  while (true) {
+    const qs = [mf, `limit=${PAGE}`, `offset=${offset}`].filter(Boolean).join("&");
+    const u = `${SUPABASE_URL}/rest/v1/${table}?${qs}`;
+    const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+    try {
+      const r = await fetch(u, { headers: h });
+      const d = await r.json().catch(() => null);
+      if (!Array.isArray(d)) return { data: all, ok: false, error: d };
+      all = all.concat(d);
+      if (d.length < PAGE) break;
+      offset += PAGE;
+    } catch (e) { return { data: all, ok: false, error: e }; }
+  }
+  return { data: all, ok: true };
+};
+
+// ---- Enrich customers with employee nickname / assigned_email mapping ----
+const enrichCustomers = (c, allEmp) => {
+  const empNickMap = {};
+  const empNameToEmail = {};
+  (allEmp || []).forEach(emp => {
+    const n = (emp.name || "").trim();
+    const empEmail = (emp.email || emp.username || "").toLowerCase().trim();
+    if (n) {
+      empNickMap[n] = n;
+      if (empEmail) empNameToEmail[n] = empEmail;
+      const m = n.match(/\(([^)]+)\)/);
+      if (m) { empNickMap[m[1].trim()] = n; if (empEmail) empNameToEmail[m[1].trim()] = empEmail; }
+    }
+    const nick = (emp.nickname || "").trim();
+    if (nick && nick !== n) {
+      empNickMap[nick] = n || nick;
+      if (empEmail) empNameToEmail[nick] = empEmail;
+      const m2 = nick.match(/\(([^)]+)\)/);
+      if (m2) { empNickMap[m2[1].trim()] = n || nick; if (empEmail) empNameToEmail[m2[1].trim()] = empEmail; }
+    }
+  });
+  return (c || []).map((cust) => {
+    if (!cust.assigned_to) return cust;
+    const fullName = empNickMap[cust.assigned_to];
+    const assignedEmail = cust.assigned_email || empNameToEmail[cust.assigned_to] || "";
+    return { ...cust, nickname: fullName || cust.nickname, assigned_email: assignedEmail };
+  });
+};
+
+// ---- Max updated_at among rows (returns ISO string or fallback) ----
+const maxUpdatedAt = (rows, fallback) => {
+  let max = fallback || null; let maxMs = max ? Date.parse(max) : -Infinity;
+  (rows || []).forEach((r) => {
+    if (!r || !r.updated_at) return;
+    const ms = Date.parse(r.updated_at);
+    if (!isNaN(ms) && ms > maxMs) { maxMs = ms; max = r.updated_at; }
+  });
+  return max;
+};
+
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
   { color: "#d4a017", bg: "#fef3c7" }, { color: "#7c3aed", bg: "#ede9fe" }, { color: "#db2777", bg: "#fce7f3" },
@@ -408,6 +467,8 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- FETCH ALL DATA FROM SUPABASE ----
   const normalizePhone = (p) => { let s = String(p || "").replace(/\D/g, ""); if (s.length === 9) s = "0" + s; return s; };
+  const lastSyncRef = useRef(null);   // max updated_at ที่ sync ไปแล้ว (สำหรับ incremental)
+  const employeesRef = useRef([]);    // รายชื่อพนักงานล่าสุด (ใช้ตอน enrich แบบ incremental)
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
@@ -424,42 +485,8 @@ function CRMApp({ currentUser, onLogout }) {
         return true;
       });
 
-      // ชื่อเล่น = ชื่อพนักงานตามมอบหมาย + map ชื่อ→อีเมล
-      const empNickMap = {};
-      const empNameToEmail = {};
-      allEmp.forEach(emp => {
-        const n = (emp.name || "").trim();
-        const empEmail = (emp.email || emp.username || "").toLowerCase().trim();
-        if (n) {
-          empNickMap[n] = n;
-          if (empEmail) empNameToEmail[n] = empEmail;
-          const m = n.match(/\(([^)]+)\)/);
-          if (m) { empNickMap[m[1].trim()] = n; if (empEmail) empNameToEmail[m[1].trim()] = empEmail; }
-        }
-        const nick = (emp.nickname || "").trim();
-        if (nick && nick !== n) {
-          empNickMap[nick] = n || nick;
-          if (empEmail) empNameToEmail[nick] = empEmail;
-          const m2 = nick.match(/\(([^)]+)\)/);
-          if (m2) { empNickMap[m2[1].trim()] = n || nick; if (empEmail) empNameToEmail[m2[1].trim()] = empEmail; }
-        }
-      });
-      const enrichedCust = c.map((cust) => {
-        if (!cust.assigned_to) return cust;
-        const fullName = empNickMap[cust.assigned_to];
-        // เติม assigned_email จากชื่อพนักงาน (ถ้ายังไม่มี)
-        const assignedEmail = cust.assigned_email || empNameToEmail[cust.assigned_to] || "";
-        return { ...cust, nickname: fullName || cust.nickname, assigned_email: assignedEmail };
-      });
-
-      // DEBUG: แสดงค่า assigned_to ที่จับคู่ไม่ได้
-      const unmatchedMap = {};
-      c.forEach(cust => {
-        const a = cust.assigned_to;
-        if (a && !empNickMap[a]) unmatchedMap[a] = (unmatchedMap[a] || 0) + 1;
-      });
-      console.log("empNickMap keys:", Object.keys(empNickMap));
-      console.log("assigned_to ที่จับคู่ไม่ได้:", unmatchedMap);
+      // เติมชื่อเล่น/อีเมลพนักงานให้ลูกค้า (ใช้ helper เดียวกับ incremental sync)
+      const enrichedCust = enrichCustomers(c, allEmp);
 
       // One-time sync: เขียน assigned_email ลง DB สำหรับลูกค้าที่ยังไม่มี
       if (!sessionStorage.getItem("crm_email_synced") && currentUser?.role === "admin") {
@@ -477,21 +504,69 @@ function CRMApp({ currentUser, onLogout }) {
       }
 
       setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      employeesRef.current = allEmp;
+      lastSyncRef.current = maxUpdatedAt(c, lastSyncRef.current);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
 
-  // Throttle fetchAll: max once per 10 seconds
+  // ---- INCREMENTAL SYNC: โหลดเฉพาะลูกค้าที่เปลี่ยน + ตรวจการลบด้วย id อย่างเดียว ----
+  // ตารางเล็ก (พนักงาน/สถานะ/หัวข้อ/หัวหน้า) รีเฟรชเต็มได้เพราะข้อมูลน้อย egress แทบเป็นศูนย์
+  // ตารางลูกค้า (ก้อนใหญ่) ดึงเฉพาะแถวที่ updated_at ใหม่กว่าครั้งก่อน -> ลด egress มหาศาล
+  const syncCustomers = useCallback(async () => {
+    const since = lastSyncRef.current;
+    // ยังไม่มีฐานเวลา หรือ DB ยังไม่มีคอลัมน์ updated_at -> โหลดเต็มแบบเดิม (ปลอดภัย)
+    if (!since) { await fetchAll(); return; }
+
+    // 1) รีเฟรชตารางเล็ก (cheap) เพื่อให้การเปลี่ยนพนักงาน/สถานะ propagate
+    try {
+      const [e, s, cs, sv] = await Promise.all([
+        sbQuery("crm_employees", ""), sbQuery("crm_statuses", ""),
+        sbQuery("crm_call_subjects", ""), sbQuery("crm_supervisors", ""),
+      ]);
+      if (e.ok) {
+        const seen = new Set();
+        const allEmp = (e.data || []).filter(emp => { const k = (emp.email || emp.username || emp.name || "").toLowerCase().trim(); if (!k || seen.has(k)) return false; seen.add(k); return true; });
+        employeesRef.current = allEmp; setEmployees(allEmp);
+      }
+      if (s.ok) setStatuses(s.data || []);
+      if (cs.ok) setCallSubjects(cs.data || []);
+      if (sv.ok) setSupervisors(sv.data || []);
+    } catch {}
+
+    // 2) ดึงเฉพาะลูกค้าที่เปลี่ยนตั้งแต่ครั้งก่อน
+    const res = await sbQuery("crm_customers", `updated_at=gte.${encodeURIComponent(since)}`);
+    if (!res.ok) { await fetchAll(); return; }   // ถ้า query พลาด (เช่นยังไม่มี updated_at) -> fallback โหลดเต็ม
+    const changed = res.data || [];
+
+    // 3) ดึงเฉพาะ id ทั้งหมด (payload เล็กมาก) เพื่อตรวจว่ามีลูกค้าถูกลบไหม
+    const idsRes = await sbQuery("crm_customers", "select=id");
+    const serverIds = idsRes.ok ? new Set((idsRes.data || []).map((r) => r.id)) : null;
+
+    const enriched = changed.length ? enrichCustomers(changed, employeesRef.current) : [];
+    setCustomers((prev) => {
+      let next = serverIds ? prev.filter((c) => serverIds.has(c.id)) : prev.slice();
+      if (enriched.length) {
+        const map = new Map(next.map((c) => [c.id, c]));
+        enriched.forEach((c) => map.set(c.id, c));
+        next = Array.from(map.values());
+      }
+      return next;
+    });
+    lastSyncRef.current = maxUpdatedAt(changed, since);
+  }, [fetchAll]);
+
+  // Throttle sync: อย่างมากครั้งละ 10 วินาที
   const fetchAllTimer = useRef(null);
   const fetchAllPending = useRef(false);
   const throttledFetchAll = useCallback(() => {
     if (fetchAllTimer.current) { fetchAllPending.current = true; return; }
-    fetchAll();
+    syncCustomers();
     fetchAllTimer.current = setTimeout(() => {
       fetchAllTimer.current = null;
-      if (fetchAllPending.current) { fetchAllPending.current = false; fetchAll(); }
+      if (fetchAllPending.current) { fetchAllPending.current = false; syncCustomers(); }
     }, 10000);
-  }, [fetchAll]);
+  }, [syncCustomers]);
 
   // Load column order + employee polls for supervisor/admin changes
   useEffect(() => {
