@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import * as XLSX from "xlsx";
+import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://sfwbzcrvesbeymvlsxsu.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmd2J6Y3J2ZXNiZXltdmxzeHN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTMzNTgsImV4cCI6MjA4ODkyOTM1OH0.E4Zvq43f0M29hAZzKg78W9HRpthv0I9U37LDo_0Pyvo";
 const USE_DEMO = false;
+// Realtime client (ใช้เฉพาะ subscribe เปลี่ยนแปลงแบบ push แทน polling — ส่วน REST ยังใช้ wrapper เดิมด้านล่าง)
+const sbRealtime = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const supabase = { from: (t) => { const req = async (m, o = {}) => { let u = `${SUPABASE_URL}/rest/v1/${t}`; if (o.mf) u += `?${o.mf}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, "Content-Type": "application/json", Prefer: m === "POST" ? "return=representation" : (m === "PATCH" || m === "DELETE") ? "return=representation" : undefined }; Object.keys(h).forEach((k) => h[k] === undefined && delete h[k]); try { const r = await fetch(u, { method: m, headers: h, body: o.body ? JSON.stringify(o.body) : undefined }); const d = await r.json().catch(() => null); return r.ok ? { data: d } : { error: d }; } catch (err) { return { error: err, data: null }; } }; const fetchAll = async () => { let all = []; let offset = 0; const PAGE = 1000; while (true) { const u = `${SUPABASE_URL}/rest/v1/${t}?limit=${PAGE}&offset=${offset}`; const h = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }; try { const r = await fetch(u, { headers: h }); const d = await r.json().catch(() => []); if (!Array.isArray(d) || d.length === 0) break; all = all.concat(d); if (d.length < PAGE) break; offset += PAGE; } catch { break; } } return { data: all }; }; return { select: () => ({ order: () => ({ then: (r, j) => fetchAll().then(r).catch(j) }), then: (r, j) => fetchAll().then(r).catch(j) }), insert: (rows) => ({ then: (r, j) => req("POST", { body: [].concat(rows) }).then(r).catch(j) }), update: (v) => ({ eq: (c, val) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("PATCH", { body: v, mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }) }), delete: () => ({ eq: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=eq.${val}` }).then(r).catch(j) }), in: (c, vals) => ({ then: (r, j) => req("DELETE", { mf: `${c}=in.(${vals.join(",")})` }).then(r).catch(j) }), gte: (c, val) => ({ then: (r, j) => req("DELETE", { mf: `${c}=gte.${val}` }).then(r).catch(j) }) }) }; } };
 
 // ---- Lightweight filtered query (paginated) for incremental sync ----
@@ -556,17 +559,9 @@ function CRMApp({ currentUser, onLogout }) {
     lastSyncRef.current = maxUpdatedAt(changed, since);
   }, [fetchAll]);
 
-  // Throttle sync: อย่างมากครั้งละ 10 วินาที
-  const fetchAllTimer = useRef(null);
-  const fetchAllPending = useRef(false);
-  const throttledFetchAll = useCallback(() => {
-    if (fetchAllTimer.current) { fetchAllPending.current = true; return; }
-    syncCustomers();
-    fetchAllTimer.current = setTimeout(() => {
-      fetchAllTimer.current = null;
-      if (fetchAllPending.current) { fetchAllPending.current = false; syncCustomers(); }
-    }, 10000);
-  }, [syncCustomers]);
+  // Throttle sync: ไม่จำเป็นแล้ว — Realtime subscribe crm_customers patch ให้ทุกการเปลี่ยน (รวม echo ของเครื่องตัวเอง)
+  // คงฟังก์ชันไว้เป็น no-op เพื่อไม่ต้องแก้จุดที่เรียกทั้งหมด (broadcastChange ยังทำงานปกติ)
+  const throttledFetchAll = useCallback(() => {}, []);
 
   // Load column order + employee polls for supervisor/admin changes
   useEffect(() => {
@@ -599,32 +594,34 @@ function CRMApp({ currentUser, onLogout }) {
       setColOrderLoaded(true);
     };
     loadColOrder();
-    // Employee polls every 5 seconds
-    if (currentUser?.role === "employee") {
-      const interval = setInterval(loadColOrder, 30000);
-      return () => clearInterval(interval);
-    }
+    // Realtime แทน poll: re-apply เมื่อ crm_settings เปลี่ยน (เช่น แก้ลำดับคอลัมน์)
+    const chS = sbRealtime.channel("crm-settings-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "crm_settings" }, () => loadColOrder())
+      .subscribe();
+    return () => sbRealtime.removeChannel(chS);
   }, [currentUser?.name, customers.length]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Auto-refresh: check for changes every 2 seconds (lightweight)
-  const [lastKnownUpdate, setLastKnownUpdate] = useState("0");
+  // Realtime แทน poll last_updated: subscribe crm_customers แล้ว patch จาก payload ตรง ๆ
+  // -> ตัดทั้ง poll ทุก 30 วิ และ id-scan (select=id) ที่ syncCustomers เคยทำทุกการเปลี่ยน
+  const [lastKnownUpdate, setLastKnownUpdate] = useState("0"); // คงไว้กันโค้ดอื่นอ้างถึง
   useEffect(() => {
-    const checkForChanges = async () => {
-      try {
-        const res = await supabase.from("crm_settings").select();
-        const settings = res.data || [];
-        const ts = settings.find((s) => s.key === "last_updated");
-        if (ts && ts.value !== lastKnownUpdate) {
-          setLastKnownUpdate(ts.value);
-          throttledFetchAll();
-        }
-      } catch {}
+    const upsert = (row) => {
+      const enriched = enrichCustomers([row], employeesRef.current)[0] || row;
+      setCustomers((prev) => {
+        const i = prev.findIndex((c) => c.id === enriched.id);
+        if (i === -1) return [enriched, ...prev];   // ใหม่ -> เพิ่มหน้าสุด
+        const next = prev.slice(); next[i] = enriched; return next;  // เดิม -> แทนที่
+      });
     };
-    const interval = setInterval(checkForChanges, 30000);
-    return () => clearInterval(interval);
-  }, [lastKnownUpdate, fetchAll]);
+    const ch = sbRealtime.channel("crm-customers-rt")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "crm_customers" }, (p) => upsert(p.new))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "crm_customers" }, (p) => upsert(p.new))
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "crm_customers" }, (p) => setCustomers((prev) => prev.filter((c) => c.id !== p.old.id)))
+      .subscribe();
+    return () => sbRealtime.removeChannel(ch);
+  }, []);
 
   // Real-time notification polling every 10 seconds
   useEffect(() => {
@@ -646,8 +643,11 @@ function CRMApp({ currentUser, onLogout }) {
       } catch {}
     };
     pollNotifications();
-    const interval = setInterval(pollNotifications, 30000);
-    return () => clearInterval(interval);
+    // Realtime แทน poll: ดึง notifications ใหม่เมื่อมีการเปลี่ยน (ตารางเล็ก + คงตรรกะ toast เดิม)
+    const chN = sbRealtime.channel("crm-notif-rt")
+      .on("postgres_changes", { event: "*", schema: "public", table: "crm_notifications" }, () => pollNotifications())
+      .subscribe();
+    return () => sbRealtime.removeChannel(chN);
   }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
