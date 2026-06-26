@@ -640,31 +640,38 @@ function CRMApp({ currentUser, onLogout }) {
     return () => sbRealtime.removeChannel(ch);
   }, []);
 
-  // Real-time notification polling every 10 seconds
+  // Real-time notifications: โหลด "ที่ยังไม่อ่าน" ครั้งเดียวตอนเข้า แล้ว patch จาก payload ของ realtime ตรง ๆ
+  // -> เลิกดึงตาราง notifications ทั้งตารางใหม่ทุกครั้งที่มีการเปลี่ยน (ตัว egress ตัวใหญ่) ลดได้มหาศาลเมื่อมีผู้ใช้หลายคน
   useEffect(() => {
     if (!currentUser?.name) return;
-    const pollNotifications = async () => {
+    let alive = true;
+    // โหลดครั้งแรก: ดึงเฉพาะแถวที่ read=false (server-side filter) แล้วค่อยกรองเป็นของตัวเองฝั่ง client
+    (async () => {
       try {
-        const res = await supabase.from("crm_notifications").select();
-        if (res.data) {
-          const unread = res.data.filter((n) => isMe(n.to_user) && !n.read);
-          setNotifications((prev) => {
-            if (unread.length > prev.length && prev.length > 0) {
-              // New notification arrived - show toast
-              const newest = unread.find((n) => !prev.some((p) => p.id === n.id));
-              if (newest) showToast("🔔 " + newest.message);
-            }
-            return unread;
-          });
-        }
+        const r = await sbQuery("crm_notifications", "read=eq.false");
+        if (alive && r.ok) setNotifications((r.data || []).filter((n) => isMe(n.to_user) && !n.read));
       } catch {}
-    };
-    pollNotifications();
-    // Realtime แทน poll: ดึง notifications ใหม่เมื่อมีการเปลี่ยน (ตารางเล็ก + คงตรรกะ toast เดิม)
+    })();
     const chN = sbRealtime.channel("crm-notif-rt")
-      .on("postgres_changes", { event: "*", schema: "public", table: "crm_notifications" }, () => pollNotifications())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "crm_notifications" }, (p) => {
+        const n = p.new; if (!isMe(n.to_user) || n.read) return;
+        setNotifications((prev) => prev.some((x) => x.id === n.id) ? prev : [n, ...prev]);
+        showToast("🔔 " + n.message);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "crm_notifications" }, (p) => {
+        const n = p.new; if (!isMe(n.to_user)) return;
+        setNotifications((prev) => {
+          if (n.read) return prev.filter((x) => x.id !== n.id);          // อ่านแล้ว -> เอาออก
+          const i = prev.findIndex((x) => x.id === n.id);
+          if (i === -1) return [n, ...prev];
+          const nx = prev.slice(); nx[i] = n; return nx;                 // อัปเดตในที่
+        });
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "crm_notifications" }, (p) => {
+        setNotifications((prev) => prev.filter((x) => x.id !== (p.old && p.old.id)));
+      })
       .subscribe();
-    return () => sbRealtime.removeChannel(chN);
+    return () => { alive = false; sbRealtime.removeChannel(chN); };
   }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
