@@ -411,6 +411,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
   const [trashPage, setTrashPage] = useState(1);
+  const [trashLoaded, setTrashLoaded] = useState(false); // โหลดข้อมูลถังขยะเต็ม (ทุกคอลัมน์) แล้วหรือยัง — lazy load ตอนเปิดแท็บ เพื่อลด egress
   const [colWidths, setColWidths] = useState({});
   const [footerStats, setFooterStats] = useState({});
   const [page, setPage] = useState(1);
@@ -477,9 +478,11 @@ function CRMApp({ currentUser, onLogout }) {
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
+      // ถังขยะ: โหลดตอนแรกแค่คอลัมน์ที่ใช้นับ badge (payload เล็กมาก) แล้วค่อยโหลดเต็มตอนเปิดแท็บ -> ลด egress
+      const safeLight = async (table, cols) => { try { const r = await sbQuery(table, `select=${cols}`); return r.ok ? (r.data || []) : []; } catch { return []; } };
       const [c, e, s, cs, sv, tr] = await Promise.all([
         safeFetch("crm_customers"), safeFetch("crm_employees"), safeFetch("crm_statuses"),
-        safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeFetch("crm_trash"),
+        safeFetch("crm_call_subjects"), safeFetch("crm_supervisors"), safeLight("crm_trash", "id,supervisor,assigned_to,deleted_by"),
       ]);
       // ลบพนักงานซ้ำ (เก็บแค่รายการแรกต่อ email)
       const seenEmail = new Set();
@@ -508,11 +511,21 @@ function CRMApp({ currentUser, onLogout }) {
         sessionStorage.setItem("crm_email_synced", "1");
       }
 
-      setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr);
+      setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr); setTrashLoaded(false);
       employeesRef.current = allEmp;
       lastSyncRef.current = maxUpdatedAt(c, lastSyncRef.current);
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
+  }, []);
+
+  // ---- TRASH LAZY LOAD ----
+  // โหลดถังขยะเต็ม (ทุกคอลัมน์) เฉพาะตอนเปิดแท็บถังขยะ -> ลด egress มหาศาลเมื่อเทียบกับโหลดทุกครั้งที่เปิดแอป
+  const loadTrashFull = useCallback(async () => {
+    try { const r = await sbQuery("crm_trash", ""); if (r.ok) { setTrash(r.data || []); setTrashLoaded(true); } } catch {}
+  }, []);
+  // รีเฟรชแค่คอลัมน์ที่ใช้นับ badge (payload เล็ก) — ใช้หลังลบ/กู้คืน เพื่อให้ตัวเลขถูกต้องโดยไม่ดึงเต็ม
+  const refreshTrashCount = useCallback(async () => {
+    try { const r = await sbQuery("crm_trash", "select=id,supervisor,assigned_to,deleted_by"); if (r.ok) { setTrash(r.data || []); setTrashLoaded(false); } } catch {}
   }, []);
 
   // ---- INCREMENTAL SYNC: โหลดเฉพาะลูกค้าที่เปลี่ยน + ตรวจการลบด้วย id อย่างเดียว ----
@@ -604,6 +617,8 @@ function CRMApp({ currentUser, onLogout }) {
   }, [currentUser?.name, customers.length]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+  // เปิดแท็บถังขยะ -> โหลดข้อมูลเต็ม (ถ้ายังไม่โหลด)
+  useEffect(() => { if (tab === "trash" && !trashLoaded) loadTrashFull(); }, [tab, trashLoaded, loadTrashFull]);
 
   // Realtime แทน poll last_updated: subscribe crm_customers แล้ว patch จาก payload ตรง ๆ
   // -> ตัดทั้ง poll ทุก 30 วิ และ id-scan (select=id) ที่ syncCustomers เคยทำทุกการเปลี่ยน
@@ -718,7 +733,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from(table).delete().eq("id", id);
     setProgress({ current: 2, total: 2, label: "กำลังลบข้อมูล..." });
     setProgress(null);
-    throttledFetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange(); refreshTrashCount();
     showToast("ลบสำเร็จ ✓");
   };
 
@@ -758,7 +773,7 @@ function CRMApp({ currentUser, onLogout }) {
     }
     setProgress(null);
     setSelectedRows([]);
-    throttledFetchAll(); broadcastChange();
+    throttledFetchAll(); broadcastChange(); refreshTrashCount();
     showToast("ลบ " + total + " รายการสำเร็จ ✓");
   };
 
@@ -773,6 +788,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", tid);
     setProgress({ current: 2, total: 2, label: "กำลังกู้คืน..." });
     setProgress(null);
+    setTrash((prev) => prev.filter((t) => t.id !== id));
     throttledFetchAll(); broadcastChange();
     showToast("กู้คืนสำเร็จ ✓");
   };
@@ -783,6 +799,7 @@ function CRMApp({ currentUser, onLogout }) {
     await supabase.from("crm_trash").delete().eq("id", id);
     setProgress({ current: 1, total: 1, label: "กำลังลบถาวร..." });
     setProgress(null);
+    setTrash((prev) => prev.filter((t) => t.id !== id));
     throttledFetchAll(); broadcastChange();
     showToast("ลบถาวรสำเร็จ ✓");
   };
@@ -793,6 +810,7 @@ function CRMApp({ currentUser, onLogout }) {
     setProgress({ current: 0, total: 1, label: "กำลังล้างถังขยะ..." });
     await supabase.from("crm_trash").delete().gte("id", 0);
     setProgress(null);
+    setTrash([]); setTrashLoaded(true);
     throttledFetchAll(); broadcastChange();
     showToast("ล้างถังขยะ " + total + " รายการสำเร็จ ✓");
   };
@@ -1941,7 +1959,12 @@ function CRMApp({ currentUser, onLogout }) {
                 {myTrash.length > 0 && currentUser?.role === "admin" && <button onClick={handleEmptyTrash} style={bd}><I.Trash /> ล้างถังขยะทั้งหมด</button>}
               </div>
             </div>
-            {filteredTrash.length === 0 ? (
+            {!trashLoaded ? (
+              <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 40, opacity: 0.4, marginBottom: 12 }}>⏳</div>
+                <div style={{ color: "#9ca3af", fontSize: 16 }}>กำลังโหลดข้อมูลถังขยะ...</div>
+              </div>
+            ) : filteredTrash.length === 0 ? (
               <div style={{ background: "#fff", borderRadius: 14, padding: 60, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div style={{ fontSize: 48, opacity: 0.3, marginBottom: 12 }}>🗑️</div>
                 <div style={{ color: "#9ca3af", fontSize: 16 }}>ไม่มีข้อมูลที่ลบ</div>
