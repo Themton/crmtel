@@ -410,6 +410,7 @@ function CRMApp({ currentUser, onLogout }) {
   const [quickUpdate, setQuickUpdate] = useState(null);
   const [trash, setTrash] = useState([]);
   const [trashSearch, setTrashSearch] = useState("");
+  const [trashPage, setTrashPage] = useState(1);
   const [colWidths, setColWidths] = useState({});
   const [footerStats, setFooterStats] = useState({});
   const [page, setPage] = useState(1);
@@ -460,6 +461,7 @@ function CRMApp({ currentUser, onLogout }) {
 
   // ---- EFFECTS ----
   useEffect(() => { setPage(1); }, [search, promoFilter]);
+  useEffect(() => { setTrashPage(1); }, [trashSearch]);
 
   // Persist filters to sessionStorage
   useEffect(() => { sessionStorage.setItem("crm_search", search); }, [search]);
@@ -1924,6 +1926,10 @@ function CRMApp({ currentUser, onLogout }) {
           {tab === "trash" && (() => {
             const myTrash = currentUser?.role === "admin" ? trash : currentUser?.role === "supervisor" ? trash.filter((t) => isMe(t.supervisor) || isMe(t.assigned_to) || isMe(t.deleted_by)) : trash.filter((t) => isMe(t.assigned_to) || isMe(t.deleted_by));
             const filteredTrash = trashSearch ? myTrash.filter((t) => t.phone?.includes(trashSearch) || t.name?.toLowerCase().includes(trashSearch.toLowerCase())) : myTrash;
+            const TRASH_PER_PAGE = 100;
+            const trashTotalPages = Math.max(1, Math.ceil(filteredTrash.length / TRASH_PER_PAGE));
+            const trashSafePage = Math.min(trashPage, trashTotalPages);
+            const pagedTrash = filteredTrash.slice((trashSafePage - 1) * TRASH_PER_PAGE, trashSafePage * TRASH_PER_PAGE);
             return <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
               <h2 style={{ fontSize: 22, fontWeight: 700, color: "#3d2a0a", margin: 0 }}>ข้อมูลที่ลบแล้ว ({filteredTrash.length})</h2>
@@ -1942,13 +1948,29 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             ) : (
               <div style={{ background: "#fff", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", borderBottom: "1px solid #fecaca", background: "#fff5f5", flexWrap: "wrap", gap: 8 }}>
+                  <span style={{ fontSize: 15, color: "#6b7280" }}>หน้าละ {TRASH_PER_PAGE} | {((trashSafePage - 1) * TRASH_PER_PAGE) + 1}–{Math.min(trashSafePage * TRASH_PER_PAGE, filteredTrash.length)} จาก <span style={{ color: "#dc2626", fontWeight: 700 }}>{filteredTrash.length}</span> รายการ</span>
+                  <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                    <select value={trashSafePage} onChange={(e) => setTrashPage(Number(e.target.value))} style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 14, color: "#3d2a0a", fontWeight: 600, cursor: "pointer", marginRight: 4 }}>
+                      {Array.from({ length: trashTotalPages }, (_, i) => i + 1).map((p) => <option key={p} value={p}>หน้า {p}/{trashTotalPages}</option>)}
+                    </select>
+                    <button onClick={() => setTrashPage(1)} disabled={trashSafePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: trashSafePage <= 1 ? "default" : "pointer", color: trashSafePage <= 1 ? "#d1d5db" : "#374151" }}>«</button>
+                    <button onClick={() => setTrashPage(trashSafePage - 1)} disabled={trashSafePage <= 1} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: trashSafePage <= 1 ? "default" : "pointer", color: trashSafePage <= 1 ? "#d1d5db" : "#374151" }}>‹</button>
+                    {Array.from({ length: trashTotalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === trashTotalPages || Math.abs(p - trashSafePage) <= 2).map((p, idx, arr) => (
+                      <span key={p}>{idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: "6px 4px", color: "#9ca3af", fontSize: 14 }}>...</span>}
+                      <button onClick={() => setTrashPage(p)} style={{ padding: "6px 12px", borderRadius: 6, border: p === trashSafePage ? "2px solid #dc2626" : "1px solid #d1d5db", background: p === trashSafePage ? "#dc2626" : "#fff", color: p === trashSafePage ? "#fff" : "#374151", fontWeight: p === trashSafePage ? 700 : 400, fontSize: 15, cursor: "pointer" }}>{p}</button></span>
+                    ))}
+                    <button onClick={() => setTrashPage(trashSafePage + 1)} disabled={trashSafePage >= trashTotalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: trashSafePage >= trashTotalPages ? "default" : "pointer", color: trashSafePage >= trashTotalPages ? "#d1d5db" : "#374151" }}>›</button>
+                    <button onClick={() => setTrashPage(trashTotalPages)} disabled={trashSafePage >= trashTotalPages} style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid #d1d5db", background: "#fff", fontSize: 14, cursor: trashSafePage >= trashTotalPages ? "default" : "pointer", color: trashSafePage >= trashTotalPages ? "#d1d5db" : "#374151" }}>»</button>
+                  </div>
+                </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15 }}>
                     <thead><tr style={{ background: "#fef2f2", borderBottom: "2px solid #fecaca" }}>
                       {["ชื่อ", "เบอร์โทร", "ที่อยู่", "สถานะ", "มอบหมาย", "ลบโดย", "ลบเมื่อ", ""].map((h, i) => <th key={i} style={{ padding: "12px 14px", textAlign: "left", fontWeight: 700, color: "#991b1b", whiteSpace: "nowrap" }}>{h}</th>)}
                     </tr></thead>
                     <tbody>
-                      {filteredTrash.map((t) => {
+                      {pagedTrash.map((t) => {
                         const st = statuses.find((s) => s.key === t.status);
                         return (
                           <tr key={t.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
