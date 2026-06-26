@@ -706,13 +706,18 @@ function CRMApp({ currentUser, onLogout }) {
         const next = prev.slice(); next[i] = enriched; return next;  // เดิม -> แทนที่
       });
     };
+    // #7 ลด realtime fan-out: พนักงานรับ event เฉพาะลูกค้าของตัวเอง (assigned_email) -> ไม่ต้องรับการเปลี่ยนของคนอื่น
+    // admin/หัวหน้าไม่กรอง (ต้องเห็นทั้งหมด); DELETE ไม่กรอง (payload เล็ก แค่ id); reload-sync เป็น backstop กันพลาด
+    // ปลอดภัยเพราะ DB บังคับ assigned_email เป็น lowercase ด้วย trigger (ดู add-email-normalize.sql)
+    const myEmail = (currentUser?.email || currentUser?.username || "").toLowerCase().trim();
+    const empF = (currentUser?.role === "employee" && myEmail) ? { filter: `assigned_email=eq.${myEmail}` } : {};
     const ch = sbRealtime.channel("crm-customers-rt")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "crm_customers" }, (p) => upsert(p.new))
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "crm_customers" }, (p) => upsert(p.new))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "crm_customers", ...empF }, (p) => upsert(p.new))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "crm_customers", ...empF }, (p) => upsert(p.new))
       .on("postgres_changes", { event: "DELETE", schema: "public", table: "crm_customers" }, (p) => setCustomers((prev) => prev.filter((c) => c.id !== p.old.id)))
       .subscribe();
     return () => sbRealtime.removeChannel(ch);
-  }, []);
+  }, [currentUser?.role, currentUser?.email, currentUser?.username]);
 
   // Real-time notifications: โหลด "ที่ยังไม่อ่าน" ครั้งเดียวตอนเข้า แล้ว patch จาก payload ของ realtime ตรง ๆ
   // -> เลิกดึงตาราง notifications ทั้งตารางใหม่ทุกครั้งที่มีการเปลี่ยน (ตัว egress ตัวใหญ่) ลดได้มหาศาลเมื่อมีผู้ใช้หลายคน
