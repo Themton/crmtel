@@ -68,6 +68,20 @@ const maxUpdatedAt = (rows, fallback) => {
   return max;
 };
 
+// ---- IndexedDB cache (ลด egress: เก็บชุดลูกค้าไว้ข้าม reload แล้ว sync เฉพาะส่วนที่เปลี่ยน) ----
+const IDB_NAME = "crmtel-cache", IDB_STORE = "kv";
+const idbOpen = () => new Promise((resolve, reject) => {
+  try {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { try { req.result.createObjectStore(IDB_STORE); } catch {} };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  } catch (e) { reject(e); }
+});
+const idbGet = async (key) => { try { const db = await idbOpen(); return await new Promise((res) => { const t = db.transaction(IDB_STORE, "readonly"); const r = t.objectStore(IDB_STORE).get(key); r.onsuccess = () => res(r.result ?? null); r.onerror = () => res(null); }); } catch { return null; } };
+const idbSet = async (key, val) => { try { const db = await idbOpen(); return await new Promise((res) => { const t = db.transaction(IDB_STORE, "readwrite"); t.objectStore(IDB_STORE).put(val, key); t.oncomplete = () => res(true); t.onerror = () => res(false); }); } catch { return false; } };
+const idbDel = async (key) => { try { const db = await idbOpen(); return await new Promise((res) => { const t = db.transaction(IDB_STORE, "readwrite"); t.objectStore(IDB_STORE).delete(key); t.oncomplete = () => res(true); t.onerror = () => res(false); }); } catch { return false; } };
+
 const COLOR_PRESETS = [
   { color: "#059669", bg: "#d1fae5" }, { color: "#d97706", bg: "#fef3c7" }, { color: "#dc2626", bg: "#fee2e2" },
   { color: "#d4a017", bg: "#fef3c7" }, { color: "#7c3aed", bg: "#ede9fe" }, { color: "#db2777", bg: "#fce7f3" },
@@ -475,6 +489,14 @@ function CRMApp({ currentUser, onLogout }) {
   const normalizePhone = (p) => { let s = String(p || "").replace(/\D/g, ""); if (s.length === 9) s = "0" + s; return s; };
   const lastSyncRef = useRef(null);   // max updated_at ที่ sync ไปแล้ว (สำหรับ incremental)
   const employeesRef = useRef([]);    // รายชื่อพนักงานล่าสุด (ใช้ตอน enrich แบบ incremental)
+  // ---- cache แยกตามผู้ใช้ (กัน RLS รั่วข้ามบัญชีบนเครื่องเดียวกัน) ----
+  const cacheKey = useMemo(() => (currentUser?.email || currentUser?.username || currentUser?.name || "").toLowerCase().trim(), [currentUser]);
+  const cacheKeyRef = useRef(cacheKey);
+  useEffect(() => { cacheKeyRef.current = cacheKey; }, [cacheKey]);
+  const customersRef = useRef([]);      // มิเรอร์ customers ไว้ใช้ตอนเขียน cache
+  const cacheReadyRef = useRef(false);  // โหลดชุดแรกเสร็จแล้วค่อยเริ่มเขียน cache
+  const cacheTimerRef = useRef(null);
+  const bootstrappedRef = useRef(false);
   const fetchAll = useCallback(async () => {
     try {
       const safeFetch = async (table) => { try { const r = await supabase.from(table).select(); return r.data || []; } catch { return []; } };
@@ -514,6 +536,9 @@ function CRMApp({ currentUser, onLogout }) {
       setCustomers(enrichedCust); setEmployees(allEmp); setStatuses(s); setCallSubjects(cs); setSupervisors(sv); setTrash(tr); setTrashLoaded(false);
       employeesRef.current = allEmp;
       lastSyncRef.current = maxUpdatedAt(c, lastSyncRef.current);
+      customersRef.current = enrichedCust;
+      // เขียน cache ชุดเต็ม (กรณีไม่มี cache มาก่อน) เพื่อรอบหน้าจะ sync เฉพาะส่วนต่าง
+      try { if (cacheKeyRef.current) { idbSet("cust:" + cacheKeyRef.current, enrichedCust); idbSet("sync:" + cacheKeyRef.current, lastSyncRef.current); } } catch {}
     } catch (err) { console.error("Fetch error:", err); }
     setLoading(false);
   }, []);
@@ -590,7 +615,7 @@ function CRMApp({ currentUser, onLogout }) {
         if (currentUser?.role === "employee") {
           // Employee: find supervisor's or admin's setting
           let setting = null;
-          const myCust = customers.find((cx) => isMe(cx.assigned_to) && cx.supervisor);
+          const myCust = customersRef.current.find((cx) => isMe(cx.assigned_to) && cx.supervisor);
           if (myCust?.supervisor) setting = colSettings.find((s) => s.key === "col_order_" + myCust.supervisor);
           if (!setting) setting = colSettings.find((s) => s.key === "col_order_Admin");
           if (!setting) setting = colSettings[0];
@@ -614,9 +639,58 @@ function CRMApp({ currentUser, onLogout }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "crm_settings" }, () => loadColOrder())
       .subscribe();
     return () => sbRealtime.removeChannel(chS);
-  }, [currentUser?.name, customers.length]);
+  }, [currentUser?.name]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  // มิเรอร์ customers ไว้เขียน cache
+  useEffect(() => { customersRef.current = customers; }, [customers]);
+  // เขียน cache แบบ debounce เมื่อ customers เปลี่ยน (realtime/sync) — ไม่เขียนถี่เกินไป
+  useEffect(() => {
+    if (!cacheKeyRef.current || !cacheReadyRef.current) return;
+    clearTimeout(cacheTimerRef.current);
+    cacheTimerRef.current = setTimeout(() => {
+      try { idbSet("cust:" + cacheKeyRef.current, customersRef.current); idbSet("sync:" + cacheKeyRef.current, lastSyncRef.current); } catch {}
+    }, 4000);
+    return () => clearTimeout(cacheTimerRef.current);
+  }, [customers]);
+
+  // BOOTSTRAP: ลองโหลดจาก cache ก่อน -> แสดงทันที + sync เฉพาะส่วนต่าง; ถ้าไม่มี cache ค่อยโหลดเต็ม
+  useEffect(() => {
+    if (bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    (async () => {
+      const ck = cacheKeyRef.current;
+      if (ck) {
+        try {
+          const cached = await idbGet("cust:" + ck);
+          const cachedSync = await idbGet("sync:" + ck);
+          if (Array.isArray(cached) && cached.length && cachedSync) {
+            // โหลดเฉพาะตารางเล็ก (cheap) เพื่อ enrich + propagate การเปลี่ยนพนักงาน/สถานะ
+            const [e, s, cs, sv, tr] = await Promise.all([
+              sbQuery("crm_employees", ""), sbQuery("crm_statuses", ""),
+              sbQuery("crm_call_subjects", ""), sbQuery("crm_supervisors", ""),
+              sbQuery("crm_trash", "select=id,supervisor,assigned_to,deleted_by"),
+            ]);
+            let allEmp = employeesRef.current;
+            if (e.ok) { const seen = new Set(); allEmp = (e.data || []).filter((emp) => { const k = (emp.email || emp.username || emp.name || "").toLowerCase().trim(); if (!k || seen.has(k)) return false; seen.add(k); return true; }); }
+            employeesRef.current = allEmp; setEmployees(allEmp);
+            if (s.ok) setStatuses(s.data || []);
+            if (cs.ok) setCallSubjects(cs.data || []);
+            if (sv.ok) setSupervisors(sv.data || []);
+            if (tr.ok) { setTrash(tr.data || []); setTrashLoaded(false); }
+            setCustomers(enrichCustomers(cached, allEmp));   // แสดงจาก cache ทันที
+            customersRef.current = cached;
+            lastSyncRef.current = cachedSync;
+            setLoading(false);
+            cacheReadyRef.current = true;
+            await syncCustomers();   // ดึงเฉพาะที่เปลี่ยน + ตรวจการลบ (fallback โหลดเต็มถ้า updated_at ยังไม่มี)
+            return;
+          }
+        } catch {}
+      }
+      await fetchAll();              // ไม่มี cache -> โหลดเต็มแบบเดิม
+      cacheReadyRef.current = true;
+    })();
+  }, [cacheKey, fetchAll, syncCustomers]);
   // เปิดแท็บถังขยะ -> โหลดข้อมูลเต็ม (ถ้ายังไม่โหลด)
   useEffect(() => { if (tab === "trash" && !trashLoaded) loadTrashFull(); }, [tab, trashLoaded, loadTrashFull]);
 
@@ -675,6 +749,12 @@ function CRMApp({ currentUser, onLogout }) {
   }, [currentUser?.name]);
 
   const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  // ล้าง cache ในเครื่องนี้แล้วโหลดใหม่ทั้งหมด (เผื่อข้อมูล cache เพี้ยน)
+  const clearCacheAndReload = async () => {
+    if (!confirm("ล้างแคชในเครื่องนี้แล้วโหลดข้อมูลใหม่ทั้งหมด?")) return;
+    try { if (cacheKeyRef.current) { await idbDel("cust:" + cacheKeyRef.current); await idbDel("sync:" + cacheKeyRef.current); } } catch {}
+    location.reload();
+  };
   const tableMap = { crm_customers: setCustomers, crm_employees: setEmployees, crm_statuses: setStatuses, crm_supervisors: setSupervisors, crm_call_subjects: setCallSubjects };
 
   // ---- SAVE (ADD / EDIT) ----
@@ -1306,6 +1386,7 @@ function CRMApp({ currentUser, onLogout }) {
               </div>
             </div>}
           </div>
+          <button onClick={clearCacheAndReload} title="ล้างแคชในเครื่องนี้แล้วโหลดข้อมูลใหม่ทั้งหมด" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", marginRight: 8 }}>↻ ล้างแคช</button>
           <button onClick={onLogout} style={{ padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>ออกจากระบบ</button>
         </div>
       </header>
